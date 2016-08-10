@@ -1,13 +1,9 @@
 #include <iostream>
 
-namespace vector_tile
-{
-
-namespace Encoding
-{
+namespace mapbox { namespace vector_tile {
 
 /*
-writer.add_uint32(vector_tile::Encoding::Tile::VERSION, 2);
+writer.add_uint32(mapbox::vector_tile::Tile::VERSION, 2);
 */
 enum Tile : std::uint32_t
 {
@@ -52,6 +48,4 @@ enum GeomType : std::uint8_t
     POLYGON = 3
 };
 
-} // end ns Encoding
-
-} // end ns vector_tile
+} }

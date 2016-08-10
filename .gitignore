@@ -1,3 +1,4 @@
 build
 test
 test-Release
+test-Release.dSYM

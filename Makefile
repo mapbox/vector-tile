@@ -16,7 +16,7 @@ endif
 default: test-$(BUILDTYPE)
 
 test-$(BUILDTYPE): tests/unit/* include/mapbox/vector_tile/* Makefile
-	$(CXX) $(FINAL_FLAGS) tests/unit/*.cpp $(CXXFLAGS) -o test-$(BUILDTYPE)
+	$(CXX) $(FINAL_FLAGS) tests/unit/*.cpp -Itests/include $(CXXFLAGS) -o test-$(BUILDTYPE)
 	./test-$(BUILDTYPE)
 
 test: test-$(BUILDTYPE)
