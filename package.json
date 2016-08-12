@@ -1,6 +1,6 @@
 {
     "name": "@mapbox/vector-tile",
-    "version": "1.0.0-rc1",
+    "version": "1.0.0-rc2",
     "description": "A C++ header only library for decoding and encoding Mapbox Vector Tiles",
     "main": "./package.json",
     "repository"   :  {
