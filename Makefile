@@ -54,3 +54,9 @@ cldoc:
 
 docs: cldoc
 	cldoc generate $(CXXFLAGS) -- $(COMMON_DOC_FLAGS)
+
+testpack:
+	rm -f ./*tgz
+	npm pack
+	tar -ztvf *tgz
+	rm -f ./*tgz
