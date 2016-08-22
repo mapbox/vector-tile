@@ -2,7 +2,7 @@
 
 ## 1.0.0-rc3
 
-- expose a node.js-style `require()` for usage in other projects that must avoid duplicate binaries from the same project (because npm installs every dependency without deduping).
+- expose a node.js-style `require()` so that other projects can dynamically determine the path to the headers, exactly where npm has decided to install them (sensitive to deduping).
 
 ## 1.0.0-rc2
 
