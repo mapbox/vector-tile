@@ -1,4 +1,3 @@
 build
-test
-test-Release
-test-Release.dSYM
+.mason
+mason_packages
