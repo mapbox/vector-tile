@@ -30,14 +30,14 @@ mason_packages/headers/variant: .mason/mason
 
 deps: mason_packages/headers/geometry mason_packages/headers/variant mason_packages/headers/protozero
 
-build/$(BUILDTYPE)/test: tests/unit/* include/mapbox/vector_tile/* Makefile
+build/$(BUILDTYPE)/test: test/unit/* include/mapbox/vector_tile/* Makefile
 	mkdir -p build/$(BUILDTYPE)/
-	$(CXX) $(FINAL_FLAGS) tests/unit/*.cpp -Itests/include $(CXXFLAGS) -o build/$(BUILDTYPE)/test
+	$(CXX) $(FINAL_FLAGS) test/unit/*.cpp -Itest/include $(CXXFLAGS) -o build/$(BUILDTYPE)/test
 
-tests/mvt-fixtures:
+test/mvt-fixtures:
 	git submodule update --init
 
-test: deps build/$(BUILDTYPE)/test tests/mvt-fixtures
+test: deps build/$(BUILDTYPE)/test test/mvt-fixtures
 	./build/$(BUILDTYPE)/test
 
 SOURCES = $(include/mapbox/vector_tile.hpp)
