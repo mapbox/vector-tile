@@ -1,4 +1,4 @@
-#include <vector_tile.hpp>
+#include <mapbox/vector_tile.hpp>
 #include <iostream>
 
 #define CATCH_CONFIG_MAIN
