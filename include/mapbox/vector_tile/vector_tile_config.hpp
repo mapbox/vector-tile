@@ -1,16 +1,16 @@
+#pragma once
+
 #include <iostream>
 
 namespace mapbox { namespace vector_tile {
 
-/*
-writer.add_uint32(mapbox::vector_tile::Tile::VERSION, 2);
-*/
-enum Tile : std::uint32_t
+
+enum TileType : std::uint32_t
 {
     LAYERS = 3
 };
 
-enum Layer : std::uint32_t
+enum LayerType : std::uint32_t
 {
     VERSION = 15,
     NAME = 1,
@@ -20,7 +20,7 @@ enum Layer : std::uint32_t
     EXTENT = 5
 };
 
-enum Feature : std::uint32_t
+enum FeatureType : std::uint32_t
 {
     ID = 1,
     TAGS = 2,
@@ -29,7 +29,7 @@ enum Feature : std::uint32_t
     RASTER = 5
 };
 
-enum Value : std::uint32_t
+enum ValueType : std::uint32_t
 {
     STRING = 1,
     FLOAT = 2,
@@ -47,5 +47,14 @@ enum GeomType : std::uint8_t
     LINESTRING = 2,
     POLYGON = 3
 };
+
+enum CommandType : std::uint8_t
+{
+    END = 0,
+    MOVE_TO = 1,
+    LINE_TO = 2,
+    CLOSE = 7
+};
+
 
 } }
