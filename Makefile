@@ -56,5 +56,11 @@ distclean:
 cldoc:
 	pip install cldoc --user
 
+testpack:
+	rm -f ./*tgz
+	npm pack
+	tar -ztvf *tgz
+	rm -f ./*tgz
+
 docs: cldoc
 	cldoc generate $(CXXFLAGS) -- $(COMMON_DOC_FLAGS)
