@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0-rc4
+
+- Add decoder implementation
+
 ## 1.0.0-rc3
 
 - expose a node.js-style `require()` so that other projects can dynamically determine the path to the headers, exactly where npm has decided to install them (sensitive to deduping).
