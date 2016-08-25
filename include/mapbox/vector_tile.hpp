@@ -2,9 +2,16 @@
 
 #include "vector_tile/vector_tile_config.hpp"
 #include <mapbox/geometry.hpp>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas" // clang+gcc
+#pragma GCC diagnostic ignored "-Wpragmas" // gcc
+#pragma GCC diagnostic ignored "-W#pragma-messages"
+#pragma GCC diagnostic ignored "-Wshadow"
 #include <protozero/pbf_reader.hpp>
+#pragma GCC diagnostic pop
 
-
+#include <cmath>
 #include <memory>
 #include <map>
 #include <unordered_map>
