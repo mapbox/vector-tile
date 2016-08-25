@@ -4,6 +4,7 @@ CXXFLAGS := $(CXXFLAGS) -Imason_packages/.link/include/ -Iinclude -std=c++14
 RELEASE_FLAGS := -O3 -DNDEBUG
 WARNING_FLAGS := -Wall -Wextra -pedantic -Werror -Wsign-compare -Wfloat-equal -Wfloat-conversion -Wshadow -Wno-unsequenced
 DEBUG_FLAGS := -g -O0 -DDEBUG -fno-inline-functions -fno-omit-frame-pointer
+DEMO_DIR:=./demo
 
 export BUILDTYPE ?= Release
 
@@ -49,6 +50,8 @@ COMMON_DOC_FLAGS = --report --output docs $(HEADERS)
 
 clean:
 	rm -rf build/
+	rm -rf demo/data/
+	rm -rf demo/include/
 
 distclean:
 	rm -rf mason_packages
@@ -62,5 +65,20 @@ testpack:
 	tar -ztvf *tgz
 	rm -f ./*tgz
 
+demo:
+	rm -rf $(DEMO_DIR)/include
+	rm -rf $(DEMO_DIR)/data
+	mkdir -p $(DEMO_DIR)/include/
+	mkdir -p $(DEMO_DIR)/data/
+	cp -r include/* $(DEMO_DIR)/include/
+	cp -r $(shell .mason/mason prefix geometry 0.8.0)/include/* $(DEMO_DIR)/include/
+	cp -r $(shell .mason/mason prefix variant 1.1.1)/include/* $(DEMO_DIR)/include/
+	cp -r $(shell .mason/mason prefix protozero 1.4.0)/include/* $(DEMO_DIR)/include/
+	cp test/mvt-fixtures/fixtures/valid/Feature-single-point.mvt $(DEMO_DIR)/data/
+	make -C $(DEMO_DIR)
+	./demo/decode ./demo/data/Feature-single-point.mvt
+
 docs: cldoc
 	cldoc generate $(CXXFLAGS) -- $(COMMON_DOC_FLAGS)
+
+.PHONY: demo

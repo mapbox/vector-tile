@@ -1,3 +1,6 @@
 build
 .mason
 mason_packages
+demo/decode
+demo/data
+demo/include

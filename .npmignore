@@ -6,3 +6,4 @@ build
 .npmignore
 .mason
 .gitmodules
+demo
