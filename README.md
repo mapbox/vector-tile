@@ -21,6 +21,25 @@ To install all dependencies and build the tests in this repo do:
 make test
 ```
 
+## To bundle the `demo` program do:
+
+```bash
+make demo
+```
+
+This copies all the includes into the `demo/include` folder such that the demo can be build like:
+
+```
+make -C demo/
+```
+
+Or also like:
+
+```
+cd demo
+make
+```
+
 # Who is using vector-tile?
 
 These are the applications targeted to upgrade to this library:

@@ -68,6 +68,7 @@ testpack:
 demo:
 	rm -rf $(DEMO_DIR)/include
 	rm -rf $(DEMO_DIR)/data
+	rm -rf $(DEMO_DIR)/decode
 	mkdir -p $(DEMO_DIR)/include/
 	mkdir -p $(DEMO_DIR)/data/
 	cp -r include/* $(DEMO_DIR)/include/
@@ -75,10 +76,12 @@ demo:
 	cp -r $(shell .mason/mason prefix variant 1.1.1)/include/* $(DEMO_DIR)/include/
 	cp -r $(shell .mason/mason prefix protozero 1.4.0)/include/* $(DEMO_DIR)/include/
 	cp test/mvt-fixtures/fixtures/valid/Feature-single-point.mvt $(DEMO_DIR)/data/
+
+run-demo: demo
 	make -C $(DEMO_DIR)
 	./demo/decode ./demo/data/Feature-single-point.mvt
 
 docs: cldoc
 	cldoc generate $(CXXFLAGS) -- $(COMMON_DOC_FLAGS)
 
-.PHONY: demo
+.PHONY: demo run-demo

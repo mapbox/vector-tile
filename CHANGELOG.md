@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0-alpha.1
+
+- Added demo application showing usage of decoder
+
 ## 1.0.0-rc4
 
 - Add decoder implementation
