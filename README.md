@@ -1,12 +1,12 @@
 ## Vector Tile Library
 
-C++11 library for decoding [Mapbox Vector Tiles](https://www.mapbox.com/vector-tiles/).
+C++14 library for decoding [Mapbox Vector Tiles](https://www.mapbox.com/vector-tiles/).
 
 [![Build Status](https://travis-ci.org/mapbox/vector-tile.svg?branch=master)](https://travis-ci.org/mapbox/vector-tile)
 
 ## Depends
 
- - C++11 compiler
+ - C++14 compiler
  - [protozero](https://github.com/mapbox/protozero)
  - [variant](https://github.com/mapbox/variant)
  - [geometry](https://github.com/mapbox/geometry.hpp)

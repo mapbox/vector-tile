@@ -1,6 +1,6 @@
 CC := $(CC)
 CXX := $(CXX)
-CXXFLAGS := $(CXXFLAGS) -Imason_packages/.link/include/ -Iinclude -std=c++11
+CXXFLAGS := $(CXXFLAGS) -Imason_packages/.link/include/ -Iinclude -std=c++14
 RELEASE_FLAGS := -O3 -DNDEBUG
 WARNING_FLAGS := -Wall -Wextra -pedantic -Werror -Wsign-compare -Wfloat-equal -Wfloat-conversion -Wshadow -Wno-unsequenced
 DEBUG_FLAGS := -g -O0 -DDEBUG -fno-inline-functions -fno-omit-frame-pointer
@@ -14,6 +14,8 @@ else
 endif
 
 default: test
+
+HEADERS = $(wildcard include/mapbox/vector_tile/*.hpp) include/mapbox/vector_tile.hpp
 
 ./.mason/mason:
 	git clone https://github.com/mapbox/mason.git .mason
@@ -30,7 +32,7 @@ mason_packages/headers/variant: .mason/mason
 
 deps: mason_packages/headers/geometry mason_packages/headers/variant mason_packages/headers/protozero
 
-build/$(BUILDTYPE)/test: test/unit/* include/mapbox/vector_tile/* Makefile
+build/$(BUILDTYPE)/test: test/unit/* $(HEADERS) Makefile
 	mkdir -p build/$(BUILDTYPE)/
 	$(CXX) $(FINAL_FLAGS) test/unit/*.cpp -Itest/include $(CXXFLAGS) -o build/$(BUILDTYPE)/test
 
@@ -40,7 +42,9 @@ test/mvt-fixtures:
 test: deps build/$(BUILDTYPE)/test test/mvt-fixtures
 	./build/$(BUILDTYPE)/test
 
-HEADERS = $(wildcard include/mapbox/vector_tile/*.hpp) include/mapbox/vector_tile.hpp
+debug:
+	BUILDTYPE=Debug make test
+
 COMMON_DOC_FLAGS = --report --output docs $(HEADERS)
 
 clean:
@@ -54,9 +58,3 @@ cldoc:
 
 docs: cldoc
 	cldoc generate $(CXXFLAGS) -- $(COMMON_DOC_FLAGS)
-
-testpack:
-	rm -f ./*tgz
-	npm pack
-	tar -ztvf *tgz
-	rm -f ./*tgz
