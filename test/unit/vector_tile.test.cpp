@@ -1,9 +1,15 @@
 #include <mapbox/vector_tile.hpp>
+#include <mapbox/vector_tile/version.hpp>
 #include <iostream>
 #include <fstream>
 
 #define CATCH_CONFIG_MAIN
 #include <catch.hpp>
+
+TEST_CASE( "Version constant" ) {
+    CHECK(VECTOR_TILE_VERSION_STRING == "1.0.0-rc4");
+    CHECK(VECTOR_TILE_VERSION_CODE == 10000)
+}
 
 TEST_CASE( "Protobuf Tag Constants" ) {
     CHECK(mapbox::vector_tile::TileType::LAYERS == 3);
