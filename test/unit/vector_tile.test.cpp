@@ -8,7 +8,7 @@
 
 TEST_CASE( "Version constant" ) {
     CHECK(VECTOR_TILE_VERSION_STRING == "1.0.0-rc4");
-    CHECK(VECTOR_TILE_VERSION_CODE == 10000)
+    CHECK(VECTOR_TILE_VERSION_CODE == 10000);
 }
 
 TEST_CASE( "Protobuf Tag Constants" ) {
