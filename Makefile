@@ -75,7 +75,7 @@ demo:
 	cp -r $(shell .mason/mason prefix geometry 0.8.0)/include/* $(DEMO_DIR)/include/
 	cp -r $(shell .mason/mason prefix variant 1.1.1)/include/* $(DEMO_DIR)/include/
 	cp -r $(shell .mason/mason prefix protozero 1.4.0)/include/* $(DEMO_DIR)/include/
-	cp test/mvt-fixtures/fixtures/valid/Feature-single-point.mvt $(DEMO_DIR)/data/
+	cp test/mvt-fixtures/fixtures/valid/* $(DEMO_DIR)/data/
 
 run-demo: demo
 	make -C $(DEMO_DIR)
