@@ -80,4 +80,42 @@ TEST_CASE( "Read tile" ) {
     REQUIRE(opt_val->get<std::string>() == "world");
 }
 
+TEST_CASE( "Invalid tile exceptions" ) {
+    SECTION( "Layer has no version" ) {
+        try {
+            std::string buffer = open_tile("test/mvt-fixtures/fixtures/invalid/Layer-version-none.mvt");
+            mapbox::vector_tile::buffer tile(buffer);
+            const auto layer_names = tile.layerNames();
+            auto layer_ptr = tile.getLayer("layer_name");
+            REQUIRE(false);
+        } catch (std::runtime_error& e) {
+            std::string err_message(e.what());
+            REQUIRE( err_message == "missing required field: version " );
+        }
+    }
+
+    SECTION( "Layer has no extent" ) {
+        try {
+            std::string buffer = open_tile("test/mvt-fixtures/fixtures/invalid/Layer-extent-none.mvt");
+            mapbox::vector_tile::buffer tile(buffer);
+            const auto layer_names = tile.layerNames();
+            auto layer_ptr = tile.getLayer("layer_name");
+            REQUIRE(false);
+        } catch (std::runtime_error& e) {
+            std::string err_message(e.what());
+            REQUIRE( err_message == "missing required field: extent " );
+        }
+    }
+
+    SECTION( "Layer has no extent" ) {
+        try {
+            std::string buffer = open_tile("test/mvt-fixtures/fixtures/invalid/Layer-name-none.mvt");
+            mapbox::vector_tile::buffer tile(buffer);
+            REQUIRE(false);
+        } catch (std::runtime_error& e) {
+            std::string err_message(e.what());
+            REQUIRE( err_message == "Layer missing name" );
+        }
+    }
+}
 
