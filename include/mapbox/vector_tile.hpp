@@ -70,8 +70,8 @@ public:
     std::size_t featureCount() const { return features.size(); }
     std::unique_ptr<const feature> getFeature(std::size_t) const;
     std::string getName() const;
-    std::uint32_t getExtent() const { return extent; };
-    std::uint32_t getVersion() const { return version; };
+    std::uint32_t getExtent() const { return extent; }
+    std::uint32_t getVersion() const { return version; }
 
 private:
     friend class data;
@@ -90,7 +90,7 @@ class buffer {
 public:
     buffer(std::string const& data);
     std::vector<std::string> layerNames() const;
-    std::map<std::string, const protozero::data_view> getLayers() const { return layers; };
+    std::map<std::string, const protozero::data_view> getLayers() const { return layers; }
     std::unique_ptr<const layer> getLayer(const std::string&) const;
 
 private:
