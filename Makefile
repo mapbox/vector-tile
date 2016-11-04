@@ -1,8 +1,8 @@
 CC := $(CC)
 CXX := $(CXX)
-CXXFLAGS := $(CXXFLAGS) -Imason_packages/.link/include/ -Iinclude -std=c++14
+CXXFLAGS := $(CXXFLAGS) -isystem mason_packages/.link/include/ -Iinclude -std=c++14 -DPROTOZERO_STRICT_API=1
 RELEASE_FLAGS := -O3 -DNDEBUG
-WARNING_FLAGS := -Wall -Wextra -pedantic -Werror -Wsign-compare -Wfloat-equal -Wfloat-conversion -Wshadow -Wno-unsequenced
+WARNING_FLAGS := -Wall -Wextra -pedantic -Werror -Wsign-compare -Wfloat-equal -Wfloat-conversion -Wshadow -Wno-unsequenced -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-exit-time-destructors
 DEBUG_FLAGS := -g -O0 -DDEBUG -fno-inline-functions -fno-omit-frame-pointer
 DEMO_DIR:=./demo
 
@@ -35,7 +35,7 @@ deps: mason_packages/headers/geometry mason_packages/headers/variant mason_packa
 
 build/$(BUILDTYPE)/test: test/unit/* $(HEADERS) Makefile
 	mkdir -p build/$(BUILDTYPE)/
-	$(CXX) $(FINAL_FLAGS) test/unit/*.cpp -Itest/include $(CXXFLAGS) -o build/$(BUILDTYPE)/test
+	$(CXX) $(FINAL_FLAGS) test/unit/*.cpp -isystem test/include $(CXXFLAGS) -o build/$(BUILDTYPE)/test
 
 test/mvt-fixtures:
 	git submodule update --init
