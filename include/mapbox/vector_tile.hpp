@@ -74,7 +74,6 @@ public:
     std::uint32_t getVersion() const { return version; }
 
 private:
-    friend class data;
     friend class feature;
 
     std::string name;
