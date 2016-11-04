@@ -43,6 +43,17 @@ test/mvt-fixtures:
 test: deps build/$(BUILDTYPE)/test test/mvt-fixtures
 	./build/$(BUILDTYPE)/test
 
+# added with: git submodule add https://github.com/mapbox/mvt-bench-fixtures.git bench/mvt-bench-fixtures
+bench/mvt-bench-fixtures:
+	git submodule update --init
+
+build/$(BUILDTYPE)/bench: bench/* $(HEADERS) Makefile bench/mvt-bench-fixtures
+	mkdir -p build/$(BUILDTYPE)/
+	$(CXX) $(FINAL_FLAGS) bench/*.cpp $(CXXFLAGS) -o build/$(BUILDTYPE)/bench
+
+bench: deps build/$(BUILDTYPE)/bench
+	./build/$(BUILDTYPE)/bench
+
 debug:
 	BUILDTYPE=Debug make test
 
