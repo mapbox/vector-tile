@@ -3,6 +3,7 @@
 #include <mapbox/vector_tile.hpp>
 #include <fstream>
 
+std::size_t feature_count = 0;
 
 static void decode_entire_tile(std::string const& buffer) {
     mapbox::vector_tile::buffer tile(buffer);
@@ -12,12 +13,12 @@ static void decode_entire_tile(std::string const& buffer) {
             throw std::runtime_error("Hit unexpected error decoding layer");
         }
         const mapbox::vector_tile::layer & layer = *layer_ptr;
-        std::size_t feature_count = layer.featureCount();
-        if (feature_count == 0) {
+        std::size_t num_features = layer.featureCount();
+        if (num_features == 0) {
             std::cout << "Layer '" << name << "' (empty)\n";
             continue;
         }
-        for (std::size_t i=0;i<feature_count;++i) {
+        for (std::size_t i=0;i<num_features;++i) {
             auto feature_ptr = layer.getFeature(i);
             if (feature_ptr == nullptr) {
                 throw std::runtime_error("Hit unexpected error decoding feature");
@@ -29,6 +30,7 @@ static void decode_entire_tile(std::string const& buffer) {
             }
             auto props = feature.getProperties();
             mapbox::vector_tile::points_arrays_type geom = feature.getGeometries<mapbox::vector_tile::points_arrays_type>(1.0);
+            ++feature_count;
         }
     }
 }
@@ -71,6 +73,9 @@ int main(/*int argc, char* const argv[]*/) {
         run_bench(tiles,100);
         auto t2 = std::chrono::high_resolution_clock::now();
         auto elapsed = milliseconds<double>(t2 - t1).count();
+        if (feature_count != 8157770) {
+            std::clog << "Warning expected feature_count of 8157770, was: " << feature_count << "\n";
+        }
         std::clog << "elapsed: " << std::fixed << elapsed << " ms\n";
     } catch (std::exception const& ex) {
         std::cerr << ex.what() << "\n";
