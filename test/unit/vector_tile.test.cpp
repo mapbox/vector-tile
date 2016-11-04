@@ -41,7 +41,7 @@ TEST_CASE( "Protobuf Tag Constants" ) {
     CHECK(mapbox::vector_tile::GeomType::POLYGON == 3);
 }
 
-std::string open_tile(std::string const& path) {
+static std::string open_tile(std::string const& path) {
     std::ifstream stream(path.c_str(),std::ios_base::in|std::ios_base::binary);
     if (!stream.is_open())
     {

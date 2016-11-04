@@ -97,7 +97,7 @@ private:
     std::map<std::string, const protozero::data_view> layers;
 };
 
-mapbox::geometry::value parseValue(protozero::pbf_reader data) {
+static mapbox::geometry::value parseValue(protozero::pbf_reader data) {
     while (data.next())
     {
         switch (data.tag()) {
