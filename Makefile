@@ -1,9 +1,9 @@
 CC := $(CC)
 CXX := $(CXX)
 CXXFLAGS := $(CXXFLAGS) -isystem mason_packages/.link/include/ -Iinclude -std=c++14 -DPROTOZERO_STRICT_API=1
-RELEASE_FLAGS := -O3 -DNDEBUG
+RELEASE_FLAGS := -O3 -DNDEBUG -flto -fvisibility-inlines-hidden -fvisibility=hidden
 WARNING_FLAGS := -Wall -Wextra -pedantic -Werror -Wsign-compare -Wfloat-equal -Wfloat-conversion -Wshadow -Wno-unsequenced -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-exit-time-destructors
-DEBUG_FLAGS := -g -O0 -DDEBUG -fno-inline-functions -fno-omit-frame-pointer
+DEBUG_FLAGS := -O0 -DDEBUG -fno-inline-functions -fno-omit-frame-pointer
 DEMO_DIR:=./demo
 
 export BUILDTYPE ?= Release
