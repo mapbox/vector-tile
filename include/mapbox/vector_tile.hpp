@@ -69,7 +69,7 @@ public:
 
     std::size_t featureCount() const { return features.size(); }
     std::unique_ptr<const feature> getFeature(std::size_t) const;
-    std::string getName() const;
+    std::string const& getName() const;
     std::uint32_t getExtent() const { return extent; }
     std::uint32_t getVersion() const { return version; }
 
@@ -182,6 +182,7 @@ std::unordered_map<std::string,mapbox::geometry::value> feature::getProperties()
     std::unordered_map<std::string,mapbox::geometry::value> properties;
     auto start_itr = tags_iter.begin();
     const auto end_itr = tags_iter.end();
+    properties.reserve(std::distance(start_itr,end_itr));
     while (start_itr != end_itr) {
         uint32_t tag_key = static_cast<uint32_t>(*start_itr++);
         if (start_itr == end_itr) {
@@ -283,6 +284,7 @@ buffer::buffer(std::string const& data)
 
 std::vector<std::string> buffer::layerNames() const {
     std::vector<std::string> names;
+    names.reserve(layers.size());
     for (auto const& layer : layers) {
         names.emplace_back(layer.first);
     }
@@ -361,7 +363,7 @@ std::unique_ptr<const feature> layer::getFeature(std::size_t i) const {
     return std::make_unique<feature>(features.at(i), *this);
 }
 
-std::string layer::getName() const {
+std::string const& layer::getName() const {
     return name;
 }
 
