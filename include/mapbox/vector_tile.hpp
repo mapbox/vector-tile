@@ -152,12 +152,14 @@ optional<mapbox::geometry::value> feature::getValue(const std::string& key) cons
         return optional<mapbox::geometry::value>();
     }
 
+    const auto values_count = layer_.values.size();
+    const auto keymap_count = layer_.keysMap.size();
     auto start_itr = tags_iter.begin();
     const auto end_itr = tags_iter.end();
     while (start_itr != end_itr) {
         uint32_t tag_key = static_cast<uint32_t>(*start_itr++);
 
-        if (layer_.keysMap.size() <= tag_key) {
+        if (keymap_count <= tag_key) {
             throw std::runtime_error("feature referenced out of range key");
         }
 
@@ -166,7 +168,7 @@ optional<mapbox::geometry::value> feature::getValue(const std::string& key) cons
         }
 
         uint32_t tag_val = static_cast<uint32_t>(*start_itr++);;
-        if (layer_.values.size() <= tag_val) {
+        if (values_count <= tag_val) {
             throw std::runtime_error("feature referenced out of range value");
         }
 
