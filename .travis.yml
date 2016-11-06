@@ -35,6 +35,7 @@ install:
       ./.mason/mason install clang++ 3.8.1
       export PATH=$(./.mason/mason prefix clang++ 3.8.1)/bin:${PATH}
       which clang++
+      ldd $(./.mason/mason prefix clang++ 3.8.1)/lib/LLVMgold.so
     fi
 
 script:
