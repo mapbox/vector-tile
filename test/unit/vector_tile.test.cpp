@@ -71,7 +71,9 @@ TEST_CASE( "Read tile" ) {
     REQUIRE(feature_id->get<uint64_t>() == 123ull);
     REQUIRE(feature.getType() == mapbox::vector_tile::GeomType::POINT);
     auto props = feature.getProperties();
-    auto val = props["hello"];
+    auto itr = props.find("hello");
+    REQUIRE(itr != props.end());
+    auto const& val = itr->second;
     REQUIRE(val.is<std::string>());
     REQUIRE(val.get<std::string>() == "world");
     auto opt_val = feature.getValue("hello");
