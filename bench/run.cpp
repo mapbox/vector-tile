@@ -24,7 +24,7 @@ static void decode_entire_tile(std::string const& buffer) {
                 throw std::runtime_error("Hit unexpected error decoding feature");
             }
             const mapbox::vector_tile::feature & feature = * feature_ptr;
-            auto feature_id = feature.getID();
+            auto const& feature_id = feature.getID();
             if (!feature_id || !feature_id->is<uint64_t>()) {
                 throw std::runtime_error("Hit unexpected error decoding feature");
             }

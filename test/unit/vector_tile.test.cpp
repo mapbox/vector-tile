@@ -65,7 +65,7 @@ TEST_CASE( "Read tile" ) {
     REQUIRE(layer.getName() == "layer_name");
     auto feature_ptr = layer.getFeature(0);
     const mapbox::vector_tile::feature & feature = * feature_ptr;
-    auto feature_id = feature.getID();
+    auto const& feature_id = feature.getID();
     REQUIRE(feature_id);
     REQUIRE(feature_id->is<uint64_t>());
     REQUIRE(feature_id->get<uint64_t>() == 123ull);

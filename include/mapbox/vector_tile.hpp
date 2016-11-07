@@ -51,7 +51,7 @@ public:
     GeomType getType() const { return type; }
     optional<mapbox::geometry::value> getValue(std::string const&) const;
     properties_type getProperties() const;
-    optional<mapbox::geometry::identifier> getID() const;
+    optional<mapbox::geometry::identifier> const& getID() const;
     std::uint32_t getExtent() const;
     std::uint32_t getVersion() const;
     template <typename GeometryCollectionType>
@@ -83,7 +83,7 @@ private:
     uint32_t extent = 4096;
     std::map<std::string, uint32_t> keysMap;
     std::vector<std::reference_wrapper<const std::string>> keys;
-    std::vector<mapbox::geometry::value> values;
+    std::vector<protozero::data_view> values;
     std::vector<protozero::data_view> features;
 };
 
@@ -98,26 +98,27 @@ private:
     std::map<std::string, const protozero::data_view> layers;
 };
 
-static mapbox::geometry::value parseValue(protozero::pbf_reader data) {
-    while (data.next())
+static mapbox::geometry::value parseValue(protozero::data_view const& value_view) {
+    protozero::pbf_reader value_reader(value_view);
+    while (value_reader.next())
     {
-        switch (data.tag()) {
+        switch (value_reader.tag()) {
         case ValueType::STRING:
-            return data.get_string();
+            return value_reader.get_string();
         case ValueType::FLOAT:
-            return static_cast<double>(data.get_float());
+            return static_cast<double>(value_reader.get_float());
         case ValueType::DOUBLE:
-            return data.get_double();
+            return value_reader.get_double();
         case ValueType::INT:
-            return data.get_int64();
+            return value_reader.get_int64();
         case ValueType::UINT:
-            return data.get_uint64();
+            return value_reader.get_uint64();
         case ValueType::SINT:
-            return data.get_sint64();
+            return value_reader.get_sint64();
         case ValueType::BOOL:
-            return data.get_bool();
+            return value_reader.get_bool();
         default:
-            data.skip();
+            value_reader.skip();
             break;
         }
     }
@@ -175,7 +176,7 @@ optional<mapbox::geometry::value> feature::getValue(const std::string& key) cons
         }
 
         if (tag_key == keyIter->second) {
-            return layer_.values[tag_val];
+            return parseValue(layer_.values[tag_val]);
         }
     }
 
@@ -197,12 +198,12 @@ feature::properties_type feature::getProperties() const {
             throw std::runtime_error("uneven number of feature tag ids");
         }
         uint32_t tag_val = static_cast<uint32_t>(*start_itr++);
-        properties.emplace(layer_.keys.at(tag_key),layer_.values.at(tag_val));
+        properties.emplace(layer_.keys.at(tag_key),parseValue(layer_.values.at(tag_val)));
     }
     return properties;
 }
 
-optional<mapbox::geometry::identifier> feature::getID() const {
+optional<mapbox::geometry::identifier> const& feature::getID() const {
     return id;
 }
 
@@ -330,7 +331,7 @@ layer::layer(protozero::data_view const& layer_view) {
             }
             break;
         case LayerType::VALUES:
-            values.emplace_back(parseValue(layer_pbf.get_message()));
+            values.emplace_back(layer_pbf.get_view());
             break;
         case LayerType::EXTENT:
             {
