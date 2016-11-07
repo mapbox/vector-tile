@@ -16,6 +16,14 @@ matrix:
         apt:
           sources: [ 'ubuntu-toolchain-r-test' ]
           packages: [ 'libstdc++-5-dev' ]
+    # linux libc++ (vs libstdc++)
+    - os: linux
+      sudo: false
+      env: CXX=clang++-3.8 BUILDTYPE=Release CXXFLAGS="-stdlib=libc++ -lc++abi -lpthread -lrt -ldl"
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++-5-dev' ]
     - os: linux
       sudo: false
       env: CXX=clang++-3.8 BUILDTYPE=Debug CXXFLAGS="-fsanitize=address"
