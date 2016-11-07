@@ -35,7 +35,9 @@ install:
       ./.mason/mason install clang++ 3.8.1
       export PATH=$(./.mason/mason prefix clang++ 3.8.1)/bin:${PATH}
       which clang++
-      ldd $(./.mason/mason prefix clang++ 3.8.1)/lib/LLVMgold.so
+      ./.mason/mason install binutils 2.27
+      export PATH=$(./.mason/mason prefix binutils 2.27)/bin:${PATH}
+      which ld
     fi
 
 script:
