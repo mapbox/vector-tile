@@ -8,6 +8,10 @@ DEMO_DIR:=./demo
 
 export BUILDTYPE ?= Release
 
+export GEOMETRY_RELEASE ?= 0.8.1
+export PROTOZERO_RELEASE ?= 1.4.2
+export VARIANT_RELEASE ?= 1.1.1
+
 ifeq ($(BUILDTYPE),Release)
 	FINAL_FLAGS := -g $(WARNING_FLAGS) $(RELEASE_FLAGS)
 else
@@ -23,13 +27,13 @@ HEADERS = $(wildcard include/mapbox/vector_tile/*.hpp) include/mapbox/vector_til
 	cd .mason && git checkout 6918fb0a
 
 mason_packages/headers/protozero: .mason/mason
-	.mason/mason install protozero 1.4.2 && .mason/mason link protozero 1.4.2
+	.mason/mason install protozero $(PROTOZERO_RELEASE) && .mason/mason link protozero $(PROTOZERO_RELEASE)
 
 mason_packages/headers/geometry: .mason/mason
-	.mason/mason install geometry 0.8.1 && .mason/mason link geometry 0.8.1
+	.mason/mason install geometry $(GEOMETRY_RELEASEd) && .mason/mason link geometry $(GEOMETRY_RELEASEd)
 
 mason_packages/headers/variant: .mason/mason
-	.mason/mason install variant 1.1.1 && .mason/mason link variant 1.1.1
+	.mason/mason install variant $(VARIANT_RELEASE) && .mason/mason link variant $(VARIANT_RELEASE)
 
 deps: mason_packages/headers/geometry mason_packages/headers/variant mason_packages/headers/protozero
 
@@ -83,9 +87,9 @@ demo:
 	mkdir -p $(DEMO_DIR)/include/
 	mkdir -p $(DEMO_DIR)/data/
 	cp -r include/* $(DEMO_DIR)/include/
-	cp -r $(shell .mason/mason prefix geometry 0.8.0)/include/* $(DEMO_DIR)/include/
-	cp -r $(shell .mason/mason prefix variant 1.1.1)/include/* $(DEMO_DIR)/include/
-	cp -r $(shell .mason/mason prefix protozero 1.4.0)/include/* $(DEMO_DIR)/include/
+	cp -r $(shell .mason/mason prefix geometry $(GEOMETRY_RELEASE))/include/* $(DEMO_DIR)/include/
+	cp -r $(shell .mason/mason prefix variant $(VARIANT_RELEASE))/include/* $(DEMO_DIR)/include/
+	cp -r $(shell .mason/mason prefix protozero $(PROTOZERO_RELEASE))/include/* $(DEMO_DIR)/include/
 	cp test/mvt-fixtures/fixtures/valid/* $(DEMO_DIR)/data/
 
 run-demo: demo
