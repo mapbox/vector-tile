@@ -197,7 +197,7 @@ feature::properties_type feature::getProperties() const {
             throw std::runtime_error("uneven number of feature tag ids");
         }
         uint32_t tag_val = static_cast<uint32_t>(*start_itr++);
-        properties.emplace(layer_.keys.at(tag_key),layer_.values.at(tag_val))
+        properties.emplace(layer_.keys.at(tag_key),layer_.values.at(tag_val));
     }
     return properties;
 }
