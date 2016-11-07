@@ -20,13 +20,13 @@ HEADERS = $(wildcard include/mapbox/vector_tile/*.hpp) include/mapbox/vector_til
 
 ./.mason/mason:
 	git clone https://github.com/mapbox/mason.git .mason
-	cd .mason && git checkout 95ab9ca
+	cd .mason && git checkout 6918fb0a
 
 mason_packages/headers/protozero: .mason/mason
-	.mason/mason install protozero 1.4.0 && .mason/mason link protozero 1.4.0
+	.mason/mason install protozero 1.4.2 && .mason/mason link protozero 1.4.2
 
 mason_packages/headers/geometry: .mason/mason
-	.mason/mason install geometry 0.8.0 && .mason/mason link geometry 0.8.0
+	.mason/mason install geometry 0.8.1 && .mason/mason link geometry 0.8.1
 
 mason_packages/headers/variant: .mason/mason
 	.mason/mason install variant 1.1.1 && .mason/mason link variant 1.1.1
@@ -64,7 +64,7 @@ clean:
 	rm -rf demo/data/
 	rm -rf demo/include/
 
-distclean:
+distclean: clean
 	rm -rf mason_packages
 
 cldoc:
