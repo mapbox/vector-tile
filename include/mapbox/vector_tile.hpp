@@ -43,11 +43,14 @@ class layer;
 
 class feature {
 public:
+    using properties_type = std::unordered_map<std::string,mapbox::geometry::value>;
+    using packed_iterator_type = protozero::iterator_range<protozero::pbf_reader::const_uint32_iterator>;
+
     feature(protozero::data_view const&, layer const&);
 
     GeomType getType() const { return type; }
     optional<mapbox::geometry::value> getValue(std::string const&) const;
-    std::unordered_map<std::string,mapbox::geometry::value> getProperties() const;
+    properties_type getProperties() const;
     optional<mapbox::geometry::identifier> getID() const;
     std::uint32_t getExtent() const;
     std::uint32_t getVersion() const;
@@ -58,9 +61,8 @@ private:
     const layer& layer_;
     optional<mapbox::geometry::identifier> id;
     GeomType type = GeomType::UNKNOWN;
-    using packed_iter_type = protozero::iterator_range<protozero::pbf_reader::const_uint32_iterator>;
-    packed_iter_type tags_iter;
-    packed_iter_type geometry_iter;
+    packed_iterator_type tags_iter;
+    packed_iterator_type geometry_iter;
 };
 
 class layer {
@@ -180,11 +182,15 @@ optional<mapbox::geometry::value> feature::getValue(const std::string& key) cons
     return optional<mapbox::geometry::value>();
 }
 
-std::unordered_map<std::string,mapbox::geometry::value> feature::getProperties() const {
-    std::unordered_map<std::string,mapbox::geometry::value> properties;
+feature::properties_type feature::getProperties() const {
     auto start_itr = tags_iter.begin();
     const auto end_itr = tags_iter.end();
-    properties.reserve(std::distance(start_itr,end_itr));
+    std::size_t num_properties = std::distance(start_itr,end_itr);
+    properties_type properties;
+    if (num_properties == 0) {
+        return properties;
+    }
+    properties.reserve(std::distance(start_itr,end_itr)/2);
     while (start_itr != end_itr) {
         uint32_t tag_key = static_cast<uint32_t>(*start_itr++);
         if (start_itr == end_itr) {
