@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
                     throw std::runtime_error("Hit unexpected error decoding feature");
                 }
                 const mapbox::vector_tile::feature & feature = * feature_ptr;
-                auto feature_id = feature.getID();
+                auto const& feature_id = feature.getID();
                 if (!feature_id || !feature_id->is<uint64_t>()) {
                     throw std::runtime_error("Hit unexpected error decoding feature");
                 }
@@ -91,6 +91,13 @@ int main(int argc, char** argv) {
                     print_value printvisitor;
                     std::string value = mapbox::util::apply_visitor(printvisitor, prop.second);
                     std::cout << "      " << prop.first  << ": " << value << "\n";
+                }
+                std::cout << "    Verticies:\n";
+                mapbox::vector_tile::points_arrays_type geom = feature.getGeometries<mapbox::vector_tile::points_arrays_type>(1.0);
+                for (auto const& point_array : geom) {
+                    for (auto const& point : point_array) {
+                        std::clog << point.x << "," << point.y;
+                    }
                 }
             }
         }
