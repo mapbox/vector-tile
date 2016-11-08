@@ -63,8 +63,8 @@ static std::string open_tile(std::string const& path) {
     const auto feature = layer.getFeature(0); \
     auto const& feature_id = feature.getID(); \
     REQUIRE(feature_id); \
-    REQUIRE(feature_id->is<uint64_t>()); \
-    REQUIRE(feature_id->get<uint64_t>() == 123ull); \
+    REQUIRE((*feature_id).is<uint64_t>()); \
+    REQUIRE((*feature_id).get<uint64_t>() == 123ull); \
     auto props = feature.getProperties(); \
     auto itr = props.find("hello"); \
     REQUIRE(itr != props.end()); \
