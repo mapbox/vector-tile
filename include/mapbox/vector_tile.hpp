@@ -7,7 +7,8 @@
 #include <cmath>
 #include <map>
 #include <functional> // reference_wrapper
-#include <sstream>
+#include <string>
+#include <stdexcept>
 
 #include <experimental/optional>
 template <typename T>
@@ -365,18 +366,17 @@ layer::layer(protozero::data_view const& layer_view) {
         }
     }
     if (!has_version || !has_name || !has_extent) {
-        std::stringstream msg;
-        msg << "missing required field:";
+        std::string msg("missing required field:");
         if (!has_version) {
-            msg << " version ";
+            msg += " version ";
         }
         if (!has_extent) {
-            msg << " extent ";
+            msg += " extent ";
         }
         if (!has_name) {
-            msg << " name";
+            msg += " name";
         }
-        throw std::runtime_error(msg.str().c_str());
+        throw std::runtime_error(msg.c_str());
     }
 }
 
