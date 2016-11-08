@@ -5,6 +5,7 @@
 #include <protozero/pbf_reader.hpp>
 
 #include <cmath>
+#include <cstdint>
 #include <map>
 #include <functional> // reference_wrapper
 #include <string>

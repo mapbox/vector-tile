@@ -1,6 +1,7 @@
 #include <mapbox/vector_tile.hpp>
 #include <fstream>
 #include <stdexcept>
+#include <iostream>
 
 std::string open_tile(std::string const& path) {
     std::ifstream stream(path.c_str(),std::ios_base::in|std::ios_base::binary);

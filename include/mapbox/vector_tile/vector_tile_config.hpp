@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace mapbox { namespace vector_tile {
 
 
