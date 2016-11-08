@@ -191,7 +191,7 @@ feature::properties_type feature::getProperties() const {
     if (num_properties == 0) {
         return properties;
     }
-    properties.reserve(std::distance(start_itr,end_itr)/2);
+    properties.reserve(num_properties/2);
     while (start_itr != end_itr) {
         uint32_t tag_key = static_cast<uint32_t>(*start_itr++);
         if (start_itr == end_itr) {
