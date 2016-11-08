@@ -2,20 +2,10 @@
 
 #include "vector_tile/vector_tile_config.hpp"
 #include <mapbox/geometry.hpp>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunknown-pragmas" // clang+gcc
-#pragma GCC diagnostic ignored "-Wpragmas" // gcc
-#pragma GCC diagnostic ignored "-W#pragma-messages"
-#pragma GCC diagnostic ignored "-Wshadow"
 #include <protozero/pbf_reader.hpp>
-#pragma GCC diagnostic pop
 
 #include <cmath>
 #include <map>
-#include <unordered_map>
-#include <functional>
-#include <utility>
 #include <sstream>
 
 #include <experimental/optional>
@@ -42,7 +32,7 @@ class layer;
 
 class feature {
 public:
-    using properties_type = std::unordered_map<std::string,mapbox::geometry::value>;
+    using properties_type = std::map<std::string,mapbox::geometry::value>;
     using packed_iterator_type = protozero::iterator_range<protozero::pbf_reader::const_uint32_iterator>;
 
     feature(protozero::data_view const&, layer const&);
@@ -184,12 +174,7 @@ optional<mapbox::geometry::value> feature::getValue(const std::string& key) cons
 feature::properties_type feature::getProperties() const {
     auto start_itr = tags_iter.begin();
     const auto end_itr = tags_iter.end();
-    std::size_t num_properties = std::distance(start_itr,end_itr);
     properties_type properties;
-    if (num_properties == 0) {
-        return properties;
-    }
-    properties.reserve(num_properties/2);
     while (start_itr != end_itr) {
         std::uint32_t tag_key = static_cast<std::uint32_t>(*start_itr++);
         if (start_itr == end_itr) {
