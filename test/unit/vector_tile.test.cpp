@@ -57,12 +57,10 @@ static std::string open_tile(std::string const& path) {
     const auto layer_names = tile.layerNames(); \
     REQUIRE(layer_names.size() == 1); \
     REQUIRE(layer_names[0] == "layer_name"); \
-    auto layer_ptr = tile.getLayer("layer_name"); \
-    REQUIRE(layer_ptr != nullptr); \
-    const mapbox::vector_tile::layer & layer = *layer_ptr; \
+    const auto layer = tile.getLayer("layer_name"); \
     REQUIRE(layer.featureCount() == 1); \
     REQUIRE(layer.getName() == "layer_name"); \
-    const mapbox::vector_tile::feature = layer.getFeature(0); \
+    const auto feature = layer.getFeature(0); \
     auto const& feature_id = feature.getID(); \
     REQUIRE(feature_id); \
     REQUIRE(feature_id->is<uint64_t>()); \
