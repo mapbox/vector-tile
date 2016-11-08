@@ -78,9 +78,9 @@ private:
     friend class feature;
 
     std::string name;
-    uint32_t version = 9;
-    uint32_t extent = 4096;
-    std::map<std::string, uint32_t> keysMap;
+    std::uint32_t version = 9;
+    std::uint32_t extent = 4096;
+    std::map<std::string, std::uint32_t> keysMap;
     std::vector<std::reference_wrapper<const std::string>> keys;
     std::vector<protozero::data_view> values;
     std::vector<protozero::data_view> features;
@@ -158,7 +158,7 @@ optional<mapbox::geometry::value> feature::getValue(const std::string& key) cons
     auto start_itr = tags_iter.begin();
     const auto end_itr = tags_iter.end();
     while (start_itr != end_itr) {
-        uint32_t tag_key = static_cast<uint32_t>(*start_itr++);
+        std::uint32_t tag_key = static_cast<std::uint32_t>(*start_itr++);
 
         if (keymap_count <= tag_key) {
             throw std::runtime_error("feature referenced out of range key");
@@ -168,7 +168,7 @@ optional<mapbox::geometry::value> feature::getValue(const std::string& key) cons
             throw std::runtime_error("uneven number of feature tag ids");
         }
 
-        uint32_t tag_val = static_cast<uint32_t>(*start_itr++);;
+        std::uint32_t tag_val = static_cast<std::uint32_t>(*start_itr++);;
         if (values_count <= tag_val) {
             throw std::runtime_error("feature referenced out of range value");
         }
@@ -191,11 +191,11 @@ feature::properties_type feature::getProperties() const {
     }
     properties.reserve(num_properties/2);
     while (start_itr != end_itr) {
-        uint32_t tag_key = static_cast<uint32_t>(*start_itr++);
+        std::uint32_t tag_key = static_cast<std::uint32_t>(*start_itr++);
         if (start_itr == end_itr) {
             throw std::runtime_error("uneven number of feature tag ids");
         }
-        uint32_t tag_val = static_cast<uint32_t>(*start_itr++);
+        std::uint32_t tag_val = static_cast<std::uint32_t>(*start_itr++);
         properties.emplace(layer_.keys.at(tag_key),parseValue(layer_.values.at(tag_val)));
     }
     return properties;
@@ -215,10 +215,10 @@ std::uint32_t feature::getVersion() const {
 
 template <typename GeometryCollectionType>
 GeometryCollectionType feature::getGeometries(float scale) const {
-    uint8_t cmd = 1;
-    uint32_t length = 0;
-    int32_t x = 0;
-    int32_t y = 0;
+    std::uint8_t cmd = 1;
+    std::uint32_t length = 0;
+    std::int32_t x = 0;
+    std::int32_t y = 0;
 
     GeometryCollectionType paths;
 
@@ -227,8 +227,8 @@ GeometryCollectionType feature::getGeometries(float scale) const {
     auto start_itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
     bool first = true;
-    uint32_t len_reserve = 0;
-    int32_t extra_coords = 0;
+    std::uint32_t len_reserve = 0;
+    std::int32_t extra_coords = 0;
     if (type == GeomType::LINESTRING) {
         extra_coords = 1;
     } else if (type == GeomType::POLYGON) {
@@ -238,7 +238,7 @@ GeometryCollectionType feature::getGeometries(float scale) const {
 
     while (start_itr != end_itr) {
         if (length == 0) {
-            uint32_t cmd_length = static_cast<uint32_t>(*start_itr++);
+            std::uint32_t cmd_length = static_cast<std::uint32_t>(*start_itr++);
             cmd = cmd_length & 0x7;
             length = len_reserve = cmd_length >> 3;
         }
@@ -266,8 +266,8 @@ GeometryCollectionType feature::getGeometries(float scale) const {
                 if (!point_type) first = true;
             }
 
-            x += protozero::decode_zigzag32(static_cast<uint32_t>(*start_itr++));
-            y += protozero::decode_zigzag32(static_cast<uint32_t>(*start_itr++));
+            x += protozero::decode_zigzag32(static_cast<std::uint32_t>(*start_itr++));
+            y += protozero::decode_zigzag32(static_cast<std::uint32_t>(*start_itr++));
             float px = std::round(x * float(scale));
             float py = std::round(y * float(scale));
 
