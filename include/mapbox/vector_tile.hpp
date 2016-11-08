@@ -220,7 +220,7 @@ GeometryCollectionType feature::getGeometries(float scale) const {
     } else if (type == GeomType::POLYGON) {
         extra_coords = 2;
     }
-    bool point_type = type == GeomType::POINT;
+    bool is_point = type == GeomType::POINT;
 
     while (start_itr != end_itr) {
         if (length == 0) {
@@ -233,7 +233,7 @@ GeometryCollectionType feature::getGeometries(float scale) const {
 
         if (cmd == CommandType::MOVE_TO || cmd == CommandType::LINE_TO) {
 
-            if (point_type) {
+            if (is_point) {
                 if (first && cmd == CommandType::MOVE_TO) {
                     // note: this invalidates pointers. So we always
                     // dynamically get the path with paths.back()
@@ -249,7 +249,7 @@ GeometryCollectionType feature::getGeometries(float scale) const {
 
             if (cmd == CommandType::MOVE_TO && !paths.back().empty()) {
                 paths.emplace_back();
-                if (!point_type) first = true;
+                if (!is_point) first = true;
             }
 
             x += protozero::decode_zigzag32(static_cast<std::uint32_t>(*start_itr++));
