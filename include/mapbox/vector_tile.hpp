@@ -6,6 +6,7 @@
 
 #include <cmath>
 #include <map>
+#include <functional> // reference_wrapper
 #include <sstream>
 
 #include <experimental/optional>
