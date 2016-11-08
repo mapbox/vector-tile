@@ -30,7 +30,7 @@ mason_packages/headers/protozero: .mason/mason
 	.mason/mason install protozero $(PROTOZERO_RELEASE) && .mason/mason link protozero $(PROTOZERO_RELEASE)
 
 mason_packages/headers/geometry: .mason/mason
-	.mason/mason install geometry $(GEOMETRY_RELEASEd) && .mason/mason link geometry $(GEOMETRY_RELEASEd)
+	.mason/mason install geometry $(GEOMETRY_RELEASE) && .mason/mason link geometry $(GEOMETRY_RELEASE)
 
 mason_packages/headers/variant: .mason/mason
 	.mason/mason install variant $(VARIANT_RELEASE) && .mason/mason link variant $(VARIANT_RELEASE)
