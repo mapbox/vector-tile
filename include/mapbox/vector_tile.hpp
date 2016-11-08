@@ -225,30 +225,54 @@ GeometryCollectionType feature::getGeometries(float scale) const {
     GeometryCollectionType paths;
 
     paths.emplace_back();
-    auto* path = &paths.back();
 
     auto start_itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
+    bool first = true;
+    uint32_t len_reserve = 0;
+    int32_t extra_coords = 0;
+    if (type == GeomType::LINESTRING) {
+        extra_coords = 1;
+    } else if (type == GeomType::POLYGON) {
+        extra_coords = 2;
+    }
+    bool point_type = type == GeomType::POINT;
+
     while (start_itr != end_itr) {
         if (length == 0) {
             uint32_t cmd_length = static_cast<uint32_t>(*start_itr++);
             cmd = cmd_length & 0x7;
-            length = cmd_length >> 3;
+            length = len_reserve = cmd_length >> 3;
         }
 
         --length;
 
         if (cmd == CommandType::MOVE_TO || cmd == CommandType::LINE_TO) {
-            x += protozero::decode_zigzag32(static_cast<uint32_t>(*start_itr++));
-            y += protozero::decode_zigzag32(static_cast<uint32_t>(*start_itr++));
 
-            if (cmd == CommandType::MOVE_TO && !path->empty()) {
-                paths.emplace_back();
-                path = &paths.back();
+            if (point_type) {
+                if (first && cmd == CommandType::MOVE_TO) {
+                    // note: this invalidates pointers. So we always
+                    // dynamically get the path with paths.back()
+                    paths.reserve(len_reserve);
+                    first = false;
+                }
+            } else {
+                if (first && cmd == CommandType::LINE_TO) {
+                    paths.back().reserve(len_reserve + extra_coords);
+                    first = false;
+                }
             }
 
+            if (cmd == CommandType::MOVE_TO && !paths.back().empty()) {
+                paths.emplace_back();
+                if (!point_type) first = true;
+            }
+
+            x += protozero::decode_zigzag32(static_cast<uint32_t>(*start_itr++));
+            y += protozero::decode_zigzag32(static_cast<uint32_t>(*start_itr++));
             float px = std::round(x * float(scale));
             float py = std::round(y * float(scale));
+
             if (px > std::numeric_limits<typename GeometryCollectionType::coordinate_type>::max() ||
                 px < std::numeric_limits<typename GeometryCollectionType::coordinate_type>::min() ||
                 py > std::numeric_limits<typename GeometryCollectionType::coordinate_type>::max() ||
@@ -256,19 +280,23 @@ GeometryCollectionType feature::getGeometries(float scale) const {
                 ) {
                 std::runtime_error("paths outside valid range of coordinate_type");
             } else {
-                path->emplace_back(
+                paths.back().emplace_back(
                     static_cast<typename GeometryCollectionType::coordinate_type>(px),
                     static_cast<typename GeometryCollectionType::coordinate_type>(py));
             }
         } else if (cmd == CommandType::CLOSE) {
-            if (!path->empty()) {
-                path->push_back((*path)[0]);
+            if (!paths.back().empty()) {
+                paths.back().push_back(paths.back()[0]);
             }
         } else {
             throw std::runtime_error("unknown command");
         }
     }
-
+#if defined(DEBUG)
+    for (auto const& p : paths) {
+        assert(p.size() == p.capacity());
+    }
+#endif
     return paths;
 }
 
