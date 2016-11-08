@@ -336,16 +336,22 @@ layer::layer(protozero::data_view const& layer_view) {
             }
             break;
         case LayerType::FEATURES:
-            features.push_back(layer_pbf.get_view());
+            {
+                features.push_back(layer_pbf.get_view());
+            }
             break;
         case LayerType::KEYS:
             {
+                // We want to keep the keys in the order of the vector tile
+                // https://github.com/mapbox/mapbox-gl-native/pull/5183
                 auto iter = keysMap.emplace(layer_pbf.get_string(), keysMap.size());
                 keys.emplace_back(std::reference_wrapper<const std::string>(iter.first->first));
             }
             break;
         case LayerType::VALUES:
-            values.emplace_back(layer_pbf.get_view());
+            {
+                values.emplace_back(layer_pbf.get_view());
+            }
             break;
         case LayerType::EXTENT:
             {
