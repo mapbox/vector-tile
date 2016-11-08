@@ -62,8 +62,7 @@ static std::string open_tile(std::string const& path) {
     const mapbox::vector_tile::layer & layer = *layer_ptr; \
     REQUIRE(layer.featureCount() == 1); \
     REQUIRE(layer.getName() == "layer_name"); \
-    auto feature_ptr = layer.getFeature(0); \
-    const mapbox::vector_tile::feature & feature = * feature_ptr; \
+    const mapbox::vector_tile::feature = layer.getFeature(0); \
     auto const& feature_id = feature.getID(); \
     REQUIRE(feature_id); \
     REQUIRE(feature_id->is<uint64_t>()); \

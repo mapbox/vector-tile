@@ -12,7 +12,6 @@
 #pragma GCC diagnostic pop
 
 #include <cmath>
-#include <memory>
 #include <map>
 #include <unordered_map>
 #include <functional>
@@ -70,7 +69,7 @@ public:
     layer(protozero::data_view const& layer_view);
 
     std::size_t featureCount() const { return features.size(); }
-    std::unique_ptr<const feature> getFeature(std::size_t) const;
+    feature getFeature(std::size_t) const;
     std::string const& getName() const;
     std::uint32_t getExtent() const { return extent; }
     std::uint32_t getVersion() const { return version; }
@@ -91,8 +90,7 @@ class buffer {
 public:
     buffer(std::string const& data);
     std::vector<std::string> layerNames() const;
-    std::map<std::string, const protozero::data_view> getLayers() const { return layers; }
-    std::unique_ptr<const layer> getLayer(const std::string&) const;
+    layer getLayer(const std::string&) const;
 
 private:
     std::map<std::string, const protozero::data_view> layers;
@@ -328,12 +326,12 @@ std::vector<std::string> buffer::layerNames() const {
     return names;
 }
 
-std::unique_ptr<const layer> buffer::getLayer(const std::string& name) const {
+layer buffer::getLayer(const std::string& name) const {
     auto layer_it = layers.find(name);
-    if (layer_it != layers.end()) {
-        return std::make_unique<layer>(layer_it->second);
+    if (layer_it == layers.end()) {
+        throw std::runtime_error(std::string("no layer by the name of '")+name+"'");
     }
-    return nullptr;
+    return layer(layer_it->second);
 }
 
 layer::layer(protozero::data_view const& layer_view) {
@@ -396,8 +394,8 @@ layer::layer(protozero::data_view const& layer_view) {
     }
 }
 
-std::unique_ptr<const feature> layer::getFeature(std::size_t i) const {
-    return std::make_unique<feature>(features.at(i), *this);
+feature layer::getFeature(std::size_t i) const {
+    return feature(features.at(i), *this);
 }
 
 std::string const& layer::getName() const {

@@ -8,22 +8,14 @@ std::size_t feature_count = 0;
 static void decode_entire_tile(std::string const& buffer) {
     mapbox::vector_tile::buffer tile(buffer);
     for (auto const& name : tile.layerNames()) {
-        auto layer_ptr = tile.getLayer(name);
-        if (layer_ptr == nullptr) {
-            throw std::runtime_error("Hit unexpected error decoding layer");
-        }
-        const mapbox::vector_tile::layer & layer = *layer_ptr;
+        const mapbox::vector_tile::layer layer = tile.getLayer(name);
         std::size_t num_features = layer.featureCount();
         if (num_features == 0) {
             std::cout << "Layer '" << name << "' (empty)\n";
             continue;
         }
         for (std::size_t i=0;i<num_features;++i) {
-            auto feature_ptr = layer.getFeature(i);
-            if (feature_ptr == nullptr) {
-                throw std::runtime_error("Hit unexpected error decoding feature");
-            }
-            const mapbox::vector_tile::feature & feature = * feature_ptr;
+            mapbox::vector_tile::feature feature = layer.getFeature(i);
             auto const& feature_id = feature.getID();
             if (!feature_id || !feature_id->is<uint64_t>()) {
                 throw std::runtime_error("Hit unexpected error decoding feature");
