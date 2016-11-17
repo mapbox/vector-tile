@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mapbox/vector_tile/config.hpp>
+
 #include <mapbox/geometry/geometry.hpp>
 #include <protozero/pbf_writer.hpp>
 
@@ -104,16 +106,20 @@ bool encode_polygon(mapbox::geometry::polygon<CoordinateType> const& poly,
                            protozero::packed_field_uint32 & geometry,
                            std::int32_t & start_x,
                            std::int32_t & start_y) {
-    bool success = false;
+    if (poly.empty()) {
+        return false;
+    }
     bool first = true;
     for (auto const& ring : poly) {
-        bool did_it_work = encode_linearring(ring, geometry, start_x, start_y);
+        bool success = encode_linearring(ring, geometry, start_x, start_y);
         if (first) {
-            success = did_it_work;
+            if (!success) {
+                return false;
+            }
             first = false;
         }
     }
-    return success;
+    return true;
 }
 
 template <typename CoordinateType>
@@ -130,7 +136,7 @@ void encode_multi_point(mapbox::geometry::multi_point<CoordinateType> const& mp,
                                protozero::packed_field_uint32 & geometry) {
     std::size_t geom_size = mp.size();
     if (geom_size <= 0) {
-        return false;
+        return;
     }
     std::int32_t start_x = 0;
     std::int32_t start_y = 0;
@@ -149,8 +155,8 @@ void encode_multi_point(mapbox::geometry::multi_point<CoordinateType> const& mp,
 template <typename CoordinateType>
 bool encode_geometry(mapbox::geometry::point<CoordinateType> const& pt,
                      protozero::pbf_writer & current_feature) {
-    current_feature.add_enum(Feature_Encoding::TYPE, Geometry_Type::POINT);
-    protozero::packed_field_uint32 geometry(current_feature, Feature_Encoding::GEOMETRY);
+    current_feature.add_enum(feature_message::TYPE, geom_type::POINT);
+    protozero::packed_field_uint32 geometry(current_feature, feature_message::GEOMETRY);
     encode_point<CoordinateType>(pt, geometry);
     return true;
 }
@@ -158,8 +164,8 @@ bool encode_geometry(mapbox::geometry::point<CoordinateType> const& pt,
 template <typename CoordinateType>
 bool encode_geometry(mapbox::geometry::multi_point<CoordinateType> const& mp,
                      protozero::pbf_writer & current_feature) {
-    current_feature.add_enum(Feature_Encoding::TYPE, Geometry_Type::POINT);
-    protozero::packed_field_uint32 geometry(current_feature, Feature_Encoding::GEOMETRY);
+    current_feature.add_enum(feature_message::TYPE, geom_type::POINT);
+    protozero::packed_field_uint32 geometry(current_feature, feature_message::GEOMETRY);
     encode_multi_point<CoordinateType>(mp, geometry);
     return true;
 }
@@ -167,21 +173,21 @@ bool encode_geometry(mapbox::geometry::multi_point<CoordinateType> const& mp,
 template <typename CoordinateType>
 bool encode_geometry(mapbox::geometry::line_string<CoordinateType> const& line,
                      protozero::pbf_writer & current_feature) {
-    current_feature.add_enum(Feature_Encoding::TYPE, Geometry_Type::LINESTRING);
+    current_feature.add_enum(feature_message::TYPE, geom_type::LINESTRING);
     std::int32_t start_x = 0;
     std::int32_t start_y = 0;
-    protozero::packed_field_uint32 geometry(current_feature, Feature_Encoding::GEOMETRY);
+    protozero::packed_field_uint32 geometry(current_feature, feature_message::GEOMETRY);
     return encode_linestring(line, geometry, start_x, start_y);
 }
 
 template <typename CoordinateType>
 bool encode_geometry(mapbox::geometry::multi_line_string<CoordinateType> const& geom,
                      protozero::pbf_writer & current_feature) {
-    current_feature.add_enum(Feature_Encoding::TYPE, Geometry_Type::LINESTRING);
+    current_feature.add_enum(feature_message::TYPE, geom_type::LINESTRING);
     bool success = false;
     std::int32_t start_x = 0;
     std::int32_t start_y = 0;
-    protozero::packed_field_uint32 geometry(current_feature, Feature_Encoding::GEOMETRY);
+    protozero::packed_field_uint32 geometry(current_feature, feature_message::GEOMETRY);
     for (auto const& line : geom) {
         if (encode_linestring(line, geometry, start_x, start_y)) {
             success = true;
@@ -193,22 +199,22 @@ bool encode_geometry(mapbox::geometry::multi_line_string<CoordinateType> const& 
 template <typename CoordinateType>
 bool encode_geometry(mapbox::geometry::polygon<CoordinateType> const& poly,
                      protozero::pbf_writer & current_feature) {
-    current_feature.add_enum(Feature_Encoding::TYPE, Geometry_Type::POLYGON);
+    current_feature.add_enum(feature_message::TYPE, geom_type::POLYGON);
     bool success = false;
     std::int32_t start_x = 0;
     std::int32_t start_y = 0;
-    protozero::packed_field_uint32 geometry(current_feature, Feature_Encoding::GEOMETRY);
+    protozero::packed_field_uint32 geometry(current_feature, feature_message::GEOMETRY);
     return encode_polygon(poly, geometry, start_x, start_y);
 }
 
 template <typename CoordinateType>
 bool encode_geometry(mapbox::geometry::multi_polygon<CoordinateType> const& geom,
                      protozero::pbf_writer & current_feature) {
-    current_feature.add_enum(Feature_Encoding::TYPE, Geometry_Type::POLYGON);
+    current_feature.add_enum(feature_message::TYPE, geom_type::POLYGON);
     bool success = false;
     std::int32_t start_x = 0;
     std::int32_t start_y = 0;
-    protozero::packed_field_uint32 geometry(current_feature, Feature_Encoding::GEOMETRY);
+    protozero::packed_field_uint32 geometry(current_feature, feature_message::GEOMETRY);
     for (auto const& poly : geom) {
         if (encode_polygon(poly, geometry, start_x, start_y)) {
             success = true;
