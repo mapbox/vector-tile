@@ -15,6 +15,47 @@
 
 #include <experimental/optional>
 
+// This enables mapbox::geometry::value to be hashable
+namespace mapbox { namespace vector_tile {
+struct hash_visitor {
+    template <typename T>
+    std::size_t operator()(T const& h) const {
+        return std::hash<T>{}(h);
+    }
+};
+
+}} // namespace mapbox::vector_tile
+
+namespace std {
+template <>
+struct hash<::mapbox::geometry::null_value_t> {
+    std::size_t operator()(::mapbox::geometry::null_value_t const& ) const noexcept {
+        return 0;
+    }
+};
+
+template <>
+struct hash<vector<::mapbox::geometry::value>> {
+    std::size_t operator()(vector<::mapbox::geometry::value> const& ) const noexcept {
+        return 1;
+    }
+};
+
+template <>
+struct hash<unordered_map<string, ::mapbox::geometry::value>> {
+    std::size_t operator()(unordered_map<string, ::mapbox::geometry::value> const& ) const noexcept {
+        return 2;
+    }
+};
+
+template <>
+struct hash<::mapbox::geometry::value> {
+    std::size_t operator()(::mapbox::geometry::value const& v) const noexcept {
+        return ::mapbox::util::apply_visitor(::mapbox::vector_tile::hash_visitor{}, v);
+    }
+};
+} // namespace std
+
 namespace mapbox { namespace vector_tile {
 
 typedef std::map<std::string, std::uint32_t> layer_keys_container;
@@ -23,8 +64,8 @@ typedef std::unordered_map<mapbox::geometry::value, std::uint32_t> layer_values_
 inline std::deque<std::uint32_t> encode_properties_to_layer(protozero::pbf_writer & layer_writer,
 															layer_keys_container & layer_keys,
 															layer_values_container & layer_values,
-															mapbox::geometry::property_map const& properties,
-															std::deque<std::uint32_t> & feature_tags) {
+															mapbox::geometry::property_map const& properties) {
+    std::deque<std::uint32_t> feature_tags;
     for (auto const& p : properties) {
         if (p.second.is<mapbox::geometry::null_value_t>()) {
             continue;
@@ -50,6 +91,7 @@ inline std::deque<std::uint32_t> encode_properties_to_layer(protozero::pbf_write
 			feature_tags.push_back(val_itr->second);
 		}
     }
+    return feature_tags;
 }
 
 struct encode_id_visitor
@@ -124,9 +166,8 @@ void encode_feature(std::string & buffer,
                     layer_values_container & layer_values,
                     mapbox::geometry::feature<CoordinateType> const& feature) {
 
-	std::deque<std::uint32_t> feature_tags;
     protozero::pbf_writer layer_writer(buffer);
-    encode_properties_to_layer(layer_writer, layer_keys, layer_values, feature.properties, feature_tags);
+    std::deque<std::uint32_t> feature_tags = encode_properties_to_layer(layer_writer, layer_keys, layer_values, feature.properties);
     encode_feature_visitor<CoordinateType> visitor(feature_tags, feature.id, layer_writer);
     mapbox::util::apply_visitor(visitor, feature.geometry);
 }
