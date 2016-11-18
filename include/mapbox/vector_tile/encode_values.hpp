@@ -30,8 +30,8 @@ struct encode_value_visitor
         value_.add_int64(value_message::INT,val);
     }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
     void operator () (double val) const {
         float fval = static_cast<float>(val);
         if (val == static_cast<double>(fval)) {
@@ -41,7 +41,7 @@ struct encode_value_visitor
             value_.add_double(value_message::DOUBLE, val);
         }
     }
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 
     void operator () (std::string const& val) const {
         value_.add_string(value_message::STRING, val);

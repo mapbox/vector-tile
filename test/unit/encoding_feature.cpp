@@ -12,8 +12,8 @@
 // Unit tests for encoding of features
 //
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
 inline void test_property_encoding(protozero::pbf_reader & l,
                                    mapbox::geometry::property_map & properties) {
     REQUIRE(l.next());
@@ -58,7 +58,7 @@ inline void test_property_encoding(protozero::pbf_reader & l,
     }
     properties.erase(itr);
 }
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 
 TEST_CASE("encode simple point feature") {
 
