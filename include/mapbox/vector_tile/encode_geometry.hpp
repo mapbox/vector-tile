@@ -132,11 +132,11 @@ void encode_point(mapbox::geometry::point<CoordinateType> const& pt,
 }
 
 template <typename CoordinateType>
-void encode_multi_point(mapbox::geometry::multi_point<CoordinateType> const& mp,
+bool encode_multi_point(mapbox::geometry::multi_point<CoordinateType> const& mp,
                                protozero::packed_field_uint32 & geometry) {
     std::size_t geom_size = mp.size();
     if (geom_size <= 0) {
-        return;
+        return false;
     }
     std::int32_t start_x = 0;
     std::int32_t start_y = 0;
@@ -150,6 +150,7 @@ void encode_multi_point(mapbox::geometry::multi_point<CoordinateType> const& mp,
         start_x = pt.x;
         start_y = pt.y;
     }
+    return true;
 }
 
 template <typename CoordinateType>
@@ -166,8 +167,7 @@ bool encode_geometry(mapbox::geometry::multi_point<CoordinateType> const& mp,
                      protozero::pbf_writer & current_feature) {
     current_feature.add_enum(feature_message::TYPE, geom_type::POINT);
     protozero::packed_field_uint32 geometry(current_feature, feature_message::GEOMETRY);
-    encode_multi_point<CoordinateType>(mp, geometry);
-    return true;
+    return encode_multi_point<CoordinateType>(mp, geometry);
 }
 
 template <typename CoordinateType>
