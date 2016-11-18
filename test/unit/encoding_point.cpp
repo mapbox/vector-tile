@@ -14,8 +14,7 @@
 // Unit tests for geometry encoding of points
 //
 
-TEST_CASE("encode pbf simple point")
-{
+TEST_CASE("encode pbf simple point") {
     mapbox::geometry::point<std::int64_t> point(10,10);
     
     std::string feature_str;
@@ -41,8 +40,7 @@ TEST_CASE("encode pbf simple point")
     CHECK(*itr++ == 20);
 }
 
-TEST_CASE("encode pbf simple negative point")
-{
+TEST_CASE("encode pbf simple negative point") {
     mapbox::geometry::point<std::int64_t> point(-10,-10);
     
     std::string feature_str;
@@ -68,8 +66,7 @@ TEST_CASE("encode pbf simple negative point")
     CHECK(*itr++ == 19);
 }
 
-TEST_CASE("encode pbf simple multi point")
-{
+TEST_CASE("encode pbf simple multi point") {
     mapbox::geometry::multi_point<std::int64_t> mp;
     mp.emplace_back(10,10);
     mp.emplace_back(20,20);
@@ -104,8 +101,7 @@ TEST_CASE("encode pbf simple multi point")
     CHECK(*itr++ == 20);
 }
 
-TEST_CASE("encode pbf multi point with repeated points")
-{
+TEST_CASE("encode pbf multi point with repeated points") {
     mapbox::geometry::multi_point<std::int64_t> mp;
     mp.emplace_back(10,10);
     mp.emplace_back(10,10);
@@ -140,8 +136,7 @@ TEST_CASE("encode pbf multi point with repeated points")
     CHECK(*itr++ == 20);
 }
 
-TEST_CASE("encode pbf empty multi point geometry")
-{
+TEST_CASE("encode pbf empty multi point geometry") {
     mapbox::geometry::multi_point<std::int64_t> mp;
     
     std::string feature_str;

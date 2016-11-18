@@ -11,8 +11,7 @@
 // Unit tests for geometry encoding of polygons
 //
 
-TEST_CASE("encoding simple polygon")
-{
+TEST_CASE("encoding simple polygon") {
     mapbox::geometry::polygon<std::int64_t> p0;
     p0.emplace_back();
     p0.back().emplace_back(0,0);
@@ -58,8 +57,7 @@ TEST_CASE("encoding simple polygon")
     CHECK(*itr++ == 15);
 }
 
-TEST_CASE("encoding simple polygon with hole")
-{
+TEST_CASE("encoding simple polygon with hole") {
     mapbox::geometry::polygon<std::int64_t> p0;
     p0.emplace_back();
     p0.back().emplace_back(0,0);
@@ -133,8 +131,7 @@ TEST_CASE("encoding simple polygon with hole")
     CHECK(*itr++ == 15);
 }
 
-TEST_CASE("encoding empty polygon")
-{
+TEST_CASE("encoding empty polygon") {
     mapbox::geometry::polygon<std::int64_t> p;
     
     std::string feature_str;
@@ -148,8 +145,7 @@ TEST_CASE("encoding empty polygon")
     REQUIRE_FALSE(f.next());
 }
 
-TEST_CASE("encoding multi polygons with holes")
-{
+TEST_CASE("encoding multi polygons with holes") {
     mapbox::geometry::multi_polygon<std::int64_t> mp;
     {
         mapbox::geometry::polygon<std::int64_t> p0;
@@ -287,8 +283,7 @@ TEST_CASE("encoding multi polygons with holes")
     CHECK(*itr++ == 15);
 }
 
-TEST_CASE("encoding empty multi polygon")
-{
+TEST_CASE("encoding empty multi polygon") {
     mapbox::geometry::multi_polygon<std::int64_t> mp;
     
     std::string feature_str;
@@ -302,8 +297,7 @@ TEST_CASE("encoding empty multi polygon")
     REQUIRE_FALSE(f.next());
 }
 
-TEST_CASE("encoding polygon with degenerate exterior ring full of repeated points")
-{
+TEST_CASE("encoding polygon with degenerate exterior ring full of repeated points") {
     mapbox::geometry::polygon<std::int64_t> p0;
     p0.emplace_back();
     // invalid exterior ring
@@ -327,8 +321,7 @@ TEST_CASE("encoding polygon with degenerate exterior ring full of repeated point
     REQUIRE_FALSE(f.next());
 }
 
-TEST_CASE("encoding polygon with degenerate exterior ring")
-{
+TEST_CASE("encoding polygon with degenerate exterior ring") {
     mapbox::geometry::polygon<std::int64_t> p0;
     p0.emplace_back();
     // invalid exterior ring
@@ -346,8 +339,7 @@ TEST_CASE("encoding polygon with degenerate exterior ring")
     REQUIRE_FALSE(f.next());
 }
 
-TEST_CASE("encoding polygon with degenerate exterior ring and interior ring")
-{
+TEST_CASE("encoding polygon with degenerate exterior ring and interior ring") {
     mapbox::geometry::polygon<std::int64_t> p0;
     p0.emplace_back();
     // invalid exterior ring
@@ -375,8 +367,7 @@ TEST_CASE("encoding polygon with degenerate exterior ring and interior ring")
     REQUIRE_FALSE(f.next());
 }
 
-TEST_CASE("encoding polygon with valid exterior ring but degenerate interior ring")
-{
+TEST_CASE("encoding polygon with valid exterior ring but degenerate interior ring") {
     mapbox::geometry::polygon<std::int64_t> p0;
     p0.emplace_back();
     p0.back().emplace_back(0,0);
