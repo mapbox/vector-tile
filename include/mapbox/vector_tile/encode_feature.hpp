@@ -11,6 +11,8 @@
 #include <deque>
 #include <map>
 #include <unordered_map>
+#include <string>
+
 #include <experimental/optional>
 
 namespace mapbox { namespace vector_tile {
@@ -23,28 +25,26 @@ inline std::deque<std::uint32_t> encode_properties_to_layer(protozero::pbf_write
 															layer_values_container & layer_values,
 															mapbox::geometry::property_map const& properties,
 															std::deque<std::uint32_t> & feature_tags) {
-    std::deque<std::uint32_t> feature_tags;
-    
     for (auto const& p : properties) {
         if (p.second.is<mapbox::geometry::null_value_t>()) {
             continue;
         }
-		keys_container::const_iterator key_itr = layer_keys.find(p.first);
-		if (key_itr == keys.end()) {   
+		layer_keys_container::const_iterator key_itr = layer_keys.find(p.first);
+		if (key_itr == layer_keys.end()) {   
 			// The key doesn't exist yet in the dictionary.
 			layer_writer.add_string(layer_message::KEYS, p.first);
-			std::size_t index = keys.size();
-			keys.emplace(p.first, index);
+			std::size_t index = layer_keys.size();
+			layer_keys.emplace(p.first, index);
 			feature_tags.push_back(index);
 		} else {
 			feature_tags.push_back(key_itr->second);
 		}
 		
-		values_container::const_iterator val_itr = layer_values.find(p.second);
-		if (val_itr == values.end()) {
+		layer_values_container::const_iterator val_itr = layer_values.find(p.second);
+		if (val_itr == layer_values.end()) {
 			encode_value(layer_writer, p.second); 
-			std::size_t index = values.size();
-			values.emplace(p.second, index);
+			std::size_t index = layer_values.size();
+			layer_values.emplace(p.second, index);
 			feature_tags.push_back(index);
 		} else {
 			feature_tags.push_back(val_itr->second);
@@ -69,15 +69,15 @@ struct encode_id_visitor
 	}
 };
 
-void encode_id(protozero::pbf_writer & feature_writer, mapbox::geometry::identifer const& id) {
+void encode_id(protozero::pbf_writer & feature_writer, mapbox::geometry::identifier const& id) {
     encode_id_visitor visitor(feature_writer);
-    mapbox::apply_visitor(visitor, id);
+    mapbox::util::apply_visitor(visitor, id);
 }
 
 template <typename CoordinateType, typename GeometryType>
 void encode_feature_geometry(protozero::pbf_writer & layer_writer,
 						     std::deque<std::uint32_t> const& feature_tags,
-                             std::experimental::optional<identifier> const& id,
+                             std::experimental::optional<mapbox::geometry::identifier> const& id,
                              GeometryType const& geometry) {
 	protozero::pbf_writer feature_writer(layer_writer, layer_message::FEATURES);
 	bool success = encode_geometry<CoordinateType>(geometry, feature_writer);
@@ -94,12 +94,12 @@ void encode_feature_geometry(protozero::pbf_writer & layer_writer,
 template <typename CoordinateType>
 struct encode_feature_visitor {
 
-    std::deque<std::uint32_t> const& feature_tags,
-	std::experimental::optional<identifier> const& id;
+    std::deque<std::uint32_t> const& feature_tags;
+	std::experimental::optional<mapbox::geometry::identifier> const& id;
     protozero::pbf_writer & layer_writer;
 
 	encode_feature_visitor(std::deque<std::uint32_t> const& f,
-                           std::experimental::optional<identifier> const& i,
+                           std::experimental::optional<mapbox::geometry::identifier> const& i,
                            protozero::pbf_writer & l)
         : feature_tags(f),
           id(i),
@@ -112,7 +112,7 @@ struct encode_feature_visitor {
 
     void operator() (mapbox::geometry::geometry_collection<CoordinateType> const& geom_collection) {
         for (auto const& geom : geom_collection) {
-            (*this)(geom);
+            mapbox::util::apply_visitor((*this),geom);
         }
     }
 
@@ -128,7 +128,7 @@ void encode_feature(std::string & buffer,
     protozero::pbf_writer layer_writer(buffer);
     encode_properties_to_layer(layer_writer, layer_keys, layer_values, feature.properties, feature_tags);
     encode_feature_visitor<CoordinateType> visitor(feature_tags, feature.id, layer_writer);
-    mapbox::apply_visitor(visitor, feature.geometry);
+    mapbox::util::apply_visitor(visitor, feature.geometry);
 }
 
 }} // namespace mapbox::vector_tile
