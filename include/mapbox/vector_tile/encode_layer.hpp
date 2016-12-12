@@ -13,13 +13,13 @@ void encode_layer_general_data(std::string & buffer, std::string const& name, st
     protozero::pbf_writer layer_writer(buffer);
     layer_writer.add_uint32(layer_message::VERSION, version);
     layer_writer.add_string(layer_message::NAME, name);
-    layer_writer.add_uint32(layer_message::EXTENT, name);
+    layer_writer.add_uint32(layer_message::EXTENT, extent);
 }
 
 template <typename CoordinateType>
 void encode_layer(std::string & buffer, 
                   std::string const& name,
-                  mapbox::geometry::feature_collection<CoordinateType>> const& features, 
+                  mapbox::geometry::feature_collection<CoordinateType> const& features, 
                   std::uint32_t extent = 4096,
                   std::uint32_t version = 2) {
 
