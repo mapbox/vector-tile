@@ -77,8 +77,9 @@ TEST_CASE("encode simple point feature") {
     mapbox::vector_tile::layer_keys_container layer_keys;
     mapbox::vector_tile::layer_values_container layer_values;
     std::string buffer;
+    protozero::pbf_writer layer_writer(buffer);
 
-    mapbox::vector_tile::encode_feature(buffer, layer_keys, layer_values, feature);
+    mapbox::vector_tile::encode_feature(layer_writer, layer_keys, layer_values, feature);
     
     protozero::pbf_reader l(buffer);
     test_property_encoding(l, properties);
@@ -138,8 +139,9 @@ TEST_CASE("encode simple multi point feature") {
     mapbox::vector_tile::layer_keys_container layer_keys;
     mapbox::vector_tile::layer_values_container layer_values;
     std::string buffer;
-
-    mapbox::vector_tile::encode_feature(buffer, layer_keys, layer_values, feature);
+    protozero::pbf_writer layer_writer(buffer);
+    
+    mapbox::vector_tile::encode_feature(layer_writer, layer_keys, layer_values, feature);
     
     protozero::pbf_reader l(buffer);
     test_property_encoding(l, properties);
@@ -203,8 +205,9 @@ TEST_CASE("encode simple line feature") {
     mapbox::vector_tile::layer_keys_container layer_keys;
     mapbox::vector_tile::layer_values_container layer_values;
     std::string buffer;
+    protozero::pbf_writer layer_writer(buffer);
 
-    mapbox::vector_tile::encode_feature(buffer, layer_keys, layer_values, feature);
+    mapbox::vector_tile::encode_feature(layer_writer, layer_keys, layer_values, feature);
     
     protozero::pbf_reader l(buffer);
     test_property_encoding(l, properties);
@@ -276,8 +279,9 @@ TEST_CASE("encode simple multi line feature") {
     mapbox::vector_tile::layer_keys_container layer_keys;
     mapbox::vector_tile::layer_values_container layer_values;
     std::string buffer;
+    protozero::pbf_writer layer_writer(buffer);
 
-    mapbox::vector_tile::encode_feature(buffer, layer_keys, layer_values, feature);
+    mapbox::vector_tile::encode_feature(layer_writer, layer_keys, layer_values, feature);
     
     protozero::pbf_reader l(buffer);
     test_property_encoding(l, properties);
@@ -356,8 +360,9 @@ TEST_CASE("encode simple polygon feature") {
     mapbox::vector_tile::layer_keys_container layer_keys;
     mapbox::vector_tile::layer_values_container layer_values;
     std::string buffer;
+    protozero::pbf_writer layer_writer(buffer);
 
-    mapbox::vector_tile::encode_feature(buffer, layer_keys, layer_values, feature);
+    mapbox::vector_tile::encode_feature(layer_writer, layer_keys, layer_values, feature);
     
     protozero::pbf_reader l(buffer);
     test_property_encoding(l, properties);
@@ -460,8 +465,9 @@ TEST_CASE("encode simple multi polygon feature") {
     mapbox::vector_tile::layer_keys_container layer_keys;
     mapbox::vector_tile::layer_values_container layer_values;
     std::string buffer;
+    protozero::pbf_writer layer_writer(buffer);
 
-    mapbox::vector_tile::encode_feature(buffer, layer_keys, layer_values, feature);
+    mapbox::vector_tile::encode_feature(layer_writer, layer_keys, layer_values, feature);
     
     protozero::pbf_reader l(buffer);
     test_property_encoding(l, properties);
@@ -598,8 +604,9 @@ TEST_CASE("encode geometry collection feature") {
     mapbox::vector_tile::layer_keys_container layer_keys;
     mapbox::vector_tile::layer_values_container layer_values;
     std::string buffer;
+    protozero::pbf_writer layer_writer(buffer);
 
-    mapbox::vector_tile::encode_feature(buffer, layer_keys, layer_values, feature);
+    mapbox::vector_tile::encode_feature(layer_writer, layer_keys, layer_values, feature);
     
     protozero::pbf_reader l(buffer);
     test_property_encoding(l, properties);

@@ -161,12 +161,10 @@ struct encode_feature_visitor {
 };
 
 template <typename CoordinateType>
-void encode_feature(std::string & buffer, 
+void encode_feature(protozero::pbf_writer & layer_writer, 
                     layer_keys_container & layer_keys,
                     layer_values_container & layer_values,
                     mapbox::geometry::feature<CoordinateType> const& feature) {
-
-    protozero::pbf_writer layer_writer(buffer);
     std::deque<std::uint32_t> feature_tags = encode_properties_to_layer(layer_writer, layer_keys, layer_values, feature.properties);
     encode_feature_visitor<CoordinateType> visitor(feature_tags, feature.id, layer_writer);
     mapbox::util::apply_visitor(visitor, feature.geometry);
