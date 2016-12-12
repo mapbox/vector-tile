@@ -23,7 +23,7 @@ void encode_layer(std::string & buffer,
                   std::uint32_t version = 2) {
 
     protozero::pbf_writer tile_writer(buffer);
-    protozero::pbf_writer layer_writer(tile_writer, tile_message::LAYER);
+    protozero::pbf_writer layer_writer(tile_writer, tile_message::LAYERS);
     encode_layer_general_data(layer_writer, name, extent, version);
 	layer_keys_container layer_keys;
 	layer_values_container layer_values;
