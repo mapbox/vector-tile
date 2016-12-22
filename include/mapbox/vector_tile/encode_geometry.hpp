@@ -200,7 +200,6 @@ template <typename CoordinateType>
 bool encode_geometry(mapbox::geometry::polygon<CoordinateType> const& poly,
                      protozero::pbf_writer & current_feature) {
     current_feature.add_enum(FeatureType::TYPE, GeomType::POLYGON);
-    bool success = false;
     std::int32_t start_x = 0;
     std::int32_t start_y = 0;
     protozero::packed_field_uint32 geometry(current_feature, FeatureType::GEOMETRY);
