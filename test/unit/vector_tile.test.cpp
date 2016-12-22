@@ -7,7 +7,7 @@
 #include <catch.hpp>
 
 TEST_CASE( "Version constant" ) {
-    CHECK(VECTOR_TILE_VERSION_STRING == "1.0.0-rc4");
+    CHECK(std::string(VECTOR_TILE_VERSION_STRING) == std::string("1.0.0-rc4"));
     CHECK(VECTOR_TILE_VERSION_CODE == 10000);
 }
 

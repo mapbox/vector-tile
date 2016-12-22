@@ -1,9 +1,8 @@
 #pragma once
 
-#include <iostream>
+#include <cstdint>
 
 namespace mapbox { namespace vector_tile {
-
 
 enum TileType : std::uint32_t
 {
