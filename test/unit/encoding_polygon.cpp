@@ -26,10 +26,10 @@ TEST_CASE("encoding simple polygon") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POLYGON);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POLYGON);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -79,10 +79,10 @@ TEST_CASE("encoding simple polygon with hole") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POLYGON);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POLYGON);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -140,8 +140,8 @@ TEST_CASE("encoding empty polygon") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POLYGON);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POLYGON);
     REQUIRE_FALSE(f.next());
 }
 
@@ -189,10 +189,10 @@ TEST_CASE("encoding multi polygons with holes") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POLYGON);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POLYGON);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -292,8 +292,8 @@ TEST_CASE("encoding empty multi polygon") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POLYGON);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POLYGON);
     REQUIRE_FALSE(f.next());
 }
 
@@ -316,8 +316,8 @@ TEST_CASE("encoding polygon with degenerate exterior ring full of repeated point
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POLYGON);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POLYGON);
     REQUIRE_FALSE(f.next());
 }
 
@@ -334,8 +334,8 @@ TEST_CASE("encoding polygon with degenerate exterior ring") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POLYGON);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POLYGON);
     REQUIRE_FALSE(f.next());
 }
 
@@ -362,8 +362,8 @@ TEST_CASE("encoding polygon with degenerate exterior ring and interior ring") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POLYGON);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POLYGON);
     REQUIRE_FALSE(f.next());
 }
 
@@ -387,10 +387,10 @@ TEST_CASE("encoding polygon with valid exterior ring but degenerate interior rin
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POLYGON);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POLYGON);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();

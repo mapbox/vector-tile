@@ -17,38 +17,38 @@
 inline void test_property_encoding(protozero::pbf_reader & l,
                                    mapbox::geometry::property_map & properties) {
     REQUIRE(l.next());
-    REQUIRE(l.tag() == mapbox::vector_tile::layer_message::KEYS);
+    REQUIRE(l.tag() == mapbox::vector_tile::LayerType::KEYS);
     auto itr = properties.find(l.get_string());
     REQUIRE(itr != properties.end());
     REQUIRE(l.next());
-    REQUIRE(l.tag() == mapbox::vector_tile::layer_message::VALUES);
+    REQUIRE(l.tag() == mapbox::vector_tile::LayerType::VALUES);
     auto v = l.get_message();
     REQUIRE(v.next());
     switch (v.tag()) {
-        case mapbox::vector_tile::value_message::STRING:
+        case mapbox::vector_tile::ValueType::STRING:
             REQUIRE(itr->second.is<std::string>());
             REQUIRE(v.get_string() == itr->second.get<std::string>());
             break;
-        case mapbox::vector_tile::value_message::FLOAT:
+        case mapbox::vector_tile::ValueType::FLOAT:
             REQUIRE(itr->second.is<double>());
             REQUIRE(static_cast<double>(v.get_float()) == itr->second.get<double>());
             break;
-        case mapbox::vector_tile::value_message::DOUBLE:
+        case mapbox::vector_tile::ValueType::DOUBLE:
             REQUIRE(itr->second.is<double>());
             REQUIRE(v.get_double() == itr->second.get<double>());
             break;
-        case mapbox::vector_tile::value_message::INT:
+        case mapbox::vector_tile::ValueType::INT:
             REQUIRE(itr->second.is<std::int64_t>());
             REQUIRE(v.get_int64() == itr->second.get<std::int64_t>());
             break;
-        case mapbox::vector_tile::value_message::UINT:
+        case mapbox::vector_tile::ValueType::UINT:
             REQUIRE(itr->second.is<std::uint64_t>());
             REQUIRE(v.get_uint64() == itr->second.get<std::uint64_t>());
             break;
-        case mapbox::vector_tile::value_message::SINT:
+        case mapbox::vector_tile::ValueType::SINT:
             REQUIRE(false); // we do not encode things as sint currently
             break;
-        case mapbox::vector_tile::value_message::BOOL:
+        case mapbox::vector_tile::ValueType::BOOL:
             REQUIRE(itr->second.is<bool>());
             REQUIRE(v.get_bool() == itr->second.get<bool>());
             break;
@@ -88,13 +88,13 @@ TEST_CASE("encode simple point feature") {
     test_property_encoding(l, properties);
     test_property_encoding(l, properties);
     REQUIRE(l.next());
-    REQUIRE(l.tag() == mapbox::vector_tile::layer_message::FEATURES);
+    REQUIRE(l.tag() == mapbox::vector_tile::LayerType::FEATURES);
     auto f = l.get_message();
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POINT);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POINT);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -107,10 +107,10 @@ TEST_CASE("encode simple point feature") {
     CHECK(*itr++ == 20);
     CHECK(*itr++ == 20);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::ID);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::ID);
     CHECK(f.get_uint64() == 100);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TAGS);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TAGS);
     auto tags_iter = f.get_packed_uint32();
     REQUIRE(std::distance(tags_iter.begin(), tags_iter.end()) == 10);
     // Not checking that all the tags are correct -- but might be in slightly
@@ -150,13 +150,13 @@ TEST_CASE("encode simple multi point feature") {
     test_property_encoding(l, properties);
     test_property_encoding(l, properties);
     REQUIRE(l.next());
-    REQUIRE(l.tag() == mapbox::vector_tile::layer_message::FEATURES);
+    REQUIRE(l.tag() == mapbox::vector_tile::LayerType::FEATURES);
     auto f = l.get_message();
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POINT);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POINT);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -174,10 +174,10 @@ TEST_CASE("encode simple multi point feature") {
     CHECK(*itr++ == 20);
     CHECK(*itr++ == 20);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::ID);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::ID);
     CHECK(f.get_uint64() == 100);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TAGS);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TAGS);
     auto tags_iter = f.get_packed_uint32();
     REQUIRE(std::distance(tags_iter.begin(), tags_iter.end()) == 10);
     // Not checking that all the tags are correct -- but might be in slightly
@@ -216,13 +216,13 @@ TEST_CASE("encode simple line feature") {
     test_property_encoding(l, properties);
     test_property_encoding(l, properties);
     REQUIRE(l.next());
-    REQUIRE(l.tag() == mapbox::vector_tile::layer_message::FEATURES);
+    REQUIRE(l.tag() == mapbox::vector_tile::LayerType::FEATURES);
     auto f = l.get_message();
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::LINESTRING);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::LINESTRING);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -242,10 +242,10 @@ TEST_CASE("encode simple line feature") {
     CHECK(*itr++ == 20);
     CHECK(*itr++ == 20);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::ID);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::ID);
     CHECK(f.get_uint64() == 100);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TAGS);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TAGS);
     auto tags_iter = f.get_packed_uint32();
     REQUIRE(std::distance(tags_iter.begin(), tags_iter.end()) == 10);
     // Not checking that all the tags are correct -- but might be in slightly
@@ -290,13 +290,13 @@ TEST_CASE("encode simple multi line feature") {
     test_property_encoding(l, properties);
     test_property_encoding(l, properties);
     REQUIRE(l.next());
-    REQUIRE(l.tag() == mapbox::vector_tile::layer_message::FEATURES);
+    REQUIRE(l.tag() == mapbox::vector_tile::LayerType::FEATURES);
     auto f = l.get_message();
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::LINESTRING);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::LINESTRING);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -326,10 +326,10 @@ TEST_CASE("encode simple multi line feature") {
     CHECK(*itr++ == 9);
     CHECK(*itr++ == 9);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::ID);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::ID);
     CHECK(f.get_uint64() == 100);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TAGS);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TAGS);
     auto tags_iter = f.get_packed_uint32();
     REQUIRE(std::distance(tags_iter.begin(), tags_iter.end()) == 10);
     // Not checking that all the tags are correct -- but might be in slightly
@@ -371,13 +371,13 @@ TEST_CASE("encode simple polygon feature") {
     test_property_encoding(l, properties);
     test_property_encoding(l, properties);
     REQUIRE(l.next());
-    REQUIRE(l.tag() == mapbox::vector_tile::layer_message::FEATURES);
+    REQUIRE(l.tag() == mapbox::vector_tile::LayerType::FEATURES);
     auto f = l.get_message();
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POLYGON);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POLYGON);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -403,10 +403,10 @@ TEST_CASE("encode simple polygon feature") {
     // Close
     CHECK(*itr++ == 15);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::ID);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::ID);
     CHECK(f.get_uint64() == 100);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TAGS);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TAGS);
     auto tags_iter = f.get_packed_uint32();
     REQUIRE(std::distance(tags_iter.begin(), tags_iter.end()) == 10);
     // Not checking that all the tags are correct -- but might be in slightly
@@ -476,13 +476,13 @@ TEST_CASE("encode simple multi polygon feature") {
     test_property_encoding(l, properties);
     test_property_encoding(l, properties);
     REQUIRE(l.next());
-    REQUIRE(l.tag() == mapbox::vector_tile::layer_message::FEATURES);
+    REQUIRE(l.tag() == mapbox::vector_tile::LayerType::FEATURES);
     auto f = l.get_message();
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POLYGON);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POLYGON);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -571,10 +571,10 @@ TEST_CASE("encode simple multi polygon feature") {
     // Close
     CHECK(*itr++ == 15);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::ID);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::ID);
     CHECK(f.get_uint64() == 100);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TAGS);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TAGS);
     auto tags_iter = f.get_packed_uint32();
     REQUIRE(std::distance(tags_iter.begin(), tags_iter.end()) == 10);
     // Not checking that all the tags are correct -- but might be in slightly
@@ -616,13 +616,13 @@ TEST_CASE("encode geometry collection feature") {
     test_property_encoding(l, properties);
     {
         REQUIRE(l.next());
-        REQUIRE(l.tag() == mapbox::vector_tile::layer_message::FEATURES);
+        REQUIRE(l.tag() == mapbox::vector_tile::LayerType::FEATURES);
         auto f = l.get_message();
         REQUIRE(f.next());
-        REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-        REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POINT);
+        REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+        REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POINT);
         REQUIRE(f.next());
-        REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+        REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
         auto geometry_iter = f.get_packed_uint32();
         auto itr = geometry_iter.begin();
         const auto end_itr = geometry_iter.end();
@@ -635,10 +635,10 @@ TEST_CASE("encode geometry collection feature") {
         CHECK(*itr++ == 20);
         CHECK(*itr++ == 20);
         REQUIRE(f.next());
-        REQUIRE(f.tag() == mapbox::vector_tile::feature_message::ID);
+        REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::ID);
         CHECK(f.get_uint64() == 100);
         REQUIRE(f.next());
-        REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TAGS);
+        REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TAGS);
         auto tags_iter = f.get_packed_uint32();
         REQUIRE(std::distance(tags_iter.begin(), tags_iter.end()) == 10);
         // Not checking that all the tags are correct -- but might be in slightly
@@ -647,13 +647,13 @@ TEST_CASE("encode geometry collection feature") {
     }
     {
         REQUIRE(l.next());
-        REQUIRE(l.tag() == mapbox::vector_tile::layer_message::FEATURES);
+        REQUIRE(l.tag() == mapbox::vector_tile::LayerType::FEATURES);
         auto f = l.get_message();
         REQUIRE(f.next());
-        REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-        REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POINT);
+        REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+        REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POINT);
         REQUIRE(f.next());
-        REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+        REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
         auto geometry_iter = f.get_packed_uint32();
         auto itr = geometry_iter.begin();
         const auto end_itr = geometry_iter.end();
@@ -666,10 +666,10 @@ TEST_CASE("encode geometry collection feature") {
         CHECK(*itr++ == 10);
         CHECK(*itr++ == 10);
         REQUIRE(f.next());
-        REQUIRE(f.tag() == mapbox::vector_tile::feature_message::ID);
+        REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::ID);
         CHECK(f.get_uint64() == 100);
         REQUIRE(f.next());
-        REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TAGS);
+        REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TAGS);
         auto tags_iter = f.get_packed_uint32();
         REQUIRE(std::distance(tags_iter.begin(), tags_iter.end()) == 10);
         REQUIRE_FALSE(f.next());

@@ -73,7 +73,7 @@ inline std::deque<std::uint32_t> encode_properties_to_layer(protozero::pbf_write
 		layer_keys_container::const_iterator key_itr = layer_keys.find(p.first);
 		if (key_itr == layer_keys.end()) {   
 			// The key doesn't exist yet in the dictionary.
-			layer_writer.add_string(layer_message::KEYS, p.first);
+			layer_writer.add_string(LayerType::KEYS, p.first);
 			std::size_t index = layer_keys.size();
 			layer_keys.emplace(p.first, index);
 			feature_tags.push_back(index);
@@ -107,7 +107,7 @@ struct encode_id_visitor
 
 	template <typename T>
 	void operator () (T const& val) const {
-        id_.add_uint64(feature_message::ID, static_cast<std::uint64_t>(val));
+        id_.add_uint64(FeatureType::ID, static_cast<std::uint64_t>(val));
 	}
 };
 
@@ -121,13 +121,13 @@ void encode_feature_geometry(protozero::pbf_writer & layer_writer,
 						     std::deque<std::uint32_t> const& feature_tags,
                              std::experimental::optional<mapbox::geometry::identifier> const& id,
                              GeometryType const& geometry) {
-	protozero::pbf_writer feature_writer(layer_writer, layer_message::FEATURES);
+	protozero::pbf_writer feature_writer(layer_writer, LayerType::FEATURES);
 	bool success = encode_geometry<CoordinateType>(geometry, feature_writer);
 	if (success) {
 		if (id) {
 			encode_id(feature_writer, *id);
 		}
-		feature_writer.add_packed_uint32(feature_message::TAGS, feature_tags.begin(), feature_tags.end());
+		feature_writer.add_packed_uint32(FeatureType::TAGS, feature_tags.begin(), feature_tags.end());
 	} else {
 		feature_writer.rollback();
 	}

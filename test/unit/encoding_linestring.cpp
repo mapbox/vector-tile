@@ -26,10 +26,10 @@ TEST_CASE("encode pbf simple line_string") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::LINESTRING);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::LINESTRING);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -63,10 +63,10 @@ TEST_CASE("encode pbf overlapping line_string") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::LINESTRING);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::LINESTRING);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -106,10 +106,10 @@ TEST_CASE("encode pbf line_string with repeated points") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::LINESTRING);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::LINESTRING);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -143,8 +143,8 @@ TEST_CASE("encode pbf degenerate line_string") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::LINESTRING);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::LINESTRING);
     REQUIRE_FALSE(f.next());
 }
 
@@ -162,8 +162,8 @@ TEST_CASE("encode pbf degenerate line_string all repeated points") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::LINESTRING);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::LINESTRING);
     REQUIRE_FALSE(f.next());
 }
 
@@ -182,10 +182,10 @@ TEST_CASE("encode pbf incredibly large segments") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::LINESTRING);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::LINESTRING);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -225,10 +225,10 @@ TEST_CASE("encode pbf simple multi_line_string") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::LINESTRING);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::LINESTRING);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -289,10 +289,10 @@ TEST_CASE("encode pbf multi_line_string with repeated points")
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::LINESTRING);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::LINESTRING);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -350,10 +350,10 @@ TEST_CASE("encode pbf multi_line_string with two degenerate linestrings")
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::LINESTRING);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::LINESTRING);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();

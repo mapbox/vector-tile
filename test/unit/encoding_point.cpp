@@ -23,10 +23,10 @@ TEST_CASE("encode pbf simple point") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POINT);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POINT);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -49,10 +49,10 @@ TEST_CASE("encode pbf simple negative point") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POINT);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POINT);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -78,10 +78,10 @@ TEST_CASE("encode pbf simple multi point") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POINT);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POINT);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -113,10 +113,10 @@ TEST_CASE("encode pbf multi point with repeated points") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POINT);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POINT);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::GEOMETRY);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::GEOMETRY);
     auto geometry_iter = f.get_packed_uint32();
     auto itr = geometry_iter.begin();
     const auto end_itr = geometry_iter.end();
@@ -145,8 +145,8 @@ TEST_CASE("encode pbf empty multi point geometry") {
     
     protozero::pbf_reader f(feature_str);
     REQUIRE(f.next());
-    REQUIRE(f.tag() == mapbox::vector_tile::feature_message::TYPE);
-    REQUIRE(f.get_enum() == mapbox::vector_tile::geom_type::POINT);
+    REQUIRE(f.tag() == mapbox::vector_tile::FeatureType::TYPE);
+    REQUIRE(f.get_enum() == mapbox::vector_tile::GeomType::POINT);
     REQUIRE_FALSE(f.next());
 }
 

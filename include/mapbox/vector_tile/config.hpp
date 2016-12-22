@@ -4,13 +4,12 @@
 
 namespace mapbox { namespace vector_tile {
 
-
-enum tile_message : std::uint8_t
+enum TileType : std::uint32_t
 {
     LAYERS = 3
 };
 
-enum layer_message : std::uint8_t
+enum LayerType : std::uint32_t
 {
     VERSION = 15,
     NAME = 1,
@@ -20,7 +19,7 @@ enum layer_message : std::uint8_t
     EXTENT = 5
 };
 
-enum feature_message : std::uint8_t
+enum FeatureType : std::uint32_t
 {
     ID = 1,
     TAGS = 2,
@@ -29,7 +28,7 @@ enum feature_message : std::uint8_t
     RASTER = 5
 };
 
-enum value_message : std::uint32_t
+enum ValueType : std::uint32_t
 {
     STRING = 1,
     FLOAT = 2,
@@ -40,7 +39,7 @@ enum value_message : std::uint32_t
     BOOL = 7
 };
 
-enum geom_type : std::uint8_t
+enum GeomType : std::uint8_t
 {
     UNKNOWN = 0,
     POINT = 1,
@@ -48,7 +47,7 @@ enum geom_type : std::uint8_t
     POLYGON = 3
 };
 
-enum command_type : std::uint8_t
+enum CommandType : std::uint8_t
 {
     END = 0,
     MOVE_TO = 1,

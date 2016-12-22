@@ -10,9 +10,9 @@
 namespace mapbox { namespace vector_tile {
 
 void encode_layer_general_data(protozero::pbf_writer & layer_writer, std::string const& name, std::uint32_t extent, std::uint32_t version) {
-    layer_writer.add_uint32(layer_message::VERSION, version);
-    layer_writer.add_string(layer_message::NAME, name);
-    layer_writer.add_uint32(layer_message::EXTENT, extent);
+    layer_writer.add_uint32(LayerType::VERSION, version);
+    layer_writer.add_string(LayerType::NAME, name);
+    layer_writer.add_uint32(LayerType::EXTENT, extent);
 }
 
 template <typename CoordinateType>

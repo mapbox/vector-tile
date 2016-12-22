@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vector_tile/vector_tile_config.hpp"
+#include "vector_tile/config.hpp"
 #include <mapbox/geometry.hpp>
 
 #pragma GCC diagnostic push
