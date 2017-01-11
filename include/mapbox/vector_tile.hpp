@@ -35,7 +35,7 @@ class layer;
 
 class feature {
 public:
-    using properties_type = std::map<std::string,mapbox::geometry::value>;
+    using properties_type = mapbox::geometry::property_map;
     using packed_iterator_type = protozero::iterator_range<protozero::pbf_reader::const_uint32_iterator>;
 
     feature(protozero::data_view const&, layer const&);
@@ -62,7 +62,7 @@ public:
     layer(protozero::data_view const& layer_view);
 
     std::size_t featureCount() const { return features.size(); }
-    feature getFeature(std::size_t) const;
+    protozero::data_view const& getFeature(std::size_t) const;
     std::string const& getName() const;
     std::uint32_t getExtent() const { return extent; }
     std::uint32_t getVersion() const { return version; }
@@ -83,6 +83,7 @@ class buffer {
 public:
     buffer(std::string const& data);
     std::vector<std::string> layerNames() const;
+    std::map<std::string, const protozero::data_view> getLayers() const { return layers; };
     layer getLayer(const std::string&) const;
 
 private:
@@ -178,6 +179,7 @@ feature::properties_type feature::getProperties() const {
     auto start_itr = tags_iter.begin();
     const auto end_itr = tags_iter.end();
     properties_type properties;
+    properties.reserve(std::distance(start_itr,end_itr)/2);
     while (start_itr != end_itr) {
         std::uint32_t tag_key = static_cast<std::uint32_t>(*start_itr++);
         if (start_itr == end_itr) {
@@ -387,8 +389,8 @@ layer::layer(protozero::data_view const& layer_view) {
     }
 }
 
-feature layer::getFeature(std::size_t i) const {
-    return feature(features.at(i), *this);
+protozero::data_view const& layer::getFeature(std::size_t i) const {
+    return features.at(i);
 }
 
 std::string const& layer::getName() const {
