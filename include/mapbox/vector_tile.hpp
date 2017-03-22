@@ -179,14 +179,17 @@ feature::properties_type feature::getProperties() const {
     auto start_itr = tags_iter.begin();
     const auto end_itr = tags_iter.end();
     properties_type properties;
-    properties.reserve(std::distance(start_itr,end_itr)/2);
-    while (start_itr != end_itr) {
-        std::uint32_t tag_key = static_cast<std::uint32_t>(*start_itr++);
-        if (start_itr == end_itr) {
-            throw std::runtime_error("uneven number of feature tag ids");
+    auto iter_len = std::distance(start_itr,end_itr);
+    if (iter_len > 0) {
+        properties.reserve(static_cast<std::size_t>(iter_len/2));
+        while (start_itr != end_itr) {
+            std::uint32_t tag_key = static_cast<std::uint32_t>(*start_itr++);
+            if (start_itr == end_itr) {
+                throw std::runtime_error("uneven number of feature tag ids");
+            }
+            std::uint32_t tag_val = static_cast<std::uint32_t>(*start_itr++);
+            properties.emplace(layer_.keys.at(tag_key),parseValue(layer_.values.at(tag_val)));
         }
-        std::uint32_t tag_val = static_cast<std::uint32_t>(*start_itr++);
-        properties.emplace(layer_.keys.at(tag_key),parseValue(layer_.values.at(tag_val)));
     }
     return properties;
 }
@@ -218,7 +221,7 @@ GeometryCollectionType feature::getGeometries(float scale) const {
     const auto end_itr = geometry_iter.end();
     bool first = true;
     std::uint32_t len_reserve = 0;
-    std::int32_t extra_coords = 0;
+    std::size_t extra_coords = 0;
     if (type == GeomType::LINESTRING) {
         extra_coords = 1;
     } else if (type == GeomType::POLYGON) {
