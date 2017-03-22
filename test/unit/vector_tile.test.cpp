@@ -54,13 +54,13 @@ static std::string open_tile(std::string const& path) {
 }
 
 #define ASSERT_KNOWN_FEATURE() \
-    const auto layer_names = tile.layerNames(); \
+    auto const layer_names = tile.layerNames(); \
     REQUIRE(layer_names.size() == 1); \
     REQUIRE(layer_names[0] == "layer_name"); \
-    const auto layer = tile.getLayer("layer_name"); \
+    auto const layer = tile.getLayer("layer_name"); \
     REQUIRE(layer.featureCount() == 1); \
     REQUIRE(layer.getName() == "layer_name"); \
-    const auto feature = mapbox::vector_tile::feature(layer.getFeature(0),layer); \
+    auto const feature = mapbox::vector_tile::feature(layer.getFeature(0),layer); \
     auto const& feature_id = feature.getID(); \
     REQUIRE(feature_id); \
     REQUIRE((*feature_id).is<uint64_t>()); \
