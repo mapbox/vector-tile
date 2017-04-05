@@ -71,8 +71,8 @@ private:
     friend class feature;
 
     std::string name;
-    std::uint32_t version = 9;
-    std::uint32_t extent = 4096;
+    std::uint32_t version;
+    std::uint32_t extent;
     std::map<std::string, std::uint32_t> keysMap;
     std::vector<std::reference_wrapper<const std::string>> keys;
     std::vector<protozero::data_view> values;
@@ -118,7 +118,12 @@ static mapbox::geometry::value parseValue(protozero::data_view const& value_view
 }
 
 feature::feature(protozero::data_view const& feature_view, layer const& l)
-    : layer_(l) {
+    : layer_(l),
+      id(),
+      type(GeomType::UNKNOWN),
+      tags_iter(),
+      geometry_iter()
+    {
     protozero::pbf_reader feature_pbf(feature_view);
     while (feature_pbf.next()) {
         switch (feature_pbf.tag()) {
@@ -327,7 +332,15 @@ layer buffer::getLayer(const std::string& name) const {
     return layer(layer_it->second);
 }
 
-layer::layer(protozero::data_view const& layer_view) {
+layer::layer(protozero::data_view const& layer_view) :
+    name(),
+    version(1),
+    extent(4096),
+    keysMap(),
+    keys(),
+    values(),
+    features()
+{
     bool has_name = false;
     bool has_extent = false;
     bool has_version = false;
