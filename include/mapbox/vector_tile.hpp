@@ -270,11 +270,13 @@ GeometryCollectionType feature::getGeometries(float scale) const {
             y += protozero::decode_zigzag32(static_cast<std::uint32_t>(*start_itr++));
             float px = std::round(static_cast<float>(x) * scale);
             float py = std::round(static_cast<float>(y) * scale);
+            static const float max_coord = static_cast<float>(std::numeric_limits<typename GeometryCollectionType::coordinate_type>::max());
+            static const float min_coord = static_cast<float>(std::numeric_limits<typename GeometryCollectionType::coordinate_type>::min());
 
-            if (px > std::numeric_limits<typename GeometryCollectionType::coordinate_type>::max() ||
-                px < std::numeric_limits<typename GeometryCollectionType::coordinate_type>::min() ||
-                py > std::numeric_limits<typename GeometryCollectionType::coordinate_type>::max() ||
-                py < std::numeric_limits<typename GeometryCollectionType::coordinate_type>::min()
+            if (px > max_coord ||
+                px < min_coord ||
+                py > max_coord ||
+                py < min_coord
                 ) {
                 std::runtime_error("paths outside valid range of coordinate_type");
             } else {
