@@ -261,7 +261,9 @@ GeometryCollectionType feature::getGeometries(float scale) const {
 
             if (cmd == CommandType::MOVE_TO && !paths.back().empty()) {
                 paths.emplace_back();
-                if (!is_point) first = true;
+                if (!is_point) {
+                    first = true;
+                }
             }
 
             x += protozero::decode_zigzag32(static_cast<std::uint32_t>(*start_itr++));
