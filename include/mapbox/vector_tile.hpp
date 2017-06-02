@@ -92,30 +92,38 @@ private:
 };
 
 static mapbox::geometry::value parseValue(protozero::data_view const& value_view) {
+    mapbox::geometry::value value;
     protozero::pbf_reader value_reader(value_view);
     while (value_reader.next())
     {
         switch (value_reader.tag()) {
         case ValueType::STRING:
-            return value_reader.get_string();
+            value = value_reader.get_string();
+            break;
         case ValueType::FLOAT:
-            return static_cast<double>(value_reader.get_float());
+            value = static_cast<double>(value_reader.get_float());
+            break;
         case ValueType::DOUBLE:
-            return value_reader.get_double();
+            value = value_reader.get_double();
+            break;
         case ValueType::INT:
-            return value_reader.get_int64();
+            value = value_reader.get_int64();
+            break;
         case ValueType::UINT:
-            return value_reader.get_uint64();
+            value = value_reader.get_uint64();
+            break;
         case ValueType::SINT:
-            return value_reader.get_sint64();
+            value = value_reader.get_sint64();
+            break;
         case ValueType::BOOL:
-            return value_reader.get_bool();
+            value = value_reader.get_bool();
+            break;
         default:
             value_reader.skip();
             break;
         }
     }
-    return mapbox::geometry::null_value;
+    return value;
 }
 
 inline feature::feature(protozero::data_view const& feature_view, layer const& l)
