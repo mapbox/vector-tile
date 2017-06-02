@@ -115,7 +115,7 @@ static mapbox::geometry::value parseValue(protozero::data_view const& value_view
             break;
         }
     }
-    return false;
+    return mapbox::geometry::null_value;
 }
 
 inline feature::feature(protozero::data_view const& feature_view, layer const& l)
