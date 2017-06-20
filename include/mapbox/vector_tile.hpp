@@ -6,7 +6,7 @@
 
 #include <cmath>
 #include <cstdint>
-#include <map>
+#include <unordered_map>
 #include <functional> // reference_wrapper
 #include <string>
 #include <stdexcept>
@@ -73,7 +73,7 @@ private:
     std::string name;
     std::uint32_t version;
     std::uint32_t extent;
-    std::map<std::string, std::uint32_t> keysMap;
+    std::unordered_map<std::string, std::uint32_t> keysMap;
     std::vector<std::reference_wrapper<const std::string>> keys;
     std::vector<protozero::data_view> values;
     std::vector<protozero::data_view> features;
@@ -83,11 +83,11 @@ class buffer {
 public:
     buffer(std::string const& data);
     std::vector<std::string> layerNames() const;
-    std::map<std::string, const protozero::data_view> getLayers() const { return layers; };
+    std::unordered_map<std::string, const protozero::data_view> getLayers() const { return layers; };
     layer getLayer(const std::string&) const;
 
 private:
-    std::map<std::string, const protozero::data_view> layers;
+    std::unordered_map<std::string, const protozero::data_view> layers;
 };
 
 static mapbox::geometry::value parseValue(protozero::data_view const& value_view) {
