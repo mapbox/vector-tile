@@ -117,7 +117,7 @@ static mapbox::geometry::value parseValue(protozero::data_view const& value_view
     return false;
 }
 
-feature::feature(protozero::data_view const& feature_view, layer const& l)
+inline feature::feature(protozero::data_view const& feature_view, layer const& l)
     : layer_(l),
       id(),
       type(GeomType::UNKNOWN),
@@ -146,7 +146,7 @@ feature::feature(protozero::data_view const& feature_view, layer const& l)
     }
 }
 
-optional<mapbox::geometry::value> feature::getValue(const std::string& key) const {
+inline optional<mapbox::geometry::value> feature::getValue(const std::string& key) const {
     auto keyIter = layer_.keysMap.find(key);
     if (keyIter == layer_.keysMap.end()) {
         return optional<mapbox::geometry::value>();
@@ -180,7 +180,7 @@ optional<mapbox::geometry::value> feature::getValue(const std::string& key) cons
     return optional<mapbox::geometry::value>();
 }
 
-feature::properties_type feature::getProperties() const {
+inline feature::properties_type feature::getProperties() const {
     auto start_itr = tags_iter.begin();
     const auto end_itr = tags_iter.end();
     properties_type properties;
@@ -199,15 +199,15 @@ feature::properties_type feature::getProperties() const {
     return properties;
 }
 
-optional<mapbox::geometry::identifier> const& feature::getID() const {
+inline optional<mapbox::geometry::identifier> const& feature::getID() const {
     return id;
 }
 
-std::uint32_t feature::getExtent() const {
+inline std::uint32_t feature::getExtent() const {
     return layer_.getExtent();
 }
 
-std::uint32_t feature::getVersion() const {
+inline std::uint32_t feature::getVersion() const {
     return layer_.getVersion();
 }
 
@@ -300,7 +300,7 @@ GeometryCollectionType feature::getGeometries(float scale) const {
     return paths;
 }
 
-buffer::buffer(std::string const& data)
+inline buffer::buffer(std::string const& data)
     : layers() {
         protozero::pbf_reader data_reader(data);
         while (data_reader.next(TileType::LAYERS)) {
@@ -319,7 +319,7 @@ buffer::buffer(std::string const& data)
         }
 }
 
-std::vector<std::string> buffer::layerNames() const {
+inline std::vector<std::string> buffer::layerNames() const {
     std::vector<std::string> names;
     names.reserve(layers.size());
     for (auto const& layer : layers) {
@@ -328,7 +328,7 @@ std::vector<std::string> buffer::layerNames() const {
     return names;
 }
 
-layer buffer::getLayer(const std::string& name) const {
+inline layer buffer::getLayer(const std::string& name) const {
     auto layer_it = layers.find(name);
     if (layer_it == layers.end()) {
         throw std::runtime_error(std::string("no layer by the name of '")+name+"'");
@@ -336,7 +336,7 @@ layer buffer::getLayer(const std::string& name) const {
     return layer(layer_it->second);
 }
 
-layer::layer(protozero::data_view const& layer_view) :
+inline layer::layer(protozero::data_view const& layer_view) :
     name(),
     version(1),
     extent(4096),
@@ -409,11 +409,11 @@ layer::layer(protozero::data_view const& layer_view) :
     }
 }
 
-protozero::data_view const& layer::getFeature(std::size_t i) const {
+inline protozero::data_view const& layer::getFeature(std::size_t i) const {
     return features.at(i);
 }
 
-std::string const& layer::getName() const {
+inline std::string const& layer::getName() const {
     return name;
 }
 
