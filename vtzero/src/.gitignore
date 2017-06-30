@@ -1,0 +1,4 @@
+*.o
+vtzero-create
+vtzero-filter
+vtzero-show
