@@ -258,15 +258,6 @@ namespace vtzero {
             return m_geometry;
         }
 
-        template <typename TGeomHandler>
-        void decode_point_geometry(TGeomHandler&& geom_handler) const;
-
-        template <typename TGeomHandler>
-        void decode_linestring_geometry(TGeomHandler&& geom_handler) const;
-
-        template <typename TGeomHandler>
-        void decode_polygon_geometry(TGeomHandler&& geom_handler) const;
-
         protozero::iterator_range<tags_iterator> tags(const layer& layer) const noexcept {
             return {{m_tags.begin(), m_tags.end(), &layer},
                     {m_tags.end(), m_tags.end(), &layer}};
@@ -521,121 +512,6 @@ namespace vtzero {
         }
 
     }; // class vector_tile
-
-    template <typename TGeomHandler>
-    void feature::decode_point_geometry(TGeomHandler&& geom_handler) const {
-        assert(type() == vtzero::GeomType::POINT);
-
-        geometry_decoder decoder{m_geometry, false};
-
-        // spec 4.3.4.2 "MUST consist of of a single MoveTo command"
-        if (!decoder.next_command(detail::command_move_to())) {
-            throw geometry_exception{};
-        }
-
-        // spec 4.3.4.2 "command count greater than 0"
-        if (decoder.count() == 0) {
-            throw geometry_exception{};
-        }
-
-        while (decoder.count() > 0) {
-            std::forward<TGeomHandler>(geom_handler).point(decoder.next_point());
-        }
-
-        // spec 4.3.4.2 "MUST consist of of a single ... command"
-        if (!decoder.done()) {
-            throw geometry_exception{};
-        }
-    }
-
-    template <typename TGeomHandler>
-    void feature::decode_linestring_geometry(TGeomHandler&& geom_handler) const {
-        assert(type() == vtzero::GeomType::LINESTRING);
-
-        geometry_decoder decoder{m_geometry, false};
-
-        // spec 4.3.4.3 "1. A MoveTo command"
-        while (decoder.next_command(detail::command_move_to())) {
-            // spec 4.3.4.3 "with a command count of 1"
-            if (decoder.count() != 1) {
-                throw geometry_exception{};
-            }
-
-            std::forward<TGeomHandler>(geom_handler).linestring_begin();
-            std::forward<TGeomHandler>(geom_handler).linestring_point(decoder.next_point());
-
-            // spec 4.3.4.3 "2. A LineTo command"
-            if (!decoder.next_command(detail::command_line_to())) {
-                throw geometry_exception{};
-            }
-
-            // spec 4.3.4.3 "with a command count greater than 0"
-            if (decoder.count() == 0) {
-                throw geometry_exception{};
-            }
-
-            while (decoder.count() > 0) {
-                std::forward<TGeomHandler>(geom_handler).linestring_point(decoder.next_point());
-            }
-
-            std::forward<TGeomHandler>(geom_handler).linestring_end();
-        }
-    }
-
-    template <typename TGeomHandler>
-    void feature::decode_polygon_geometry(TGeomHandler&& geom_handler) const {
-        assert(type() == vtzero::GeomType::POLYGON);
-
-        geometry_decoder decoder{m_geometry, false};
-
-        // spec 4.3.4.4 "1. A MoveTo command"
-        while (decoder.next_command(detail::command_move_to())) {
-            // spec 4.3.4.4 "with a command count of 1"
-            if (decoder.count() != 1) {
-                throw geometry_exception{};
-            }
-
-            std::forward<TGeomHandler>(geom_handler).ring_begin();
-
-            point start_point{decoder.next_point()};
-            int64_t sum = 0;
-            point last_point = start_point;
-
-            std::forward<TGeomHandler>(geom_handler).ring_point(start_point);
-
-            // spec 4.3.4.4 "2. A LineTo command"
-            if (!decoder.next_command(detail::command_line_to())) {
-                throw geometry_exception{};
-            }
-
-            // spec 4.3.4.4 "with a command count greater than 1"
-/*            if (decoder.count() <= 1) {
-                throw geometry_exception{};
-            }*/
-
-            while (decoder.count() > 0) {
-                point p = decoder.next_point();
-                sum += detail::det(last_point, p);
-                last_point = p;
-                std::forward<TGeomHandler>(geom_handler).ring_point(p);
-            }
-
-            // spec 4.3.4.4 "3. A ClosePath command"
-            if (!decoder.next_command(detail::command_close_path())) {
-                throw geometry_exception{};
-            }
-
-            // spec 4.3.3.3 "A ClosePath command MUST have a command count of 1"
-            if (decoder.count() != 1) {
-                throw geometry_exception{};
-            }
-
-            sum += detail::det(last_point, start_point);
-            std::forward<TGeomHandler>(geom_handler).ring_point(start_point);
-
-            std::forward<TGeomHandler>(geom_handler).ring_end(sum > 0);
-        }
-    }
 
     inline tag tags_iterator::operator*() const {
         assert(m_it != m_end);

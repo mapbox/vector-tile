@@ -115,14 +115,14 @@ void print_layer(vtzero::layer& layer, bool print_tables) {
                   << "    geom      : ";
         switch (feature.type()) {
             case vtzero::GeomType::POINT:
-                feature.decode_point_geometry(geom_handler_points{});
+                vtzero::decode_point_geometry(feature.geometry(), false, geom_handler_points{});
                 break;
             case vtzero::GeomType::LINESTRING:
-                feature.decode_linestring_geometry(geom_handler_linestrings{});
+                vtzero::decode_linestring_geometry(feature.geometry(), false, geom_handler_linestrings{});
                 break;
             case vtzero::GeomType::POLYGON:
                 std::cout << '\n';
-                feature.decode_polygon_geometry(geom_handler_polygons{});
+                vtzero::decode_polygon_geometry(feature.geometry(), false, geom_handler_polygons{});
                 break;
             default:
                 std::cout << "UNKNOWN GEOMETRY TYPE\n";

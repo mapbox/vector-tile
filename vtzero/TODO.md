@@ -20,7 +20,6 @@
 
 * Change interfaces for feature and layer iteration. Use something similar to
   the tags iterator?
-* `feature::decode_*_geometry` functions might be better as free functions.
 * Add functions to convert tag value to a `variant`?
 * Add functions to convert mercator coordinates to tile coordinates?
 
