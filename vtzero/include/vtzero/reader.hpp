@@ -278,7 +278,7 @@ namespace vtzero {
                 } else {
                     m_data = data_view{};
                 }
-            } catch (...) {
+            } catch (const protozero::exception&) {
                 // convert protozero exceptions into vtzero exception
                 throw format_exception{};
             }
@@ -366,37 +366,49 @@ namespace vtzero {
             m_name() {
         }
 
+        /**
+         * Construct a layer object.
+         *
+         * @throws format_exception if the layer data is ill-formed.
+         * @throws version_exception if the layer contains an unsupported version
+         *                           number (only version 1 and 2 are supported)
+         */
         explicit layer(const data_view& data) :
             m_data(data),
             m_version(1), // defaults to 1, see https://github.com/mapbox/vector-tile-spec/blob/master/2.1/vector_tile.proto#L55
             m_extent(4096), // defaults to 4096, see https://github.com/mapbox/vector-tile-spec/blob/master/2.1/vector_tile.proto#L70
             m_name() {
-            protozero::pbf_message<detail::pbf_layer> reader{data};
-            while (reader.next()) {
-                switch (reader.tag_and_type()) {
-                    case protozero::tag_and_type(detail::pbf_layer::version, protozero::pbf_wire_type::varint):
-                        m_version = reader.get_uint32();
-                        // This library can only handle version 1 and 2.
-                        if (m_version < 1 || m_version > 2) {
-                            throw version_exception{};
-                        }
-                        break;
-                    case protozero::tag_and_type(detail::pbf_layer::name, protozero::pbf_wire_type::length_delimited):
-                        m_name = reader.get_view();
-                        break;
-                    case protozero::tag_and_type(detail::pbf_layer::keys, protozero::pbf_wire_type::length_delimited):
-                        m_key_table.push_back(reader.get_view());
-                        break;
-                    case protozero::tag_and_type(detail::pbf_layer::values, protozero::pbf_wire_type::length_delimited):
-                        m_value_table.push_back(reader.get_view());
-                        break;
-                    case protozero::tag_and_type(detail::pbf_layer::extent, protozero::pbf_wire_type::varint):
-                        m_extent = reader.get_uint32();
-                        break;
-                    default:
-                        reader.skip();
-                        break;
+            try {
+                protozero::pbf_message<detail::pbf_layer> reader{data};
+                while (reader.next()) {
+                    switch (reader.tag_and_type()) {
+                        case protozero::tag_and_type(detail::pbf_layer::version, protozero::pbf_wire_type::varint):
+                            m_version = reader.get_uint32();
+                            // This library can only handle version 1 and 2.
+                            if (m_version < 1 || m_version > 2) {
+                                throw version_exception{};
+                            }
+                            break;
+                        case protozero::tag_and_type(detail::pbf_layer::name, protozero::pbf_wire_type::length_delimited):
+                            m_name = reader.get_view();
+                            break;
+                        case protozero::tag_and_type(detail::pbf_layer::keys, protozero::pbf_wire_type::length_delimited):
+                            m_key_table.push_back(reader.get_view());
+                            break;
+                        case protozero::tag_and_type(detail::pbf_layer::values, protozero::pbf_wire_type::length_delimited):
+                            m_value_table.push_back(reader.get_view());
+                            break;
+                        case protozero::tag_and_type(detail::pbf_layer::extent, protozero::pbf_wire_type::varint):
+                            m_extent = reader.get_uint32();
+                            break;
+                        default:
+                            reader.skip();
+                            break;
+                    }
                 }
+            } catch (const protozero::exception&) {
+                // convert protozero exceptions into vtzero exception
+                throw format_exception{};
             }
 
             // 4.1 "A layer MUST contain a name field."
@@ -488,7 +500,7 @@ namespace vtzero {
                         }
                     }
                 }
-            } catch (...) {
+            } catch (const protozero::exception&) {
                 // convert protozero exceptions into vtzero exception
                 throw format_exception{};
             }
@@ -513,7 +525,7 @@ namespace vtzero {
                     layer_reader.skip();
                     ++count;
                 }
-            } catch (...) {
+            } catch (const protozero::exception&) {
                 // convert protozero exceptions into vtzero exception
                 throw format_exception{};
             }
@@ -536,7 +548,7 @@ namespace vtzero {
                 } else {
                     m_data = data_view{};
                 }
-            } catch (...) {
+            } catch (const protozero::exception&) {
                 // convert protozero exceptions into vtzero exception
                 throw format_exception{};
             }
@@ -652,7 +664,7 @@ namespace vtzero {
                     reader.skip();
                     --index;
                 }
-            } catch (...) {
+            } catch (const protozero::exception&) {
                 // convert protozero exceptions into vtzero exception
                 throw format_exception{};
             }
@@ -690,7 +702,7 @@ namespace vtzero {
                         throw format_exception{};
                     }
                 }
-            } catch (...) {
+            } catch (const protozero::exception&) {
                 // convert protozero exceptions into vtzero exception
                 throw format_exception{};
             }
