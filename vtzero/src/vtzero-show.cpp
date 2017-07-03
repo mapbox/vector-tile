@@ -194,7 +194,7 @@ int main(int argc, char* argv[]) {
     vtzero::vector_tile tile{data};
 
     if (remaining_args == 1) {
-        while (auto layer = tile.get_next_layer()) {
+        for (auto layer : tile) {
             if (layer_overview) {
                 print_layer_overview(layer);
             } else {
