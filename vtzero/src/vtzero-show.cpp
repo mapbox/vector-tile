@@ -92,7 +92,7 @@ struct print_value {
 
 }; // struct print_value
 
-void print_layer(vtzero::layer& layer, bool print_tables) {
+void print_layer(const vtzero::layer& layer, bool print_tables) {
     std::cout << "layer:\n"
               << "  name   : " << std::string{layer.name()} << '\n'
               << "  version: " << layer.version() << '\n'
@@ -108,7 +108,7 @@ void print_layer(vtzero::layer& layer, bool print_tables) {
         }
     }
 
-    while (const auto feature = layer.get_next_feature()) {
+    for (const auto feature : layer) {
         std::cout << "  feature:\n"
                   << "    id        : " << feature.id() << '\n'
                   << "    geomtype  : " << vtzero::geom_type_name(feature.type()) << '\n'
@@ -138,7 +138,7 @@ void print_layer(vtzero::layer& layer, bool print_tables) {
     }
 }
 
-void print_layer_overview(vtzero::layer& layer) {
+void print_layer_overview(const vtzero::layer& layer) {
     std::cout.write(layer.name().data(), layer.name().size());
     std::cout << ' ' << layer.get_feature_count() << '\n';
 }
@@ -194,7 +194,7 @@ int main(int argc, char* argv[]) {
     vtzero::vector_tile tile{data};
 
     if (remaining_args == 1) {
-        for (auto layer : tile) {
+        for (const auto layer : tile) {
             if (layer_overview) {
                 print_layer_overview(layer);
             } else {
@@ -202,7 +202,7 @@ int main(int argc, char* argv[]) {
             }
         }
     } else {
-        auto layer = get_layer(tile, argv[optind + 1]);
+        const auto layer = get_layer(tile, argv[optind + 1]);
         if (layer_overview) {
             print_layer_overview(layer);
         } else {

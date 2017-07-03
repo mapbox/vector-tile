@@ -265,6 +265,86 @@ namespace vtzero {
 
     }; // class feature
 
+    class feature_iterator {
+
+        protozero::pbf_message<detail::pbf_layer> m_layer_reader;
+        data_view m_data;
+
+        void next() {
+            try {
+                if (m_layer_reader.next(detail::pbf_layer::features,
+                                        protozero::pbf_wire_type::length_delimited)) {
+                    m_data = m_layer_reader.get_view();
+                } else {
+                    m_data = data_view{};
+                }
+            } catch (...) {
+                // convert protozero exceptions into vtzero exception
+                throw format_exception{};
+            }
+        }
+
+    public:
+
+        using iterator_category = std::forward_iterator_tag;
+        using value_type        = feature;
+        using difference_type   = std::ptrdiff_t;
+        using pointer           = value_type*;
+        using reference         = value_type&;
+
+        /**
+         * Construct special "end" iterator.
+         */
+        feature_iterator() = default;
+
+        /**
+         * Construct feature iterator from specified vector tile data.
+         *
+         * @throws format_exception if the tile data is ill-formed.
+         */
+        feature_iterator(const data_view& tile_data) :
+            m_layer_reader(tile_data),
+            m_data() {
+            next();
+        }
+
+        feature operator*() const {
+            assert(m_data.data() != nullptr);
+            return feature{m_data};
+        }
+
+        feature operator->() const {
+            assert(m_data.data() != nullptr);
+            return feature{m_data};
+        }
+
+        /**
+         * @throws format_exception if the layer data is ill-formed.
+         */
+        feature_iterator& operator++() {
+            next();
+            return *this;
+        }
+
+        /**
+         * @throws format_exception if the layer data is ill-formed.
+         */
+        feature_iterator operator++(int) {
+            const feature_iterator tmp{*this};
+            ++(*this);
+            return tmp;
+        }
+
+        bool operator==(const feature_iterator& other) const noexcept {
+            return m_data == other.m_data;
+        }
+
+        bool operator!=(const feature_iterator& other) const noexcept {
+            return !(*this == other);
+        }
+
+    }; // feature_iterator
+
     /**
      * A layer according to spec 4.1
      */
@@ -274,7 +354,6 @@ namespace vtzero {
         uint32_t m_version;
         uint32_t m_extent;
         data_view m_name;
-        protozero::pbf_message<detail::pbf_layer> m_layer_reader;
         std::vector<data_view> m_key_table;
         std::vector<data_view> m_value_table;
 
@@ -284,16 +363,14 @@ namespace vtzero {
             m_data(),
             m_version(0),
             m_extent(0),
-            m_name(),
-            m_layer_reader() {
+            m_name() {
         }
 
         explicit layer(const data_view& data) :
             m_data(data),
             m_version(1), // defaults to 1, see https://github.com/mapbox/vector-tile-spec/blob/master/2.1/vector_tile.proto#L55
             m_extent(4096), // defaults to 4096, see https://github.com/mapbox/vector-tile-spec/blob/master/2.1/vector_tile.proto#L70
-            m_name(),
-            m_layer_reader(data) {
+            m_name() {
             protozero::pbf_message<detail::pbf_layer> reader{data};
             while (reader.next()) {
                 switch (reader.tag_and_type()) {
@@ -379,29 +456,12 @@ namespace vtzero {
             return m_value_table[n];
         }
 
-        /**
-         * Reset feature iterator. The next call to get_next_feature() will
-         * start at the first feature again.
-         */
-        void reset() {
-            m_layer_reader = protozero::pbf_message<detail::pbf_layer>{m_data};
+        feature_iterator begin() const {
+            return feature_iterator{m_data};
         }
 
-        /**
-         * Get the next feature in this layer.
-         *
-         * Complexity: Constant.
-         * @returns Feature with the specified ID or the invalid feature if
-         *          there are no more features in this layer.
-         */
-        feature get_next_feature() {
-            assert(valid());
-            if (m_layer_reader.next(detail::pbf_layer::features, protozero::pbf_wire_type::length_delimited)) {
-                return feature{m_layer_reader.get_view()};
-            }
-
-            reset();
-            return feature{};
+        feature_iterator end() const {
+            return feature_iterator{};
         }
 
         /**
@@ -412,18 +472,25 @@ namespace vtzero {
          * @param id The ID to look for.
          * @returns Feature with the specified ID or the invalid feature if
          *          there is no feature with this ID.
+         * @throws format_exception if the layer data is ill-formed.
          */
         feature get_feature(uint64_t id) const {
             assert(valid());
-            protozero::pbf_message<detail::pbf_layer> layer_reader{m_data};
-            while (layer_reader.next(detail::pbf_layer::features, protozero::pbf_wire_type::length_delimited)) {
-                const auto feature_data = layer_reader.get_view();
-                protozero::pbf_message<detail::pbf_feature> feature_reader{feature_data};
-                if (feature_reader.next(detail::pbf_feature::id, protozero::pbf_wire_type::varint)) {
-                    if (feature_reader.get_uint64() == id) {
-                        return feature{feature_data};
+
+            try {
+                protozero::pbf_message<detail::pbf_layer> layer_reader{m_data};
+                while (layer_reader.next(detail::pbf_layer::features, protozero::pbf_wire_type::length_delimited)) {
+                    const auto feature_data = layer_reader.get_view();
+                    protozero::pbf_message<detail::pbf_feature> feature_reader{feature_data};
+                    if (feature_reader.next(detail::pbf_feature::id, protozero::pbf_wire_type::varint)) {
+                        if (feature_reader.get_uint64() == id) {
+                            return feature{feature_data};
+                        }
                     }
                 }
+            } catch (...) {
+                // convert protozero exceptions into vtzero exception
+                throw format_exception{};
             }
 
             return feature{};
@@ -433,15 +500,22 @@ namespace vtzero {
          * Count the number of features in this layer.
          *
          * Complexity: Linear in the number of features.
+         *
+         * @throws format_exception if the layer data is ill-formed.
          */
         std::size_t get_feature_count() const {
             assert(valid());
             std::size_t count = 0;
 
-            protozero::pbf_message<detail::pbf_layer> layer_reader{m_data};
-            while (layer_reader.next(detail::pbf_layer::features, protozero::pbf_wire_type::length_delimited)) {
-                layer_reader.skip();
-                ++count;
+            try {
+                protozero::pbf_message<detail::pbf_layer> layer_reader{m_data};
+                while (layer_reader.next(detail::pbf_layer::features, protozero::pbf_wire_type::length_delimited)) {
+                    layer_reader.skip();
+                    ++count;
+                }
+            } catch (...) {
+                // convert protozero exceptions into vtzero exception
+                throw format_exception{};
             }
 
             return count;
