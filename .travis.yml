@@ -4,6 +4,13 @@ matrix:
   include:
     - os: linux
       sudo: false
+      env: CXX=g++-4.9 BUILDTYPE=Release
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-4.9', 'libstdc++-4.9-dev' ]
+    - os: linux
+      sudo: false
       env: CXX=g++-5 BUILDTYPE=Release
       addons:
         apt:
