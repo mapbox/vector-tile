@@ -93,7 +93,7 @@ namespace vtzero {
             m_count = detail::get_command_count(*it);
 
             if (m_command_id != expected_command) {
-                throw geometry_exception{};
+                throw geometry_exception{std::string{"expected command "} + std::to_string(expected_command) + " but got " + std::to_string(m_command_id)};
             }
 
             ++it;
@@ -105,7 +105,7 @@ namespace vtzero {
             assert(m_count > 0);
 
             if (it == end || std::next(it) == end) {
-                throw geometry_exception{};
+                throw geometry_exception{"too few points in geometry"};
             }
 
             const uint32_t x = protozero::decode_zigzag32(*it++);
@@ -113,7 +113,7 @@ namespace vtzero {
 
             // spec 4.3.3.2 "For any pair of (dX, dY) the dX and dY MUST NOT both be 0."
             if (m_strict && x == 0 && y == 0) {
-                throw geometry_exception{};
+                throw geometry_exception{"found consecutive equal points (spec 4.3.3.2)"};
             }
 
             m_cursor.x += x;
@@ -132,12 +132,12 @@ namespace vtzero {
 
         // spec 4.3.4.2 "MUST consist of of a single MoveTo command"
         if (!decoder.next_command(detail::command_move_to())) {
-            throw geometry_exception{};
+            throw geometry_exception{"expected MoveTo command (spec 4.3.4.2)"};
         }
 
         // spec 4.3.4.2 "command count greater than 0"
         if (decoder.count() == 0) {
-            throw geometry_exception{};
+            throw geometry_exception{"MoveTo command count is zero (spec 4.3.4.2)"};
         }
 
         std::forward<TGeomHandler>(geom_handler).points_begin(decoder.count());
@@ -147,7 +147,7 @@ namespace vtzero {
 
         // spec 4.3.4.2 "MUST consist of of a single ... command"
         if (!decoder.done()) {
-            throw geometry_exception{};
+            throw geometry_exception{"additional data after end of geometry (spec 4.3.4.2)"};
         }
 
         std::forward<TGeomHandler>(geom_handler).points_end();
@@ -161,19 +161,19 @@ namespace vtzero {
         while (decoder.next_command(detail::command_move_to())) {
             // spec 4.3.4.3 "with a command count of 1"
             if (decoder.count() != 1) {
-                throw geometry_exception{};
+                throw geometry_exception{"MoveTo command count is not 1 (spec 4.3.4.3)"};
             }
 
             const auto first_point = decoder.next_point();
 
             // spec 4.3.4.3 "2. A LineTo command"
             if (!decoder.next_command(detail::command_line_to())) {
-                throw geometry_exception{};
+                throw geometry_exception{"expected LineTo command (spec 4.3.4.3)"};
             }
 
             // spec 4.3.4.3 "with a command count greater than 0"
             if (decoder.count() == 0) {
-                throw geometry_exception{};
+                throw geometry_exception{"LineTo command count is zero (spec 4.3.4.3)"};
             }
 
             std::forward<TGeomHandler>(geom_handler).linestring_begin(decoder.count() + 1);
@@ -195,7 +195,7 @@ namespace vtzero {
         while (decoder.next_command(detail::command_move_to())) {
             // spec 4.3.4.4 "with a command count of 1"
             if (decoder.count() != 1) {
-                throw geometry_exception{};
+                throw geometry_exception{"MoveTo command count is not 1 (spec 4.3.4.4)"};
             }
 
             point start_point{decoder.next_point()};
@@ -204,12 +204,12 @@ namespace vtzero {
 
             // spec 4.3.4.4 "2. A LineTo command"
             if (!decoder.next_command(detail::command_line_to())) {
-                throw geometry_exception{};
+                throw geometry_exception{"expected LineTo command (spec 4.3.4.4)"};
             }
 
             // spec 4.3.4.4 "with a command count greater than 1"
             if (strict && decoder.count() <= 1) {
-                throw geometry_exception{};
+                throw geometry_exception{"LineTo command count is not greater than 1 (spec 4.3.4.4)"};
             }
 
             std::forward<TGeomHandler>(geom_handler).ring_begin(decoder.count() + 2);
@@ -224,12 +224,12 @@ namespace vtzero {
 
             // spec 4.3.4.4 "3. A ClosePath command"
             if (!decoder.next_command(detail::command_close_path())) {
-                throw geometry_exception{};
+                throw geometry_exception{"expected ClosePath command (4.3.4.4)"};
             }
 
             // spec 4.3.3.3 "A ClosePath command MUST have a command count of 1"
             if (decoder.count() != 1) {
-                throw geometry_exception{};
+                throw geometry_exception{"ClosePath command count is not 1"};
             }
 
             sum += detail::det(last_point, start_point);

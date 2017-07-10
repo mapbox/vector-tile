@@ -62,7 +62,7 @@ namespace vtzero {
             if (value_message.next()) {
                 return value_message.tag();
             }
-            throw format_exception{};
+            throw format_exception{"missing tag value"};
         }
 
         data_view string_value() const {
@@ -152,7 +152,7 @@ namespace vtzero {
         tags_iterator& operator++() {
             ++m_it;
             if (m_it == m_end) {
-                throw format_exception{};
+                throw format_exception{"unpaired tag key/value indexes (spec 4.4)"};
             }
             ++m_it;
             return *this;
@@ -217,7 +217,7 @@ namespace vtzero {
                             const auto type = reader.get_enum();
                             // spec 4.3.4 "Geometry Types"
                             if (type < 0 || type > 3) {
-                                throw format_exception{};
+                                throw format_exception{"Unknown geometry type (spec 4.3.4)"};
                             }
                             m_type = static_cast<GeomType>(type);
                         }
@@ -232,7 +232,7 @@ namespace vtzero {
 
             // spec 4.2 "A feature MUST contain a geometry field."
             if (m_geometry.empty()) {
-                throw format_exception{};
+                throw format_exception{"Missing geometry field in feature (spec 4.2)"};
             }
         }
 
@@ -280,7 +280,7 @@ namespace vtzero {
                 }
             } catch (const protozero::exception&) {
                 // convert protozero exceptions into vtzero exception
-                throw format_exception{};
+                throw protocol_buffers_exception{};
             }
         }
 
@@ -386,7 +386,7 @@ namespace vtzero {
                             m_version = reader.get_uint32();
                             // This library can only handle version 1 and 2.
                             if (m_version < 1 || m_version > 2) {
-                                throw version_exception{};
+                                throw version_exception{m_version};
                             }
                             break;
                         case protozero::tag_and_type(detail::pbf_layer::name, protozero::pbf_wire_type::length_delimited):
@@ -408,12 +408,12 @@ namespace vtzero {
                 }
             } catch (const protozero::exception&) {
                 // convert protozero exceptions into vtzero exception
-                throw format_exception{};
+                throw protocol_buffers_exception{};
             }
 
             // 4.1 "A layer MUST contain a name field."
             if (m_name.data() == nullptr) {
-                throw format_exception{};
+                throw format_exception{"missing name field in layer (spec 4.1)"};
             }
         }
 
@@ -454,7 +454,7 @@ namespace vtzero {
 
         const data_view& key(uint32_t n) const {
             if (n >= m_key_table.size()) {
-                throw format_exception{};
+                throw format_exception{std::string{"key table index too large: "} + std::to_string(n)};
             }
 
             return m_key_table[n];
@@ -462,7 +462,7 @@ namespace vtzero {
 
         const data_view& value(uint32_t n) const {
             if (n >= m_value_table.size()) {
-                throw format_exception{};
+                throw format_exception{std::string{"value table index too large: "} + std::to_string(n)};
             }
 
             return m_value_table[n];
@@ -502,7 +502,7 @@ namespace vtzero {
                 }
             } catch (const protozero::exception&) {
                 // convert protozero exceptions into vtzero exception
-                throw format_exception{};
+                throw protocol_buffers_exception{};
             }
 
             return feature{};
@@ -527,7 +527,7 @@ namespace vtzero {
                 }
             } catch (const protozero::exception&) {
                 // convert protozero exceptions into vtzero exception
-                throw format_exception{};
+                throw protocol_buffers_exception{};
             }
 
             return count;
@@ -550,7 +550,7 @@ namespace vtzero {
                 }
             } catch (const protozero::exception&) {
                 // convert protozero exceptions into vtzero exception
-                throw format_exception{};
+                throw protocol_buffers_exception{};
             }
         }
 
@@ -666,7 +666,7 @@ namespace vtzero {
                 }
             } catch (const protozero::exception&) {
                 // convert protozero exceptions into vtzero exception
-                throw format_exception{};
+                throw protocol_buffers_exception{};
             }
 
             return layer{};
@@ -699,12 +699,12 @@ namespace vtzero {
                         }
                     } else {
                         // 4.1 "A layer MUST contain a name field."
-                        throw format_exception{};
+                        throw format_exception{"missing name in layer (spec 4.1)"};
                     }
                 }
             } catch (const protozero::exception&) {
                 // convert protozero exceptions into vtzero exception
-                throw format_exception{};
+                throw protocol_buffers_exception{};
             }
 
             return layer{};
@@ -753,7 +753,7 @@ namespace vtzero {
     inline tag tags_iterator::operator*() const {
         assert(m_it != m_end);
         if (std::next(m_it) == m_end) {
-            throw format_exception{};
+            throw format_exception{"unpaired tag key/value indexes (spec 4.4)"};
         }
         return tag{m_layer->key(*m_it), m_layer->value(*std::next(m_it))};
     }
