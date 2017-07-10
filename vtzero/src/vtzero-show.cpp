@@ -12,8 +12,14 @@
 
 struct geom_handler_points {
 
-    void point(const vtzero::point& point) const {
+    void points_begin(uint32_t /*count*/) const noexcept {
+    }
+
+    void points_point(const vtzero::point point) const {
         std::cout << "POINT(" << point.x << ',' << point.y << ")\n";
+    }
+
+    void points_end() const noexcept {
     }
 
 };
@@ -22,11 +28,13 @@ struct geom_handler_linestrings {
 
     std::string output;
 
-    void linestring_begin() {
-        output = "LINESTRING(";
+    void linestring_begin(uint32_t count) {
+        output = "LINESTRING[count=";
+        output += std::to_string(count);
+        output += "](";
     }
 
-    void linestring_point(const vtzero::point& point) {
+    void linestring_point(const vtzero::point point) {
         output += std::to_string(point.x);
         output += ' ';
         output += std::to_string(point.y);
@@ -50,11 +58,13 @@ struct geom_handler_polygons {
 
     std::string output;
 
-    void ring_begin() {
-        output += "        RING(";
+    void ring_begin(uint32_t count) {
+        output += "        RING[count=";
+        output += std::to_string(count);
+        output += "](";
     }
 
-    void ring_point(const vtzero::point& point) {
+    void ring_point(const vtzero::point point) {
         output += std::to_string(point.x);
         output += ' ';
         output += std::to_string(point.y);
@@ -66,14 +76,13 @@ struct geom_handler_polygons {
             return;
         }
         if (output.back() == ',') {
-            output.resize(output.size() - 1);
+            output.back() = ')';
         }
         if (is_outer) {
-            output += " OUTER";
+            output += "[OUTER]\n";
         } else {
-            output += " INNER";
+            output += "[INNER]\n";
         }
-        output += ")\n";
         std::cout << output;
     }
 

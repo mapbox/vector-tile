@@ -140,14 +140,17 @@ namespace vtzero {
             throw geometry_exception{};
         }
 
+        std::forward<TGeomHandler>(geom_handler).points_begin(decoder.count());
         while (decoder.count() > 0) {
-            std::forward<TGeomHandler>(geom_handler).point(decoder.next_point());
+            std::forward<TGeomHandler>(geom_handler).points_point(decoder.next_point());
         }
 
         // spec 4.3.4.2 "MUST consist of of a single ... command"
         if (!decoder.done()) {
             throw geometry_exception{};
         }
+
+        std::forward<TGeomHandler>(geom_handler).points_end();
     }
 
     template <typename TGeomHandler>
@@ -161,8 +164,7 @@ namespace vtzero {
                 throw geometry_exception{};
             }
 
-            std::forward<TGeomHandler>(geom_handler).linestring_begin();
-            std::forward<TGeomHandler>(geom_handler).linestring_point(decoder.next_point());
+            const auto first_point = decoder.next_point();
 
             // spec 4.3.4.3 "2. A LineTo command"
             if (!decoder.next_command(detail::command_line_to())) {
@@ -174,6 +176,8 @@ namespace vtzero {
                 throw geometry_exception{};
             }
 
+            std::forward<TGeomHandler>(geom_handler).linestring_begin(decoder.count() + 1);
+            std::forward<TGeomHandler>(geom_handler).linestring_point(first_point);
             while (decoder.count() > 0) {
                 std::forward<TGeomHandler>(geom_handler).linestring_point(decoder.next_point());
             }
@@ -194,13 +198,9 @@ namespace vtzero {
                 throw geometry_exception{};
             }
 
-            std::forward<TGeomHandler>(geom_handler).ring_begin();
-
             point start_point{decoder.next_point()};
             int64_t sum = 0;
             point last_point = start_point;
-
-            std::forward<TGeomHandler>(geom_handler).ring_point(start_point);
 
             // spec 4.3.4.4 "2. A LineTo command"
             if (!decoder.next_command(detail::command_line_to())) {
@@ -211,6 +211,9 @@ namespace vtzero {
             if (strict && decoder.count() <= 1) {
                 throw geometry_exception{};
             }
+
+            std::forward<TGeomHandler>(geom_handler).ring_begin(decoder.count() + 2);
+            std::forward<TGeomHandler>(geom_handler).ring_point(start_point);
 
             while (decoder.count() > 0) {
                 point p = decoder.next_point();
