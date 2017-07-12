@@ -23,13 +23,31 @@ int main() {
         feature.rollback();
     }
 
-    vtzero::point_feature_builder feature{layer_points, 2 /* id */};
+    {
+        vtzero::point_feature_builder feature{layer_points, 2 /* id */};
+        feature.add_single_point({20, 20});
+        feature.add_tag("some", "attr");
+    }
+    {
+        vtzero::point_feature_builder feature{layer_points, 3 /* id */};
+        feature.add_single_point({20, 20});
+        feature.add_tag("some", "attr");
+    }
+
+    {
+        vtzero::point_feature_builder feature{layer_points, 4 /* id */};
+        feature.add_single_point({20, 20});
+        feature.add_tag("some", "otherattr");
+    }
+
+
+    vtzero::point_feature_builder feature{layer_points, 5 /* id */};
     feature.add_single_point({20, 20});
-    feature.add_tag("some", "attr");
+    feature.add_tag("otherkey", "attr");
     feature.commit();
 
     {
-        vtzero::line_string_feature_builder feature{layer_lines, 3 /* id */};
+        vtzero::line_string_feature_builder feature{layer_lines, 6 /* id */};
         feature.linestring_begin(3);
         feature.add_point({10, 10});
         feature.add_point({10, 20});
@@ -44,7 +62,7 @@ int main() {
     }
 
     {
-        vtzero::polygon_feature_builder feature{layer_polygons, 4 /* id */};
+        vtzero::polygon_feature_builder feature{layer_polygons, 7 /* id */};
         feature.ring_begin(5);
         feature.add_point({0, 0});
         feature.add_point({10, 0});
