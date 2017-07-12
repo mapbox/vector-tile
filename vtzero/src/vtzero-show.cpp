@@ -101,7 +101,7 @@ struct print_value {
 
 }; // struct print_value
 
-void print_layer(const vtzero::layer& layer, bool print_tables) {
+void print_layer(const vtzero::layer& layer, bool strict, bool print_tables) {
     std::cout << "layer:\n"
               << "  name   : " << std::string{layer.name()} << '\n'
               << "  version: " << layer.version() << '\n'
@@ -124,14 +124,14 @@ void print_layer(const vtzero::layer& layer, bool print_tables) {
                   << "    geom      : ";
         switch (feature.type()) {
             case vtzero::GeomType::POINT:
-                vtzero::decode_point_geometry(feature.geometry(), false, geom_handler_points{});
+                vtzero::decode_point_geometry(feature.geometry(), strict, geom_handler_points{});
                 break;
             case vtzero::GeomType::LINESTRING:
-                vtzero::decode_linestring_geometry(feature.geometry(), false, geom_handler_linestrings{});
+                vtzero::decode_linestring_geometry(feature.geometry(), strict, geom_handler_linestrings{});
                 break;
             case vtzero::GeomType::POLYGON:
                 std::cout << '\n';
-                vtzero::decode_polygon_geometry(feature.geometry(), false, geom_handler_polygons{});
+                vtzero::decode_polygon_geometry(feature.geometry(), strict, geom_handler_polygons{});
                 break;
             default:
                 std::cout << "UNKNOWN GEOMETRY TYPE\n";
@@ -157,22 +157,26 @@ void print_help() {
               << "Dump contents of vector tile.\n"
               << "\nOptions:\n"
               << "  -h, --help         This help message\n"
-              << "  -l, --layers       Show layer overview\n";
+              << "  -l, --layers       Show layer overview\n"
+              << "  -s, --strict       Use strict geometry parser\n"
+              << "  -t, --tables       Also print key/value tables\n";
 }
 
 int main(int argc, char* argv[]) {
     bool layer_overview = false;
+    bool strict = false;
     bool print_tables = false;
 
     static struct option long_options[] = {
         {"help",   no_argument, nullptr, 'h'},
         {"layers", no_argument, nullptr, 'l'},
+        {"strict", no_argument, nullptr, 's'},
         {"tables", no_argument, nullptr, 't'},
         {nullptr, 0, nullptr, 0}
     };
 
     while (true) {
-        const int c = getopt_long(argc, argv, "hlt", long_options, nullptr);
+        const int c = getopt_long(argc, argv, "hlst", long_options, nullptr);
         if (c == -1) {
             break;
         }
@@ -183,6 +187,9 @@ int main(int argc, char* argv[]) {
                 std::exit(0);
             case 'l':
                 layer_overview = true;
+                break;
+            case 's':
+                strict = true;
                 break;
             case 't':
                 print_tables = true;
@@ -207,7 +214,7 @@ int main(int argc, char* argv[]) {
             if (layer_overview) {
                 print_layer_overview(layer);
             } else {
-                print_layer(layer, print_tables);
+                print_layer(layer, strict, print_tables);
             }
         }
     } else {
@@ -215,7 +222,7 @@ int main(int argc, char* argv[]) {
         if (layer_overview) {
             print_layer_overview(layer);
         } else {
-            print_layer(layer, print_tables);
+            print_layer(layer, strict, print_tables);
         }
     }
 
