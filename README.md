@@ -14,28 +14,35 @@ C++14 library for decoding [Mapbox Vector Tiles](https://www.mapbox.com/vector-t
 
 ## Building
 
+Call
+```sh
+git submodule init
+git submodule update
+```
+
+to install test fixtures from an external git repository.
+
 To install all dependencies and build the tests in this repo do:
 
-
-```bash
+```sh
 make test
 ```
 
 ## To bundle the `demo` program do:
 
-```bash
+```sh
 make demo
 ```
 
 This copies all the includes into the `demo/include` folder such that the demo can be build like:
 
-```
+```sh
 make -C demo/
 ```
 
 Or also like:
 
-```
+```sh
 cd demo
 make
 ```
