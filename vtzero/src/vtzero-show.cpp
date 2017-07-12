@@ -59,7 +59,7 @@ struct geom_handler_polygons {
     std::string output;
 
     void ring_begin(uint32_t count) {
-        output += "      RING[count=";
+        output = "      RING[count=";
         output += std::to_string(count);
         output += "](";
     }

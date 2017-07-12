@@ -37,8 +37,8 @@ namespace vtzero {
             return command_integer(2, count);
         }
 
-        constexpr inline uint32_t command_close_path() noexcept {
-            return command_integer(7, 0);
+        constexpr inline uint32_t command_close_path(uint32_t count = 0) noexcept {
+            return command_integer(7, count);
         }
 
         constexpr inline uint32_t get_command_id(uint32_t command_integer) noexcept {
@@ -113,7 +113,7 @@ namespace vtzero {
 
             // spec 4.3.3.2 "For any pair of (dX, dY) the dX and dY MUST NOT both be 0."
             if (m_strict && x == 0 && y == 0) {
-                throw geometry_exception{"found consecutive equal points (spec 4.3.3.2)"};
+                throw geometry_exception{"found consecutive equal points (spec 4.3.3.2) (strict mode)"};
             }
 
             m_cursor.x += x;

@@ -9,29 +9,56 @@
 
 int main() {
     vtzero::tile_builder tile;
-    auto& layer_points = tile.add_layer("points");
-    auto& layer_lines = tile.add_layer("lines");
+    auto& layer_points   = tile.add_layer("points");
+    auto& layer_lines    = tile.add_layer("lines");
+    auto& layer_polygons = tile.add_layer("polygons");
 
     {
-        vtzero::point_feature_builder feature{layer_points, 1 /* id */, {10, 10}};
+        vtzero::point_feature_builder feature{layer_points, 1 /* id */};
+        feature.points_begin(1);
+        feature.add_point({10, 10});
+        feature.points_end();
         feature.add_attribute("foo", "bar");
         feature.add_attribute("x", "y");
+        feature.rollback();
     }
-    {
-        vtzero::point_feature_builder feature{layer_points, 2 /* id */, {20, 20}};
-        feature.add_attribute("some", "attr");
-    }
+
+    vtzero::point_feature_builder feature{layer_points, 2 /* id */};
+    feature.add_single_point({20, 20});
+    feature.add_attribute("some", "attr");
+    feature.commit();
+
     {
         vtzero::line_string_feature_builder feature{layer_lines, 3 /* id */};
-        feature.add_attribute("highway", "primary");
-        feature.add_attribute("maxspeed", "50");
-        feature.start_linestring(3);
+        feature.linestring_begin(3);
         feature.add_point({10, 10});
         feature.add_point({10, 20});
         feature.add_point({20, 20});
-        feature.start_linestring(2);
+        feature.linestring_end();
+        feature.linestring_begin(2);
         feature.add_point({11, 11});
         feature.add_point({12, 13});
+        feature.linestring_end();
+        feature.add_attribute("highway", "primary");
+        feature.add_attribute("maxspeed", "50");
+    }
+
+    {
+        vtzero::polygon_feature_builder feature{layer_polygons, 4 /* id */};
+        feature.ring_begin(5);
+        feature.add_point({0, 0});
+        feature.add_point({10, 0});
+        feature.add_point({10, 10});
+        feature.add_point({0, 10});
+        feature.add_point({0, 0});
+        feature.ring_end();
+        feature.ring_begin(4);
+        feature.add_point({3, 3});
+        feature.add_point({3, 5});
+        feature.add_point({5, 5});
+        feature.add_point({3, 3});
+        feature.ring_end();
+        feature.add_attribute("natural", "wood");
     }
 
     const auto data = tile.serialize();

@@ -19,8 +19,6 @@
 
 namespace vtzero {
 
-    using coordinates_type = std::vector<std::pair<int32_t, int32_t>>;
-
     class layer_builder_base {
 
     public:
@@ -161,7 +159,7 @@ namespace vtzero {
     protected:
 
         protozero::pbf_builder<detail::pbf_feature> m_feature_writer;
-        std::unique_ptr<protozero::packed_field_uint32> m_pbf_tags{nullptr};
+        protozero::packed_field_uint32 m_pbf_tags;
 
         feature_builder(layer_builder& layer, uint64_t id) :
             m_layer(layer),
@@ -171,10 +169,25 @@ namespace vtzero {
 
         template <typename TKey, typename TValue>
         void add_tags(TKey&& key, TValue&& value) {
+            assert(m_pbf_tags.valid());
             const auto k = m_layer.add_key(std::forward<TKey>(key));
             const auto v = m_layer.add_value(std::forward<TValue>(value));
-            m_pbf_tags->add_element(k);
-            m_pbf_tags->add_element(v);
+            m_pbf_tags.add_element(k);
+            m_pbf_tags.add_element(v);
+        }
+
+        void do_commit() {
+            if (m_pbf_tags.valid()) {
+                m_pbf_tags.commit();
+            }
+            m_feature_writer.commit();
+        }
+
+        void do_rollback() {
+            if (m_pbf_tags.valid()) {
+                m_pbf_tags.commit();
+            }
+            m_feature_writer.rollback();
         }
 
     }; // class feature_builder
@@ -187,7 +200,7 @@ namespace vtzero {
             feature_builder(layer, id) {
             m_feature_writer.add_enum(detail::pbf_feature::type, static_cast<int32_t>(geom_type));
             m_feature_writer.add_string(detail::pbf_feature::geometry, geometry);
-            m_pbf_tags.reset(new protozero::packed_field_uint32{m_feature_writer, detail::pbf_feature::tags});
+            m_pbf_tags = {m_feature_writer, detail::pbf_feature::tags};
         }
 
         template <typename TKey, typename TValue>
@@ -199,42 +212,89 @@ namespace vtzero {
 
     class point_feature_builder : public feature_builder {
 
-        void add_point(point p) {
-            protozero::packed_field_uint32 geometry_field{m_feature_writer, detail::pbf_feature::geometry};
-            geometry_field.add_element(detail::command_move_to(1));
-            geometry_field.add_element(protozero::encode_zigzag32(p.x));
-            geometry_field.add_element(protozero::encode_zigzag32(p.y));
-        }
+        protozero::packed_field_uint32 m_pbf_geometry{};
+        size_t m_num_points = 0;
+        point m_cursor{0, 0};
 
     public:
 
-        point_feature_builder(layer_builder& layer, uint64_t id, point p) :
+        point_feature_builder(layer_builder& layer, uint64_t id = 0) :
             feature_builder(layer, id) {
             m_feature_writer.add_enum(detail::pbf_feature::type, static_cast<int32_t>(GeomType::POINT));
-            add_point(p);
-            m_pbf_tags.reset(new protozero::packed_field_uint32{m_feature_writer, detail::pbf_feature::tags});
+            m_pbf_geometry = {m_feature_writer, detail::pbf_feature::geometry};
+        }
+
+        ~point_feature_builder() {
+            assert(m_num_points == 0 && "has fewer points than expected");
+        }
+
+        void points_begin(uint32_t count) {
+            assert(m_pbf_geometry.valid());
+            assert(!m_pbf_tags.valid());
+            m_num_points = count;
+            m_pbf_geometry.add_element(detail::command_move_to(count));
+        }
+
+        void add_point(const point p) {
+            assert(m_pbf_geometry.valid());
+            assert(!m_pbf_tags.valid() && "Call points_begin() before add_point()");
+            assert(m_num_points > 0 && "Too many calls to add_point()");
+            --m_num_points;
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+            m_cursor = p;
+        }
+
+        void points_end() {
+            assert(m_pbf_geometry.valid());
+            assert(m_num_points == 0 && "Not enough calls to add_point()");
+            m_pbf_geometry.commit();
+            m_pbf_tags = {m_feature_writer, detail::pbf_feature::tags};
+        }
+
+        void add_single_point(const point p) {
+            assert(m_pbf_geometry.valid());
+            m_pbf_geometry.add_element(detail::command_move_to(1));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y));
+            points_end();
         }
 
         template <typename TKey, typename TValue>
         void add_attribute(TKey&& key, TValue&& value) {
+            assert(m_pbf_tags.valid() && "Add point(s) before adding attributes");
             add_tags(std::forward<TKey>(key), std::forward<TValue>(value));
+        }
+
+        void commit() {
+            if (m_pbf_geometry.valid()) {
+                m_pbf_geometry.commit();
+            }
+            do_commit();
+        }
+
+        void rollback() {
+            if (m_pbf_geometry.valid()) {
+                m_pbf_geometry.commit();
+            }
+            do_rollback();
         }
 
     }; // class point_feature_builder
 
     class line_string_feature_builder : public feature_builder {
 
-        std::unique_ptr<protozero::packed_field_uint32> m_pbf_geometry{nullptr};
+        protozero::packed_field_uint32 m_pbf_geometry{};
         size_t m_num_points = 0;
         point m_cursor{0, 0};
         bool m_start_line = false;
 
     public:
 
-        line_string_feature_builder(layer_builder& layer, uint64_t id) :
+        line_string_feature_builder(layer_builder& layer, uint64_t id = 0) :
             feature_builder(layer, id) {
             m_feature_writer.add_enum(detail::pbf_feature::type, static_cast<int32_t>(GeomType::LINESTRING));
-            m_pbf_tags.reset(new protozero::packed_field_uint32{m_feature_writer, detail::pbf_feature::tags});
+            m_pbf_geometry = {m_feature_writer, detail::pbf_feature::geometry};
         }
 
         ~line_string_feature_builder() {
@@ -243,39 +303,114 @@ namespace vtzero {
 
         template <typename TKey, typename TValue>
         void add_attribute(TKey&& key, TValue&& value) {
-            assert(m_pbf_tags && "Call add_attribute() for all attributes first, then add geometry data");
+            if (m_pbf_geometry.valid()) {
+                m_pbf_geometry.commit();
+                m_pbf_tags = {m_feature_writer, detail::pbf_feature::tags};
+            }
             add_tags(std::forward<TKey>(key), std::forward<TValue>(value));
         }
 
-        void start_linestring(size_t num_points) {
-            assert(num_points > 1);
+        void linestring_begin(size_t count) {
+            assert(m_pbf_geometry.valid());
+            assert(!m_pbf_tags.valid());
+            assert(count > 1);
             assert(m_num_points == 0 && "LineString has fewer points than expected");
-            m_num_points = num_points;
-            if (m_pbf_tags) {
-                m_pbf_tags.reset();
-            }
-            if (!m_pbf_geometry) {
-                m_pbf_geometry.reset(new protozero::packed_field_uint32{m_feature_writer, detail::pbf_feature::geometry});
-            }
+            m_num_points = count;
             m_start_line = true;
         }
 
-        void add_point(const point& p) {
-            assert(!m_pbf_tags && "Call start_linestring() before add_point()");
+        void add_point(const point p) {
+            assert(m_pbf_geometry.valid());
+            assert(!m_pbf_tags.valid() && "Call linestring_begin() before add_point()");
             assert(m_num_points > 0 && "Too many calls to add_point()");
             --m_num_points;
             if (m_start_line) {
-                m_pbf_geometry->add_element(detail::command_move_to(1));
-                m_pbf_geometry->add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
-                m_pbf_geometry->add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
-                m_pbf_geometry->add_element(detail::command_line_to(m_num_points));
+                m_pbf_geometry.add_element(detail::command_move_to(1));
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+                m_pbf_geometry.add_element(detail::command_line_to(m_num_points));
                 m_start_line = false;
             } else {
                 assert(p != m_cursor);
-                m_pbf_geometry->add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
-                m_pbf_geometry->add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
             }
             m_cursor = p;
+        }
+
+        void linestring_end() {
+            assert(m_pbf_geometry.valid());
+            assert(m_num_points == 0 && "Not enough calls to add_point()");
+        }
+
+    }; // class line_string_feature_builder
+
+    class polygon_feature_builder : public feature_builder {
+
+        protozero::packed_field_uint32 m_pbf_geometry{};
+        size_t m_num_points = 0;
+        point m_cursor{0, 0};
+        point m_first_point{0, 0};
+        bool m_start_ring = false;
+
+    public:
+
+        polygon_feature_builder(layer_builder& layer, uint64_t id = 0) :
+            feature_builder(layer, id) {
+            m_feature_writer.add_enum(detail::pbf_feature::type, static_cast<int32_t>(GeomType::POLYGON));
+            m_pbf_geometry = {m_feature_writer, detail::pbf_feature::geometry};
+        }
+
+        ~polygon_feature_builder() {
+            assert(m_num_points == 0 && "ring has fewer points than expected");
+        }
+
+        template <typename TKey, typename TValue>
+        void add_attribute(TKey&& key, TValue&& value) {
+            if (m_pbf_geometry.valid()) {
+                m_pbf_geometry.commit();
+                m_pbf_tags = {m_feature_writer, detail::pbf_feature::tags};
+            }
+            add_tags(std::forward<TKey>(key), std::forward<TValue>(value));
+        }
+
+        void ring_begin(size_t count) {
+            assert(m_pbf_geometry.valid());
+            assert(!m_pbf_tags.valid());
+            assert(count > 3);
+            assert(m_num_points == 0 && "ring has fewer points than expected");
+            m_num_points = count;
+            m_start_ring = true;
+        }
+
+        void add_point(const point p) {
+            assert(m_pbf_geometry.valid());
+            assert(!m_pbf_tags.valid() && "Call ring_begin() before add_point()");
+            assert(m_num_points > 0 && "Too many calls to add_point()");
+            --m_num_points;
+            if (m_start_ring) {
+                m_first_point = p;
+                m_pbf_geometry.add_element(detail::command_move_to(1));
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+                m_pbf_geometry.add_element(detail::command_line_to(m_num_points - 1));
+                m_start_ring = false;
+                m_cursor = p;
+            } else if (m_num_points == 0) {
+                assert(m_first_point == p); // XXX
+                // spec 4.3.3.3 "A ClosePath command MUST have a command count of 1"
+                m_pbf_geometry.add_element(detail::command_close_path(1));
+            } else {
+                assert(p != m_cursor); // XXX
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+                m_cursor = p;
+            }
+        }
+
+        void ring_end() {
+            assert(m_pbf_geometry.valid());
+            assert(m_num_points == 0 && "Not enough calls to add_point()");
         }
 
     }; // class line_string_feature_builder
