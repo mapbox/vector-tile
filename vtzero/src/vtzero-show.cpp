@@ -16,7 +16,7 @@ struct geom_handler_points {
     }
 
     void points_point(const vtzero::point point) const {
-        std::cout << "POINT(" << point.x << ',' << point.y << ")\n";
+        std::cout << "      POINT(" << point.x << ',' << point.y << ")\n";
     }
 
     void points_end() const noexcept {
@@ -29,7 +29,7 @@ struct geom_handler_linestrings {
     std::string output;
 
     void linestring_begin(uint32_t count) {
-        output = "LINESTRING[count=";
+        output = "      LINESTRING[count=";
         output += std::to_string(count);
         output += "](";
     }
@@ -59,7 +59,7 @@ struct geom_handler_polygons {
     std::string output;
 
     void ring_begin(uint32_t count) {
-        output += "        RING[count=";
+        output += "      RING[count=";
         output += std::to_string(count);
         output += "](";
     }
@@ -119,9 +119,9 @@ void print_layer(const vtzero::layer& layer, bool strict, bool print_tables) {
 
     for (const auto feature : layer) {
         std::cout << "  feature:\n"
-                  << "    id        : " << feature.id() << '\n'
-                  << "    geomtype  : " << vtzero::geom_type_name(feature.type()) << '\n'
-                  << "    geom      : ";
+                  << "    id      : " << feature.id() << '\n'
+                  << "    geomtype: " << vtzero::geom_type_name(feature.type()) << '\n'
+                  << "    geometry:\n";
         switch (feature.type()) {
             case vtzero::GeomType::POINT:
                 vtzero::decode_point_geometry(feature.geometry(), strict, geom_handler_points{});
@@ -130,7 +130,6 @@ void print_layer(const vtzero::layer& layer, bool strict, bool print_tables) {
                 vtzero::decode_linestring_geometry(feature.geometry(), strict, geom_handler_linestrings{});
                 break;
             case vtzero::GeomType::POLYGON:
-                std::cout << '\n';
                 vtzero::decode_polygon_geometry(feature.geometry(), strict, geom_handler_polygons{});
                 break;
             default:
