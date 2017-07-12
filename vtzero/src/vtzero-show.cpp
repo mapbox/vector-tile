@@ -96,30 +96,39 @@ struct print_value {
     }
 
     void operator()(const vtzero::data_view& value) const {
+        std::cout << '"';
         std::cout.write(value.data(), value.size());
+        std::cout << '"';
     }
 
 }; // struct print_value
 
 void print_layer(const vtzero::layer& layer, bool strict, bool print_tables) {
     std::cout << "layer:\n"
-              << "  name   : " << std::string{layer.name()} << '\n'
+              << "  name:    " << std::string{layer.name()} << '\n'
               << "  version: " << layer.version() << '\n'
-              << "  extent : " << layer.extent() << '\n';
+              << "  extent:  " << layer.extent() << '\n';
 
     if (print_tables) {
-        std::cout << "  keys   :\n";
+        std::cout << "  keys:\n";
         int n = 0;
         for (const auto& key : layer.key_table()) {
-            std::cout << "    " << n++ << ' ';
+            std::cout << "    " << n++ << ": ";
             std::cout.write(key.data(), key.size());
+            std::cout << '\n';
+        }
+        std::cout << "  values:\n";
+        n = 0;
+        for (const auto& value : layer.value_table()) {
+            std::cout << "    " << n++ << ": ";
+            vtzero::value_visit(print_value{}, value);
             std::cout << '\n';
         }
     }
 
     for (const auto feature : layer) {
         std::cout << "  feature:\n"
-                  << "    id      : " << feature.id() << '\n'
+                  << "    id:       " << feature.id() << '\n'
                   << "    geomtype: " << vtzero::geom_type_name(feature.type()) << '\n'
                   << "    geometry:\n";
         switch (feature.type()) {
@@ -140,7 +149,7 @@ void print_layer(const vtzero::layer& layer, bool strict, bool print_tables) {
             std::cout << "      ";
             std::cout.write(tag.key().data(), tag.key().size());
             std::cout << '=';
-            tag_value_visit(print_value{}, tag);
+            vtzero::value_visit(print_value{}, tag.value());
             std::cout << '\n';
         }
     }

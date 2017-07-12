@@ -18,14 +18,14 @@ int main() {
         feature.points_begin(1);
         feature.add_point({10, 10});
         feature.points_end();
-        feature.add_attribute("foo", "bar");
-        feature.add_attribute("x", "y");
+        feature.add_tag("foo", "bar");
+        feature.add_tag("x", "y");
         feature.rollback();
     }
 
     vtzero::point_feature_builder feature{layer_points, 2 /* id */};
     feature.add_single_point({20, 20});
-    feature.add_attribute("some", "attr");
+    feature.add_tag("some", "attr");
     feature.commit();
 
     {
@@ -39,8 +39,8 @@ int main() {
         feature.add_point({11, 11});
         feature.add_point({12, 13});
         feature.linestring_end();
-        feature.add_attribute("highway", "primary");
-        feature.add_attribute("maxspeed", "50");
+        feature.add_tag("highway", "primary");
+        feature.add_tag(std::string{"maxspeed"}, vtzero::sint_value(50));
     }
 
     {
@@ -58,7 +58,7 @@ int main() {
         feature.add_point({5, 5});
         feature.add_point({3, 3});
         feature.ring_end();
-        feature.add_attribute("natural", "wood");
+        feature.add_tag("natural", "wood");
     }
 
     const auto data = tile.serialize();

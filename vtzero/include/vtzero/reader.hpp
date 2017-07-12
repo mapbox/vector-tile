@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include <protozero/pbf_builder.hpp>
 #include <protozero/pbf_message.hpp>
 
 #include "exception.hpp"
@@ -14,15 +15,83 @@
 
 namespace vtzero {
 
-    /**
-     * A vector tile tag.
-     */
-    class tag {
+    class tag_value {
 
-        data_view m_key;
+        std::string m_data;
+
+    public:
+
+        data_view data() const noexcept {
+            return {m_data.data(), m_data.size()};
+        }
+
+        explicit tag_value(const char* string) {
+            protozero::pbf_builder<detail::pbf_value> pbf_message_value{m_data};
+            pbf_message_value.add_string(detail::pbf_value::string_value, string);
+        }
+
+        explicit tag_value(float value) {
+            protozero::pbf_builder<detail::pbf_value> pbf_message_value{m_data};
+            pbf_message_value.add_float(detail::pbf_value::float_value, value);
+        }
+
+        explicit tag_value(double value) {
+            protozero::pbf_builder<detail::pbf_value> pbf_message_value{m_data};
+            pbf_message_value.add_double(detail::pbf_value::double_value, value);
+        }
+
+        explicit tag_value(int64_t value) {
+            protozero::pbf_builder<detail::pbf_value> pbf_message_value{m_data};
+            pbf_message_value.add_int64(detail::pbf_value::int_value, value);
+        }
+
+        explicit tag_value(uint64_t value) {
+            protozero::pbf_builder<detail::pbf_value> pbf_message_value{m_data};
+            pbf_message_value.add_uint64(detail::pbf_value::uint_value, value);
+        }
+
+        explicit tag_value(int64_t value, int /*unused*/) {
+            protozero::pbf_builder<detail::pbf_value> pbf_message_value{m_data};
+            pbf_message_value.add_sint64(detail::pbf_value::sint_value, value);
+        }
+
+        explicit tag_value(bool value) {
+            protozero::pbf_builder<detail::pbf_value> pbf_message_value{m_data};
+            pbf_message_value.add_bool(detail::pbf_value::bool_value, value);
+        }
+
+    }; // class tag_value
+
+    inline tag_value float_value(float value) {
+        return tag_value{value};
+    }
+
+    inline tag_value double_value(double value) {
+        return tag_value{value};
+    }
+
+    inline tag_value int_value(int64_t value) {
+        return tag_value{value};
+    }
+
+    inline tag_value uint_value(uint64_t value) {
+        return tag_value{value};
+    }
+
+    inline tag_value sint_value(int64_t value) {
+        return tag_value{value, 0};
+    }
+
+    inline tag_value bool_value(bool value) {
+        return tag_value{value};
+    }
+
+    class value_view {
+
         data_view m_value;
 
         protozero::pbf_message<detail::pbf_value> check_value(detail::pbf_value type, protozero::pbf_wire_type wire_type) const {
+            assert(valid());
             protozero::pbf_message<detail::pbf_value> value_message{m_value};
 
             if (!value_message.next(type, wire_type)) {
@@ -34,35 +103,27 @@ namespace vtzero {
 
     public:
 
-        tag() = default;
+        value_view() = default;
 
-        tag(const data_view& key, const data_view& value) noexcept :
-            m_key(key),
+        value_view(const data_view& value) noexcept :
             m_value(value) {
         }
 
         bool valid() const noexcept {
-            return m_key.data() != nullptr;
+            return m_value.data() != nullptr;
         }
 
-        operator bool() const noexcept {
-            return valid();
-        }
-
-        const data_view& key() const noexcept {
-            return m_key;
-        }
-
-        const data_view& value() const noexcept {
-            return m_value;
-        }
-
-        value_type get_value_type() const {
+        value_type type() const {
+            assert(valid());
             protozero::pbf_message<detail::pbf_value> value_message{m_value};
             if (value_message.next()) {
                 return value_message.tag();
             }
             throw format_exception{"missing tag value"};
+        }
+
+        data_view data() const noexcept {
+            return m_value;
         }
 
         data_view string_value() const {
@@ -93,34 +154,69 @@ namespace vtzero {
             return check_value(detail::pbf_value::bool_value, protozero::pbf_wire_type::varint).get_bool();
         }
 
-    }; // class tag
+    }; // class value_view
 
     template <typename V>
-    void tag_value_visit(V&& visitor, const tag& tag) {
-        switch (tag.get_value_type()) {
+    void value_visit(V&& visitor, const value_view& value) {
+        switch (value.type()) {
             case detail::pbf_value::string_value:
-                std::forward<V>(visitor)(tag.string_value());
+                std::forward<V>(visitor)(value.string_value());
                 break;
             case detail::pbf_value::float_value:
-                std::forward<V>(visitor)(tag.float_value());
+                std::forward<V>(visitor)(value.float_value());
                 break;
             case detail::pbf_value::double_value:
-                std::forward<V>(visitor)(tag.double_value());
+                std::forward<V>(visitor)(value.double_value());
                 break;
             case detail::pbf_value::int_value:
-                std::forward<V>(visitor)(tag.int_value());
+                std::forward<V>(visitor)(value.int_value());
                 break;
             case detail::pbf_value::uint_value:
-                std::forward<V>(visitor)(tag.uint_value());
+                std::forward<V>(visitor)(value.uint_value());
                 break;
             case detail::pbf_value::sint_value:
-                std::forward<V>(visitor)(tag.sint_value());
+                std::forward<V>(visitor)(value.sint_value());
                 break;
             case detail::pbf_value::bool_value:
-                std::forward<V>(visitor)(tag.bool_value());
+                std::forward<V>(visitor)(value.bool_value());
                 break;
         }
     }
+
+    /**
+     * A vector tile tag.
+     */
+    class tag_view {
+
+        data_view m_key;
+        value_view m_value;
+
+    public:
+
+        tag_view() = default;
+
+        tag_view(const data_view& key, const data_view& value) noexcept :
+            m_key(key),
+            m_value(value) {
+        }
+
+        bool valid() const noexcept {
+            return m_key.data() != nullptr;
+        }
+
+        operator bool() const noexcept {
+            return valid();
+        }
+
+        data_view key() const noexcept {
+            return m_key;
+        }
+
+        value_view value() const noexcept {
+            return m_value;
+        }
+
+    }; // class tag_view
 
     class layer;
 
@@ -133,7 +229,7 @@ namespace vtzero {
     public:
 
         using iterator_category = std::forward_iterator_tag;
-        using value_type        = tag;
+        using value_type        = tag_view;
         using difference_type   = std::ptrdiff_t;
         using pointer           = value_type*;
         using reference         = value_type&;
@@ -147,7 +243,7 @@ namespace vtzero {
             assert(layer);
         }
 
-        tag operator*() const;
+        tag_view operator*() const;
 
         tags_iterator& operator++() {
             ++m_it;
@@ -750,12 +846,12 @@ namespace vtzero {
 
     }; // class vector_tile
 
-    inline tag tags_iterator::operator*() const {
+    inline tag_view tags_iterator::operator*() const {
         assert(m_it != m_end);
         if (std::next(m_it) == m_end) {
             throw format_exception{"unpaired tag key/value indexes (spec 4.4)"};
         }
-        return tag{m_layer->key(*m_it), m_layer->value(*std::next(m_it))};
+        return {m_layer->key(*m_it), m_layer->value(*std::next(m_it))};
     }
 
 } // namespace vtzero

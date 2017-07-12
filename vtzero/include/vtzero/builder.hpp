@@ -27,6 +27,11 @@ namespace vtzero {
 
     }; // class layer_builder_base
 
+    struct kv_index {
+        uint32_t k;
+        uint32_t v;
+    };
+
     class layer_builder : public layer_builder_base {
 
         std::string m_data;
@@ -41,6 +46,29 @@ namespace vtzero {
 
         uint32_t m_max_key = 0;
         uint32_t m_max_value = 0;
+
+        uint32_t add_key(const data_view& text) {
+            auto p = m_keys_map.insert(std::make_pair(std::string{text.data(), text.size()}, m_max_key));
+
+            if (p.second) {
+                ++m_max_key;
+                m_pbf_message_keys.add_string(detail::pbf_layer::keys, text);
+            }
+
+            return p.first->second;
+        }
+
+        uint32_t add_value(const data_view& text) {
+            auto p = m_values_map.insert(std::make_pair(std::string{text.data(), text.size()}, m_max_value));
+
+            if (p.second) {
+                ++m_max_value;
+
+                m_pbf_message_values.add_string(detail::pbf_layer::values, text);
+            }
+
+            return p.first->second;
+        }
 
     public:
 
@@ -60,51 +88,8 @@ namespace vtzero {
             m_pbf_message_layer.add_uint32(detail::pbf_layer::extent, extent);
         }
 
-        uint32_t add_key(const char* text) {
-            auto p = m_keys_map.insert(std::make_pair(text, m_max_key));
-
-            if (p.second) {
-                ++m_max_key;
-                m_pbf_message_keys.add_string(detail::pbf_layer::keys, text);
-            }
-
-            return p.first->second;
-        }
-
-        uint32_t add_key(const data_view& text) {
-            auto p = m_keys_map.insert(std::make_pair(std::string{text.data(), text.size()}, m_max_key));
-
-            if (p.second) {
-                ++m_max_key;
-                m_pbf_message_keys.add_string(detail::pbf_layer::keys, text);
-            }
-
-            return p.first->second;
-        }
-
-        uint32_t add_value(const char* text) {
-            auto p = m_values_map.insert(std::make_pair(text, m_max_value));
-
-            if (p.second) {
-                ++m_max_value;
-
-                protozero::pbf_builder<detail::pbf_value> pbf_message_value{m_pbf_message_values, detail::pbf_layer::values};
-                pbf_message_value.add_string(detail::pbf_value::string_value, text);
-            }
-
-            return p.first->second;
-        }
-
-        uint32_t add_value(const data_view& text) {
-            auto p = m_values_map.insert(std::make_pair(std::string{text.data(), text.size()}, m_max_value));
-
-            if (p.second) {
-                ++m_max_value;
-
-                m_pbf_message_values.add_string(detail::pbf_layer::values, text);
-            }
-
-            return p.first->second;
+        kv_index add_tag(const data_view& key, const data_view& value) {
+            return {add_key(key), add_value(value)};
         }
 
         const std::string& data() const noexcept {
@@ -167,13 +152,21 @@ namespace vtzero {
             m_feature_writer.add_uint64(detail::pbf_feature::id, id);
         }
 
+        void add_tag_impl(const data_view key, const data_view value) {
+            const auto idx = m_layer.add_tag(key, value);
+            m_pbf_tags.add_element(idx.k);
+            m_pbf_tags.add_element(idx.v);
+        }
+
+        void add_tag_impl(const tag_view& tag) {
+            add_tag_impl(tag.key(), tag.value().data());
+        }
+
         template <typename TKey, typename TValue>
-        void add_tags(TKey&& key, TValue&& value) {
-            assert(m_pbf_tags.valid());
-            const auto k = m_layer.add_key(std::forward<TKey>(key));
-            const auto v = m_layer.add_value(std::forward<TValue>(value));
-            m_pbf_tags.add_element(k);
-            m_pbf_tags.add_element(v);
+        void add_tag_impl(TKey&& key, TValue&& value) {
+            data_view k{std::forward<TKey>(key)};
+            tag_value v{std::forward<TValue>(value)};
+            add_tag_impl(k, v.data());
         }
 
         void do_commit() {
@@ -203,9 +196,9 @@ namespace vtzero {
             m_pbf_tags = {m_feature_writer, detail::pbf_feature::tags};
         }
 
-        template <typename TKey, typename TValue>
-        void add_attribute(TKey&& key, TValue&& value) {
-            add_tags(std::forward<TKey>(key), std::forward<TValue>(value));
+        template <typename ...TArgs>
+        void add_tag(TArgs&& ...args) {
+            add_tag_impl(std::forward<TArgs>(args)...);
         }
 
     }; // class geometry_feature_builder
@@ -260,10 +253,10 @@ namespace vtzero {
             points_end();
         }
 
-        template <typename TKey, typename TValue>
-        void add_attribute(TKey&& key, TValue&& value) {
-            assert(m_pbf_tags.valid() && "Add point(s) before adding attributes");
-            add_tags(std::forward<TKey>(key), std::forward<TValue>(value));
+        template <typename ...TArgs>
+        void add_tag(TArgs&& ...args) {
+            assert(m_pbf_tags.valid() && "Add point(s) before adding tags");
+            add_tag_impl(std::forward<TArgs>(args)...);
         }
 
         void commit() {
@@ -301,13 +294,13 @@ namespace vtzero {
             assert(m_num_points == 0 && "LineString has fewer points than expected");
         }
 
-        template <typename TKey, typename TValue>
-        void add_attribute(TKey&& key, TValue&& value) {
+        template <typename ...TArgs>
+        void add_tag(TArgs&& ...args) {
             if (m_pbf_geometry.valid()) {
                 m_pbf_geometry.commit();
                 m_pbf_tags = {m_feature_writer, detail::pbf_feature::tags};
             }
-            add_tags(std::forward<TKey>(key), std::forward<TValue>(value));
+            add_tag_impl(std::forward<TArgs>(args)...);
         }
 
         void linestring_begin(size_t count) {
@@ -365,13 +358,13 @@ namespace vtzero {
             assert(m_num_points == 0 && "ring has fewer points than expected");
         }
 
-        template <typename TKey, typename TValue>
-        void add_attribute(TKey&& key, TValue&& value) {
+        template <typename ...TArgs>
+        void add_tag(TArgs&& ...args) {
             if (m_pbf_geometry.valid()) {
                 m_pbf_geometry.commit();
                 m_pbf_tags = {m_feature_writer, detail::pbf_feature::tags};
             }
-            add_tags(std::forward<TKey>(key), std::forward<TValue>(value));
+            add_tag_impl(std::forward<TArgs>(args)...);
         }
 
         void ring_begin(size_t count) {
@@ -418,7 +411,7 @@ namespace vtzero {
     inline void layer_builder::add_feature(feature& feature, layer& layer) {
         geometry_feature_builder feature_builder{*this, feature.id(), feature.type(), feature.geometry()};
         for (auto tag : feature.tags(layer)) {
-            feature_builder.add_attribute(tag.key(), tag.value());
+            feature_builder.add_tag(tag);
         }
     }
 
