@@ -103,7 +103,7 @@ struct print_value {
 
 }; // struct print_value
 
-void print_layer(const vtzero::layer& layer, bool strict, bool print_tables) {
+void print_layer(const vtzero::layer& layer, bool strict, bool print_tables, bool print_values_with_type) {
     std::cout << "layer:\n"
               << "  name:    " << std::string{layer.name()} << '\n'
               << "  version: " << layer.version() << '\n'
@@ -119,10 +119,14 @@ void print_layer(const vtzero::layer& layer, bool strict, bool print_tables) {
         }
         std::cout << "  values:\n";
         n = 0;
-        for (const auto& value : layer.value_table()) {
+        for (const vtzero::value_view& value : layer.value_table()) {
             std::cout << "    " << n++ << ": ";
             vtzero::value_visit(print_value{}, value);
-            std::cout << '\n';
+            if (print_values_with_type) {
+                std::cout << " [" << vtzero::value_type_name(value.type()) << "]\n";
+            } else {
+                std::cout << '\n';
+            }
         }
     }
 
@@ -150,7 +154,11 @@ void print_layer(const vtzero::layer& layer, bool strict, bool print_tables) {
             std::cout.write(tag.key().data(), tag.key().size());
             std::cout << '=';
             vtzero::value_visit(print_value{}, tag.value());
-            std::cout << '\n';
+            if (print_values_with_type) {
+                std::cout << " [" << vtzero::value_type_name(tag.value().type()) << "]\n";
+            } else {
+                std::cout << '\n';
+            }
         }
     }
 }
@@ -174,17 +182,19 @@ int main(int argc, char* argv[]) {
     bool layer_overview = false;
     bool strict = false;
     bool print_tables = false;
+    bool print_values_with_type = false;
 
     static struct option long_options[] = {
-        {"help",   no_argument, nullptr, 'h'},
-        {"layers", no_argument, nullptr, 'l'},
-        {"strict", no_argument, nullptr, 's'},
-        {"tables", no_argument, nullptr, 't'},
+        {"help",             no_argument, nullptr, 'h'},
+        {"layers",           no_argument, nullptr, 'l'},
+        {"strict",           no_argument, nullptr, 's'},
+        {"tables",           no_argument, nullptr, 't'},
+        {"values-with-type", no_argument, nullptr, 'T'},
         {nullptr, 0, nullptr, 0}
     };
 
     while (true) {
-        const int c = getopt_long(argc, argv, "hlst", long_options, nullptr);
+        const int c = getopt_long(argc, argv, "hlstT", long_options, nullptr);
         if (c == -1) {
             break;
         }
@@ -201,6 +211,9 @@ int main(int argc, char* argv[]) {
                 break;
             case 't':
                 print_tables = true;
+                break;
+            case 'T':
+                print_values_with_type = true;
                 break;
             default:
                 std::exit(1);
@@ -222,7 +235,7 @@ int main(int argc, char* argv[]) {
             if (layer_overview) {
                 print_layer_overview(layer);
             } else {
-                print_layer(layer, strict, print_tables);
+                print_layer(layer, strict, print_tables, print_values_with_type);
             }
         }
     } else {
@@ -230,7 +243,7 @@ int main(int argc, char* argv[]) {
         if (layer_overview) {
             print_layer_overview(layer);
         } else {
-            print_layer(layer, strict, print_tables);
+            print_layer(layer, strict, print_tables, print_values_with_type);
         }
     }
 

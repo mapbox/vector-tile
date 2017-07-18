@@ -35,6 +35,13 @@ namespace vtzero {
         bool_value   = 7
     };
 
+    inline const char* value_type_name(value_type type) noexcept {
+        static const char* names[] = {
+            "", "string", "float", "double", "int", "uint", "sint", "bool"
+        };
+        return names[static_cast<int>(type)];
+    }
+
     namespace detail {
 
         enum class pbf_tile : protozero::pbf_tag_type {
