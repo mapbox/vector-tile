@@ -448,6 +448,13 @@ namespace vtzero {
             return data;
         }
 
+        void serialize(std::string& data) {
+            protozero::pbf_builder<detail::pbf_tile> pbf_tile_builder{data};
+            for (auto& layer : m_layers) {
+                layer->build(pbf_tile_builder);
+            }
+        }
+
     }; // class tile_builder
 
 } // namespace vtzero
