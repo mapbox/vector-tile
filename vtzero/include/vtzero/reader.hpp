@@ -25,9 +25,19 @@ namespace vtzero {
             return {m_data.data(), m_data.size()};
         }
 
-        explicit tag_value(const char* string) {
+        explicit tag_value(const char* value) {
             protozero::pbf_builder<detail::pbf_value> pbf_message_value{m_data};
-            pbf_message_value.add_string(detail::pbf_value::string_value, string);
+            pbf_message_value.add_string(detail::pbf_value::string_value, value);
+        }
+
+        explicit tag_value(const std::string& value) {
+            protozero::pbf_builder<detail::pbf_value> pbf_message_value{m_data};
+            pbf_message_value.add_string(detail::pbf_value::string_value, value);
+        }
+
+        explicit tag_value(const data_view& value) {
+            protozero::pbf_builder<detail::pbf_value> pbf_message_value{m_data};
+            pbf_message_value.add_string(detail::pbf_value::string_value, value);
         }
 
         explicit tag_value(float value) {
