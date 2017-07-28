@@ -19,15 +19,16 @@ static std::string open_tile(const std::string& path) {
     return message;
 }
 
+template <int Dimensions>
 struct point_handler {
 
-    std::vector<vtzero::point> data;
+    std::vector<vtzero::point<Dimensions>> data;
 
     void points_begin(uint32_t count) {
         data.reserve(count);
     }
 
-    void points_point(const vtzero::point point) {
+    void points_point(const vtzero::point<Dimensions> point) {
         data.push_back(point);
     }
 
@@ -36,16 +37,17 @@ struct point_handler {
 
 };
 
+template <int Dimensions>
 struct linestring_handler {
 
-    std::vector<std::vector<vtzero::point>> data;
+    std::vector<std::vector<vtzero::point<Dimensions>>> data;
 
     void linestring_begin(uint32_t count) {
         data.emplace_back();
         data.back().reserve(count);
     }
 
-    void linestring_point(const vtzero::point point) {
+    void linestring_point(const vtzero::point<Dimensions> point) {
         data.back().push_back(point);
     }
 
@@ -54,16 +56,17 @@ struct linestring_handler {
 
 };
 
+template <int Dimensions>
 struct polygon_handler {
 
-    std::vector<std::vector<vtzero::point>> data;
+    std::vector<std::vector<vtzero::point<Dimensions>>> data;
 
     void ring_begin(uint32_t count) {
         data.emplace_back();
         data.back().reserve(count);
     }
 
-    void ring_point(const vtzero::point point) {
+    void ring_point(const vtzero::point<Dimensions> point) {
         data.back().push_back(point);
     }
 
@@ -95,10 +98,10 @@ TEST_CASE("Read Feature-single-point.mvt") {
 
     REQUIRE(feature.type() == vtzero::GeomType::POINT);
 
-    point_handler handler;
+    point_handler<2> handler;
     vtzero::decode_point_geometry(feature.geometry(), true, handler);
 
-    std::vector<vtzero::point> result = {{25, 17}};
+    std::vector<vtzero::point<2>> result = {{25, 17}};
     REQUIRE(handler.data == result);
 }
 
@@ -110,10 +113,10 @@ TEST_CASE("Read Feature-single-multipoint.mvt") {
 
     REQUIRE(feature.type() == vtzero::GeomType::POINT);
 
-    point_handler handler;
+    point_handler<2> handler;
     vtzero::decode_point_geometry(feature.geometry(), true, handler);
 
-    std::vector<vtzero::point> result = {{5, 7}, {3,2}};
+    std::vector<vtzero::point<2>> result = {{5, 7}, {3,2}};
     REQUIRE(handler.data == result);
 }
 
@@ -125,10 +128,10 @@ TEST_CASE("Read Feature-single-linestring.mvt") {
 
     REQUIRE(feature.type() == vtzero::GeomType::LINESTRING);
 
-    linestring_handler handler;
+    linestring_handler<2> handler;
     vtzero::decode_linestring_geometry(feature.geometry(), true, handler);
 
-    std::vector<std::vector<vtzero::point>> result = {{{2, 2}, {2,10}, {10, 10}}};
+    std::vector<std::vector<vtzero::point<2>>> result = {{{2, 2}, {2,10}, {10, 10}}};
     REQUIRE(handler.data == result);
 }
 
@@ -140,10 +143,10 @@ TEST_CASE("Read Feature-single-multilinestring.mvt") {
 
     REQUIRE(feature.type() == vtzero::GeomType::LINESTRING);
 
-    linestring_handler handler;
+    linestring_handler<2> handler;
     vtzero::decode_linestring_geometry(feature.geometry(), true, handler);
 
-    std::vector<std::vector<vtzero::point>> result = {{{2, 2}, {2,10}, {10, 10}}, {{1,1}, {3, 5}}};
+    std::vector<std::vector<vtzero::point<2>>> result = {{{2, 2}, {2,10}, {10, 10}}, {{1,1}, {3, 5}}};
     REQUIRE(handler.data == result);
 }
 
@@ -155,10 +158,10 @@ TEST_CASE("Read Feature-single-polygon.mvt") {
 
     REQUIRE(feature.type() == vtzero::GeomType::POLYGON);
 
-    polygon_handler handler;
+    polygon_handler<2> handler;
     vtzero::decode_polygon_geometry(feature.geometry(), true, handler);
 
-    std::vector<std::vector<vtzero::point>> result = {{{3, 6}, {8,12}, {20, 34}, {3, 6}}};
+    std::vector<std::vector<vtzero::point<2>>> result = {{{3, 6}, {8,12}, {20, 34}, {3, 6}}};
     REQUIRE(handler.data == result);
 }
 

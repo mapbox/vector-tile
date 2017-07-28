@@ -288,10 +288,13 @@ namespace vtzero {
     class feature {
 
         using uint32_it_range = protozero::iterator_range<protozero::pbf_reader::const_uint32_iterator>;
+        using double_it_range = protozero::iterator_range<protozero::const_fixed_iterator<double>>;
 
         uint64_t m_id;
         uint32_it_range m_tags;
         data_view m_geometry;
+        double_it_range m_knots;
+        uint32_t m_dimensions;
         GeomType m_type;
 
     public:
@@ -300,13 +303,17 @@ namespace vtzero {
             m_id(0),
             m_tags(),
             m_geometry(),
+            m_knots(),
+            m_dimensions(2),
             m_type() {
         }
 
-        feature(const data_view& data) :
+        feature(const data_view& data, uint32_t dimensions) :
             m_id(0), // defaults to 0, see https://github.com/mapbox/vector-tile-spec/blob/master/2.1/vector_tile.proto#L32
             m_tags(),
             m_geometry(),
+            m_knots(),
+            m_dimensions(dimensions),
             m_type() { // defaults to UNKOWN, see https://github.com/mapbox/vector-tile-spec/blob/master/2.1/vector_tile.proto#L41
 
             protozero::pbf_message<detail::pbf_feature> reader{data};
@@ -322,7 +329,7 @@ namespace vtzero {
                     case protozero::tag_and_type(detail::pbf_feature::type, protozero::pbf_wire_type::varint): {
                             const auto type = reader.get_enum();
                             // spec 4.3.4 "Geometry Types"
-                            if (type < 0 || type > 3) {
+                            if (type < 0 || type > 4) {
                                 throw format_exception{"Unknown geometry type (spec 4.3.4)"};
                             }
                             m_type = static_cast<GeomType>(type);
@@ -330,6 +337,9 @@ namespace vtzero {
                         break;
                     case protozero::tag_and_type(detail::pbf_feature::geometry, protozero::pbf_wire_type::length_delimited):
                         m_geometry = reader.get_view();
+                        break;
+                    case protozero::tag_and_type(detail::pbf_feature::knots, protozero::pbf_wire_type::length_delimited):
+                        m_knots = reader.get_packed_double();
                         break;
                     default:
                         reader.skip();
@@ -364,6 +374,14 @@ namespace vtzero {
             return m_geometry;
         }
 
+        const double_it_range& knots() const noexcept {
+            return m_knots;
+        }
+        
+        uint32_t dimensions() const noexcept {
+            return m_dimensions;
+        }
+
         protozero::iterator_range<tags_iterator> tags(const layer& layer) const noexcept {
             return {{m_tags.begin(), m_tags.end(), &layer},
                     {m_tags.end(), m_tags.end(), &layer}};
@@ -375,6 +393,7 @@ namespace vtzero {
 
         protozero::pbf_message<detail::pbf_layer> m_layer_reader;
         data_view m_data;
+        uint32_t m_dimensions;
 
         void next() {
             try {
@@ -408,20 +427,21 @@ namespace vtzero {
          *
          * @throws format_exception if the tile data is ill-formed.
          */
-        feature_iterator(const data_view& tile_data) :
+        feature_iterator(const data_view& tile_data, uint32_t dimensions) :
             m_layer_reader(tile_data),
-            m_data() {
+            m_data(),
+            m_dimensions(dimensions) {
             next();
         }
 
         feature operator*() const {
             assert(m_data.data() != nullptr);
-            return feature{m_data};
+            return feature{m_data, m_dimensions};
         }
 
         feature operator->() const {
             assert(m_data.data() != nullptr);
-            return feature{m_data};
+            return feature{m_data, m_dimensions};
         }
 
         /**
@@ -459,6 +479,7 @@ namespace vtzero {
         data_view m_data;
         uint32_t m_version;
         uint32_t m_extent;
+        uint32_t m_dimensions;
         data_view m_name;
         std::vector<data_view> m_key_table;
         std::vector<data_view> m_value_table;
@@ -469,6 +490,7 @@ namespace vtzero {
             m_data(),
             m_version(0),
             m_extent(0),
+            m_dimensions(0),
             m_name() {
         }
 
@@ -483,6 +505,7 @@ namespace vtzero {
             m_data(data),
             m_version(1), // defaults to 1, see https://github.com/mapbox/vector-tile-spec/blob/master/2.1/vector_tile.proto#L55
             m_extent(4096), // defaults to 4096, see https://github.com/mapbox/vector-tile-spec/blob/master/2.1/vector_tile.proto#L70
+            m_dimensions(2),
             m_name() {
             try {
                 protozero::pbf_message<detail::pbf_layer> reader{data};
@@ -506,6 +529,9 @@ namespace vtzero {
                             break;
                         case protozero::tag_and_type(detail::pbf_layer::extent, protozero::pbf_wire_type::varint):
                             m_extent = reader.get_uint32();
+                            break;
+                        case protozero::tag_and_type(detail::pbf_layer::dimensions, protozero::pbf_wire_type::varint):
+                            m_dimensions = reader.get_uint32();
                             break;
                         default:
                             reader.skip();
@@ -549,6 +575,11 @@ namespace vtzero {
             assert(valid());
             return m_extent;
         }
+        
+        std::uint32_t dimensions() const noexcept {
+            assert(valid());
+            return m_dimensions;
+        }
 
         const std::vector<data_view>& key_table() const noexcept {
             return m_key_table;
@@ -575,7 +606,7 @@ namespace vtzero {
         }
 
         feature_iterator begin() const {
-            return feature_iterator{m_data};
+            return feature_iterator{m_data, m_dimensions};
         }
 
         feature_iterator end() const {
@@ -602,7 +633,7 @@ namespace vtzero {
                     protozero::pbf_message<detail::pbf_feature> feature_reader{feature_data};
                     if (feature_reader.next(detail::pbf_feature::id, protozero::pbf_wire_type::varint)) {
                         if (feature_reader.get_uint64() == id) {
-                            return feature{feature_data};
+                            return feature{feature_data, m_dimensions};
                         }
                     }
                 }

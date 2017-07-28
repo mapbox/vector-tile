@@ -10,16 +10,36 @@
 
 namespace vtzero {
 
-    struct point {
+    template <int Dimensions>
+    struct point {};
+
+    template <>
+    struct point<2> {
+        constexpr point() : x(0), y(0) {}
+        constexpr point(int32_t x_, int32_t y_): x(x_), y(y_) {}
         int32_t x;
         int32_t y;
     };
+    
+    template <>
+    struct point<3> {
+        constexpr point() : x(0), y(0), z(0) {}
+        constexpr point(int32_t x_, int32_t y_, int32_t z_): x(x_), y(y_), z(z_) {}
+        int32_t x;
+        int32_t y;
+        int32_t z;
+    };
 
-    inline bool operator==(const point& a, const point& b) noexcept {
+    inline bool operator==(const point<2>& a, const point<2>& b) noexcept {
         return a.x == b.x && a.y == b.y;
     }
+    
+    inline bool operator==(const point<3>& a, const point<3>& b) noexcept {
+        return a.x == b.x && a.y == b.y && a.z == b.z;
+    }
 
-    inline bool operator!=(const point& a, const point& b) noexcept {
+    template <int D>
+    inline bool operator!=(const point<D>& a, const point<D>& b) noexcept {
         return !(a==b);
     }
 
@@ -49,7 +69,8 @@ namespace vtzero {
             return command_integer >> 3;
         }
 
-        inline constexpr int64_t det(const point& a, const point& b) noexcept {
+        template <int Dimensions>
+        inline constexpr int64_t det(const point<Dimensions>& a, const point<Dimensions>& b) noexcept {
             return int64_t(a.x) * int64_t(b.y) - int64_t(b.x) * int64_t(a.y);
         }
 
@@ -59,12 +80,13 @@ namespace vtzero {
      * Decode a geometry as specified in spec 4.3 from a sequence of 32 bit
      * unsigned integers.
      */
+    template <int Dimensions>
     class geometry_decoder {
 
         protozero::pbf_reader::const_uint32_iterator it;
         protozero::pbf_reader::const_uint32_iterator end;
 
-        point m_cursor{0, 0};
+        point<Dimensions> m_cursor;
         uint32_t m_command_id = 0;
         uint32_t m_count = 0;
         bool m_strict = true;
@@ -101,34 +123,63 @@ namespace vtzero {
             return true;
         }
 
-        point next_point() {
-            assert(m_count > 0);
-
-            if (it == end || std::next(it) == end) {
-                throw geometry_exception{"too few points in geometry"};
-            }
-
-            const uint32_t x = protozero::decode_zigzag32(*it++);
-            const uint32_t y = protozero::decode_zigzag32(*it++);
-
-            // spec 4.3.3.2 "For any pair of (dX, dY) the dX and dY MUST NOT both be 0."
-            if (m_strict && x == 0 && y == 0) {
-                throw geometry_exception{"found consecutive equal points (spec 4.3.3.2) (strict mode)"};
-            }
-
-            m_cursor.x += x;
-            m_cursor.y += y;
-
-            --m_count;
-
-            return m_cursor;
-        }
+        point<Dimensions> next_point(); 
 
     }; // class geometry_decoder
+    
+    template <>
+    inline point<2> geometry_decoder<2>::next_point() {
+        assert(m_count > 0);
 
-    template <typename TGeomHandler>
+        if (it == end || std::next(it) == end) {
+            throw geometry_exception{"too few points in geometry"};
+        }
+
+        const uint32_t x = protozero::decode_zigzag32(*it++);
+        const uint32_t y = protozero::decode_zigzag32(*it++);
+
+        // spec 4.3.3.2 "For any pair of (dX, dY) the dX and dY MUST NOT both be 0."
+        if (m_strict && x == 0 && y == 0) {
+            throw geometry_exception{"found consecutive equal points (spec 4.3.3.2) (strict mode)"};
+        }
+
+        m_cursor.x += x;
+        m_cursor.y += y;
+
+        --m_count;
+
+        return m_cursor;
+    }
+    
+    template <>
+    inline point<3> geometry_decoder<3>::next_point() {
+        assert(m_count > 0);
+
+        if (it == end || std::next(it) == end) {
+            throw geometry_exception{"too few points in geometry"};
+        }
+
+        const uint32_t x = protozero::decode_zigzag32(*it++);
+        const uint32_t y = protozero::decode_zigzag32(*it++);
+        const uint32_t z = protozero::decode_zigzag32(*it++);
+
+        // spec 4.3.3.2 "For any pair of (dX, dY) the dX and dY MUST NOT both be 0."
+        if (m_strict && x == 0 && y == 0 && z == 0) {
+            throw geometry_exception{"found consecutive equal points (spec 4.3.3.2) (strict mode)"};
+        }
+
+        m_cursor.x += x;
+        m_cursor.y += y;
+        m_cursor.z += z;
+
+        --m_count;
+
+        return m_cursor;
+    }
+
+    template <typename TGeomHandler, int Dimensions = 2>
     void decode_point_geometry(const data_view& geometry, bool strict, TGeomHandler&& geom_handler) {
-        geometry_decoder decoder{geometry, strict};
+        geometry_decoder<Dimensions> decoder{geometry, strict};
 
         // spec 4.3.4.2 "MUST consist of of a single MoveTo command"
         if (!decoder.next_command(detail::command_move_to())) {
@@ -153,9 +204,9 @@ namespace vtzero {
         std::forward<TGeomHandler>(geom_handler).points_end();
     }
 
-    template <typename TGeomHandler>
+    template <typename TGeomHandler, int Dimensions = 2>
     void decode_linestring_geometry(const data_view& geometry, bool strict, TGeomHandler&& geom_handler) {
-        geometry_decoder decoder{geometry, strict};
+        geometry_decoder<Dimensions> decoder{geometry, strict};
 
         // spec 4.3.4.3 "1. A MoveTo command"
         while (decoder.next_command(detail::command_move_to())) {
@@ -185,11 +236,45 @@ namespace vtzero {
             std::forward<TGeomHandler>(geom_handler).linestring_end();
         }
     }
+    
+    template <typename TGeomHandler, int Dimensions = 2>
+    void decode_spline_geometry(const data_view& geometry, bool strict, TGeomHandler&& geom_handler) {
+        geometry_decoder<Dimensions> decoder{geometry, strict};
 
-    template <typename TGeomHandler>
+        // spec 4.3.4.3 "1. A MoveTo command"
+        if (decoder.next_command(detail::command_move_to())) {
+            // spec 4.3.4.3 "with a command count of 1"
+            if (decoder.count() != 1) {
+                throw geometry_exception{"MoveTo command count is not 1 (spec 4.3.4.3)"};
+            }
+
+            const auto first_point = decoder.next_point();
+
+            // spec 4.3.4.3 "2. A LineTo command"
+            if (!decoder.next_command(detail::command_line_to())) {
+                throw geometry_exception{"expected LineTo command (spec 4.3.4.3)"};
+            }
+
+            // spec 4.3.4.3 "with a command count greater than 0"
+            if (decoder.count() == 0) {
+                throw geometry_exception{"LineTo command count is zero (spec 4.3.4.3)"};
+            }
+
+            std::forward<TGeomHandler>(geom_handler).spline_begin(decoder.count() + 1);
+            std::forward<TGeomHandler>(geom_handler).spline_point(first_point);
+            while (decoder.count() > 0) {
+                std::forward<TGeomHandler>(geom_handler).spline_point(decoder.next_point());
+            }
+
+            std::forward<TGeomHandler>(geom_handler).spline_end();
+        }
+
+    }
+
+    template <typename TGeomHandler, int Dimensions = 2>
     void decode_polygon_geometry(const data_view& geometry, bool strict, TGeomHandler&& geom_handler) {
 
-        geometry_decoder decoder{geometry, strict};
+        geometry_decoder<Dimensions> decoder{geometry, strict};
 
         // spec 4.3.4.4 "1. A MoveTo command"
         while (decoder.next_command(detail::command_move_to())) {
@@ -198,9 +283,9 @@ namespace vtzero {
                 throw geometry_exception{"MoveTo command count is not 1 (spec 4.3.4.4)"};
             }
 
-            point start_point{decoder.next_point()};
+            point<Dimensions> start_point{decoder.next_point()};
             int64_t sum = 0;
-            point last_point = start_point;
+            point<Dimensions> last_point = start_point;
 
             // spec 4.3.4.4 "2. A LineTo command"
             if (!decoder.next_command(detail::command_line_to())) {
@@ -216,8 +301,8 @@ namespace vtzero {
             std::forward<TGeomHandler>(geom_handler).ring_point(start_point);
 
             while (decoder.count() > 0) {
-                point p = decoder.next_point();
-                sum += detail::det(last_point, p);
+                point<Dimensions> p = decoder.next_point();
+                sum += detail::det<Dimensions>(last_point, p);
                 last_point = p;
                 std::forward<TGeomHandler>(geom_handler).ring_point(p);
             }
@@ -232,7 +317,7 @@ namespace vtzero {
                 throw geometry_exception{"ClosePath command count is not 1"};
             }
 
-            sum += detail::det(last_point, start_point);
+            sum += detail::det<Dimensions>(last_point, start_point);
             std::forward<TGeomHandler>(geom_handler).ring_point(start_point);
 
             std::forward<TGeomHandler>(geom_handler).ring_end(sum > 0);

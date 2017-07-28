@@ -15,12 +15,13 @@ namespace vtzero {
         UNKNOWN    = 0,
         POINT      = 1,
         LINESTRING = 2,
-        POLYGON    = 3
+        POLYGON    = 3,
+        SPLINE     = 4
     };
 
     inline const char* geom_type_name(GeomType type) noexcept {
         static const char* names[] = {
-            "unknown", "point", "linestring", "polygon"
+            "unknown", "point", "linestring", "polygon", "spline"
         };
         return names[static_cast<int>(type)];
     }
@@ -49,19 +50,21 @@ namespace vtzero {
         };
 
         enum class pbf_layer : protozero::pbf_tag_type {
-            name     =  1,
-            features =  2,
-            keys     =  3,
-            values   =  4,
-            extent   =  5,
-            version  = 15
+            name       =  1,
+            features   =  2,
+            keys       =  3,
+            values     =  4,
+            extent     =  5,
+            dimensions =  6,
+            version    = 15
         };
 
         enum class pbf_feature : protozero::pbf_tag_type {
-            id       = 1,
-            tags     = 2,
-            type     = 3,
-            geometry = 4
+            id         = 1,
+            tags       = 2,
+            type       = 3,
+            geometry   = 4,
+            knots      = 5
         };
 
         using pbf_value = value_type;

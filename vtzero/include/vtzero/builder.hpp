@@ -50,7 +50,7 @@ namespace vtzero {
     public:
 
         template <typename T>
-        layer_builder(T&& name, uint32_t version, uint32_t extent) :
+        layer_builder(T&& name, uint32_t version, uint32_t extent, uint32_t dimensions = 2) :
             layer_builder_base(),
             m_data(),
             m_keys_data(),
@@ -63,6 +63,7 @@ namespace vtzero {
             m_pbf_message_layer.add_uint32(detail::pbf_layer::version, version);
             m_pbf_message_layer.add_string(detail::pbf_layer::name, std::forward<T>(name));
             m_pbf_message_layer.add_uint32(detail::pbf_layer::extent, extent);
+            m_pbf_message_layer.add_uint32(detail::pbf_layer::dimensions, dimensions);
         }
 
         uint32_t add_key(const data_view& text) {
@@ -215,11 +216,12 @@ namespace vtzero {
 
     }; // class geometry_feature_builder
 
+    template <int Dimensions = 2>
     class point_feature_builder : public feature_builder {
 
         protozero::packed_field_uint32 m_pbf_geometry{};
         size_t m_num_points = 0;
-        point m_cursor{0, 0};
+        point<Dimensions> m_cursor;
 
     public:
 
@@ -240,15 +242,7 @@ namespace vtzero {
             m_pbf_geometry.add_element(detail::command_move_to(count));
         }
 
-        void add_point(const point p) {
-            assert(m_pbf_geometry.valid());
-            assert(!m_pbf_tags.valid() && "Call points_begin() before add_point()");
-            assert(m_num_points > 0 && "Too many calls to add_point()");
-            --m_num_points;
-            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
-            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
-            m_cursor = p;
-        }
+        void add_point(const point<Dimensions> p); 
 
         void points_end() {
             assert(m_pbf_geometry.valid());
@@ -257,13 +251,7 @@ namespace vtzero {
             m_pbf_tags = {m_feature_writer, detail::pbf_feature::tags};
         }
 
-        void add_single_point(const point p) {
-            assert(m_pbf_geometry.valid());
-            m_pbf_geometry.add_element(detail::command_move_to(1));
-            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x));
-            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y));
-            points_end();
-        }
+        void add_single_point(const point<Dimensions> p);
 
         template <typename ...TArgs>
         void add_tag(TArgs&& ...args) {
@@ -286,12 +274,55 @@ namespace vtzero {
         }
 
     }; // class point_feature_builder
+    
+    template <>
+    inline void point_feature_builder<2>::add_point(const point<2> p) {
+        assert(m_pbf_geometry.valid());
+        assert(!m_pbf_tags.valid() && "Call points_begin() before add_point()");
+        assert(m_num_points > 0 && "Too many calls to add_point()");
+        --m_num_points;
+        m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+        m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+        m_cursor = p;
+    }
+    
+    template <>
+    inline void point_feature_builder<3>::add_point(const point<3> p) {
+        assert(m_pbf_geometry.valid());
+        assert(!m_pbf_tags.valid() && "Call points_begin() before add_point()");
+        assert(m_num_points > 0 && "Too many calls to add_point()");
+        --m_num_points;
+        m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+        m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+        m_pbf_geometry.add_element(protozero::encode_zigzag32(p.z - m_cursor.z));
+        m_cursor = p;
+    }
 
+    template <>
+    inline void point_feature_builder<2>::add_single_point(const point<2> p) {
+        assert(m_pbf_geometry.valid());
+        m_pbf_geometry.add_element(detail::command_move_to(1));
+        m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x));
+        m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y));
+        points_end();
+    }
+
+    template <>
+    inline void point_feature_builder<3>::add_single_point(const point<3> p) {
+        assert(m_pbf_geometry.valid());
+        m_pbf_geometry.add_element(detail::command_move_to(1));
+        m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x));
+        m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y));
+        m_pbf_geometry.add_element(protozero::encode_zigzag32(p.z));
+        points_end();
+    }
+
+    template <int Dimensions = 2>
     class line_string_feature_builder : public feature_builder {
 
         protozero::packed_field_uint32 m_pbf_geometry{};
         size_t m_num_points = 0;
-        point m_cursor{0, 0};
+        point<Dimensions> m_cursor;
         bool m_start_line = false;
 
     public:
@@ -324,24 +355,7 @@ namespace vtzero {
             m_start_line = true;
         }
 
-        void add_point(const point p) {
-            assert(m_pbf_geometry.valid());
-            assert(!m_pbf_tags.valid() && "Call linestring_begin() before add_point()");
-            assert(m_num_points > 0 && "Too many calls to add_point()");
-            --m_num_points;
-            if (m_start_line) {
-                m_pbf_geometry.add_element(detail::command_move_to(1));
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
-                m_pbf_geometry.add_element(detail::command_line_to(m_num_points));
-                m_start_line = false;
-            } else {
-                assert(p != m_cursor);
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
-            }
-            m_cursor = p;
-        }
+        void add_point(const point<Dimensions> p);
 
         void linestring_end() {
             assert(m_pbf_geometry.valid());
@@ -349,13 +363,56 @@ namespace vtzero {
         }
 
     }; // class line_string_feature_builder
+    
+    template <>
+    inline void line_string_feature_builder<2>::add_point(const point<2> p) {
+        assert(m_pbf_geometry.valid());
+        assert(!m_pbf_tags.valid() && "Call linestring_begin() before add_point()");
+        assert(m_num_points > 0 && "Too many calls to add_point()");
+        --m_num_points;
+        if (m_start_line) {
+            m_pbf_geometry.add_element(detail::command_move_to(1));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+            m_pbf_geometry.add_element(detail::command_line_to(m_num_points));
+            m_start_line = false;
+        } else {
+            assert(p != m_cursor);
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+        }
+        m_cursor = p;
+    }
+    
+    template <>
+    inline void line_string_feature_builder<3>::add_point(const point<3> p) {
+        assert(m_pbf_geometry.valid());
+        assert(!m_pbf_tags.valid() && "Call linestring_begin() before add_point()");
+        assert(m_num_points > 0 && "Too many calls to add_point()");
+        --m_num_points;
+        if (m_start_line) {
+            m_pbf_geometry.add_element(detail::command_move_to(1));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.z - m_cursor.z));
+            m_pbf_geometry.add_element(detail::command_line_to(m_num_points));
+            m_start_line = false;
+        } else {
+            assert(p != m_cursor);
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.z - m_cursor.z));
+        }
+        m_cursor = p;
+    }
 
+    template <int Dimensions = 2>
     class polygon_feature_builder : public feature_builder {
 
         protozero::packed_field_uint32 m_pbf_geometry{};
         size_t m_num_points = 0;
-        point m_cursor{0, 0};
-        point m_first_point{0, 0};
+        point<Dimensions> m_cursor;
+        point<Dimensions> m_first_point;
         bool m_start_ring = false;
 
     public:
@@ -388,37 +445,188 @@ namespace vtzero {
             m_start_ring = true;
         }
 
-        void add_point(const point p) {
-            assert(m_pbf_geometry.valid());
-            assert(!m_pbf_tags.valid() && "Call ring_begin() before add_point()");
-            assert(m_num_points > 0 && "Too many calls to add_point()");
-            --m_num_points;
-            if (m_start_ring) {
-                m_first_point = p;
-                m_pbf_geometry.add_element(detail::command_move_to(1));
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
-                m_pbf_geometry.add_element(detail::command_line_to(m_num_points - 1));
-                m_start_ring = false;
-                m_cursor = p;
-            } else if (m_num_points == 0) {
-                assert(m_first_point == p); // XXX
-                // spec 4.3.3.3 "A ClosePath command MUST have a command count of 1"
-                m_pbf_geometry.add_element(detail::command_close_path(1));
-            } else {
-                assert(p != m_cursor); // XXX
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
-                m_cursor = p;
-            }
-        }
+        void add_point(const point<Dimensions> p);
 
         void ring_end() {
             assert(m_pbf_geometry.valid());
             assert(m_num_points == 0 && "Not enough calls to add_point()");
         }
 
-    }; // class line_string_feature_builder
+    }; // class polygon_feature_builder
+    
+    template <>
+    inline void polygon_feature_builder<2>::add_point(const point<2> p) {
+        assert(m_pbf_geometry.valid());
+        assert(!m_pbf_tags.valid() && "Call ring_begin() before add_point()");
+        assert(m_num_points > 0 && "Too many calls to add_point()");
+        --m_num_points;
+        if (m_start_ring) {
+            m_first_point = p;
+            m_pbf_geometry.add_element(detail::command_move_to(1));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+            m_pbf_geometry.add_element(detail::command_line_to(m_num_points - 1));
+            m_start_ring = false;
+            m_cursor = p;
+        } else if (m_num_points == 0) {
+            assert(m_first_point == p); // XXX
+            // spec 4.3.3.3 "A ClosePath command MUST have a command count of 1"
+            m_pbf_geometry.add_element(detail::command_close_path(1));
+        } else {
+            assert(p != m_cursor); // XXX
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+            m_cursor = p;
+        }
+    }
+    
+    template <>
+    inline void polygon_feature_builder<3>::add_point(const point<3> p) {
+        assert(m_pbf_geometry.valid());
+        assert(!m_pbf_tags.valid() && "Call ring_begin() before add_point()");
+        assert(m_num_points > 0 && "Too many calls to add_point()");
+        --m_num_points;
+        if (m_start_ring) {
+            m_first_point = p;
+            m_pbf_geometry.add_element(detail::command_move_to(1));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.z - m_cursor.z));
+            m_pbf_geometry.add_element(detail::command_line_to(m_num_points - 1));
+            m_start_ring = false;
+            m_cursor = p;
+        } else if (m_num_points == 0) {
+            assert(m_first_point == p); // XXX
+            // spec 4.3.3.3 "A ClosePath command MUST have a command count of 1"
+            m_pbf_geometry.add_element(detail::command_close_path(1));
+        } else {
+            assert(p != m_cursor); // XXX
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.z - m_cursor.z));
+            m_cursor = p;
+        }
+    }
+
+    template <int Dimensions = 2>
+    class spline_feature_builder : public feature_builder {
+
+        protozero::packed_field_uint32 m_pbf_geometry{};
+        protozero::packed_field_double m_pbf_knots{};
+        size_t m_num_points = 0;
+        point<Dimensions> m_cursor;
+        bool m_start_line = false;
+
+    public:
+
+        spline_feature_builder(layer_builder& layer, uint64_t id = 0) :
+            feature_builder(layer, id) {
+            m_feature_writer.add_enum(detail::pbf_feature::type, static_cast<int32_t>(GeomType::SPLINE));
+        }
+
+        ~spline_feature_builder() {
+            assert(m_num_points == 0 && "Spline has fewer points than expected");
+        }
+
+        void tags_begin() {
+            assert(!m_pbf_geometry.valid());
+            assert(!m_pbf_knots.valid());
+            m_pbf_tags = {m_feature_writer, detail::pbf_feature::tags};
+
+        }
+
+        template <typename ...TArgs>
+        void add_tag(TArgs&& ...args) {
+            assert(m_pbf_tags.valid());
+            add_tag_impl(std::forward<TArgs>(args)...);
+        }
+
+        void tags_end() {
+            assert(m_pbf_tags.valid());
+            m_pbf_tags.commit();
+        }
+
+        void controlpoints_begin(size_t count) {
+            assert(!m_pbf_tags.valid());
+            assert(!m_pbf_knots.valid());
+            m_pbf_geometry = {m_feature_writer, detail::pbf_feature::geometry};
+            assert(count > 1);
+            assert(m_num_points == 0 && "Spline has fewer points than expected");
+            m_num_points = count;
+            m_start_line = true;
+        }
+
+        void add_point(const point<Dimensions> p);
+
+        void controlpoints_end() {
+            assert(m_pbf_geometry.valid());
+            assert(m_num_points == 0 && "Not enough calls to add_point()");
+            m_pbf_geometry.commit();
+        }
+
+        void knots_begin() {
+            assert(!m_pbf_tags.valid());
+            assert(!m_pbf_geometry.valid());
+            m_pbf_knots = {m_feature_writer, detail::pbf_feature::knots};
+        }
+
+        void add_knot(double k) {
+            assert(m_pbf_knots.valid());
+            assert(!m_pbf_geometry.valid());
+            assert(!m_pbf_tags.valid() && "Call spline_begin() before add_point()");
+            m_pbf_knots.add_element(k);
+        }
+
+        void knots_end() {
+            assert(m_pbf_knots.valid());
+            m_pbf_knots.commit();
+        }
+
+
+
+    }; // class spline_feature_builder
+    
+    template <>
+    inline void spline_feature_builder<2>::add_point(const point<2> p) {
+        assert(m_pbf_geometry.valid());
+        assert(!m_pbf_tags.valid() && "Call spline_begin() before add_point()");
+        assert(m_num_points > 0 && "Too many calls to add_point()");
+        --m_num_points;
+        if (m_start_line) {
+            m_pbf_geometry.add_element(detail::command_move_to(1));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+            m_pbf_geometry.add_element(detail::command_line_to(m_num_points));
+            m_start_line = false;
+        } else {
+            assert(p != m_cursor);
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+        }
+        m_cursor = p;
+    }
+    
+    template <>
+    inline void spline_feature_builder<3>::add_point(const point<3> p) {
+        assert(m_pbf_geometry.valid());
+        assert(!m_pbf_tags.valid() && "Call spline_begin() before add_point()");
+        assert(m_num_points > 0 && "Too many calls to add_point()");
+        --m_num_points;
+        if (m_start_line) {
+            m_pbf_geometry.add_element(detail::command_move_to(1));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.z - m_cursor.z));
+            m_pbf_geometry.add_element(detail::command_line_to(m_num_points));
+            m_start_line = false;
+        } else {
+            assert(p != m_cursor);
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.z - m_cursor.z));
+        }
+        m_cursor = p;
+    }
 
     inline void layer_builder::add_feature(feature& feature, layer& layer) {
         geometry_feature_builder feature_builder{*this, feature.id(), feature.type(), feature.geometry()};
@@ -434,14 +642,14 @@ namespace vtzero {
     public:
 
         layer_builder& add_layer(const layer& layer) {
-            m_layers.emplace_back(new layer_builder{layer.name(), layer.version(), layer.extent()});
+            m_layers.emplace_back(new layer_builder{layer.name(), layer.version(), layer.extent(), layer.dimensions()});
             return *static_cast<layer_builder*>(m_layers.back().get());
         }
 
         template <typename T,
                   typename std::enable_if<!std::is_same<typename std::decay<T>::type, layer>{}, int>::type = 0>
-        layer_builder& add_layer(T&& name, uint32_t version = 2, uint32_t extent = 4096) {
-            m_layers.emplace_back(new layer_builder{std::forward<T>(name), version, extent});
+        layer_builder& add_layer(T&& name, uint32_t version = 2, uint32_t extent = 4096, uint32_t dimensions = 2) {
+            m_layers.emplace_back(new layer_builder{std::forward<T>(name), version, extent, dimensions});
             return *static_cast<layer_builder*>(m_layers.back().get());
         }
 

@@ -15,8 +15,12 @@ struct geom_handler_points {
     void points_begin(uint32_t /*count*/) const noexcept {
     }
 
-    void points_point(const vtzero::point point) const {
+    void points_point(const vtzero::point<2> point) const {
         std::cout << "      POINT(" << point.x << ',' << point.y << ")\n";
+    }
+    
+    void points_point(const vtzero::point<3> point) const {
+        std::cout << "      POINT(" << point.x << ',' << point.y << ',' << point.z << ")\n";
     }
 
     void points_end() const noexcept {
@@ -34,14 +38,62 @@ struct geom_handler_linestrings {
         output += "](";
     }
 
-    void linestring_point(const vtzero::point point) {
+    void linestring_point(const vtzero::point<2> point) {
         output += std::to_string(point.x);
         output += ' ';
         output += std::to_string(point.y);
         output += ',';
     }
+    
+    void linestring_point(const vtzero::point<3> point) {
+        output += std::to_string(point.x);
+        output += ' ';
+        output += std::to_string(point.y);
+        output += ' ';
+        output += std::to_string(point.z);
+        output += ',';
+    }
 
     void linestring_end() {
+        if (output.empty()) {
+            return;
+        }
+        if (output.back() == ',') {
+            output.resize(output.size() - 1);
+        }
+        output += ")\n";
+        std::cout << output;
+    }
+
+};
+
+struct geom_handler_spline {
+
+    std::string output;
+
+    void spline_begin(uint32_t count) {
+        output = "      SPLINE[count=";
+        output += std::to_string(count);
+        output += "](";
+    }
+
+    void spline_point(const vtzero::point<2> point) {
+        output += std::to_string(point.x);
+        output += ' ';
+        output += std::to_string(point.y);
+        output += ',';
+    }
+    
+    void spline_point(const vtzero::point<3> point) {
+        output += std::to_string(point.x);
+        output += ' ';
+        output += std::to_string(point.y);
+        output += ' ';
+        output += std::to_string(point.z);
+        output += ',';
+    }
+
+    void spline_end() {
         if (output.empty()) {
             return;
         }
@@ -64,10 +116,19 @@ struct geom_handler_polygons {
         output += "](";
     }
 
-    void ring_point(const vtzero::point point) {
+    void ring_point(const vtzero::point<2> point) {
         output += std::to_string(point.x);
         output += ' ';
         output += std::to_string(point.y);
+        output += ',';
+    }
+    
+    void ring_point(const vtzero::point<3> point) {
+        output += std::to_string(point.x);
+        output += ' ';
+        output += std::to_string(point.y);
+        output += ' ';
+        output += std::to_string(point.z);
         output += ',';
     }
 
@@ -107,7 +168,8 @@ void print_layer(const vtzero::layer& layer, bool strict, bool print_tables, boo
     std::cout << "layer:\n"
               << "  name:    " << std::string{layer.name()} << '\n'
               << "  version: " << layer.version() << '\n'
-              << "  extent:  " << layer.extent() << '\n';
+              << "  extent:  " << layer.extent() << '\n'
+              << "  dimensions:  " << layer.dimensions() << '\n';
 
     if (print_tables) {
         std::cout << "  keys:\n";
@@ -137,13 +199,46 @@ void print_layer(const vtzero::layer& layer, bool strict, bool print_tables, boo
                   << "    geometry:\n";
         switch (feature.type()) {
             case vtzero::GeomType::POINT:
-                vtzero::decode_point_geometry(feature.geometry(), strict, geom_handler_points{});
+                if (feature.dimensions() == 2) {
+                    vtzero::decode_point_geometry(feature.geometry(), strict, geom_handler_points{});
+                } else if (feature.dimensions() == 3) {
+                    vtzero::decode_point_geometry<geom_handler_points, 3>(feature.geometry(), strict, geom_handler_points{});
+                }
                 break;
             case vtzero::GeomType::LINESTRING:
-                vtzero::decode_linestring_geometry(feature.geometry(), strict, geom_handler_linestrings{});
+                if (feature.dimensions() == 2) {
+                    vtzero::decode_linestring_geometry(feature.geometry(), strict, geom_handler_linestrings{});
+                } else if (feature.dimensions() == 3) {
+                    vtzero::decode_linestring_geometry<geom_handler_linestrings, 3>(feature.geometry(), strict, geom_handler_linestrings{});
+                }
                 break;
             case vtzero::GeomType::POLYGON:
-                vtzero::decode_polygon_geometry(feature.geometry(), strict, geom_handler_polygons{});
+                if (feature.dimensions() == 2) {
+                    vtzero::decode_polygon_geometry(feature.geometry(), strict, geom_handler_polygons{});
+                } else if (feature.dimensions() == 3) {
+                    vtzero::decode_polygon_geometry<geom_handler_polygons, 3>(feature.geometry(), strict, geom_handler_polygons{});
+                }
+                break;
+            case vtzero::GeomType::SPLINE:
+                {
+                    if (feature.dimensions() == 2) {
+                        vtzero::decode_spline_geometry(feature.geometry(), strict, geom_handler_spline{});
+                    } else if (feature.dimensions() == 3) {
+                        vtzero::decode_spline_geometry<geom_handler_spline, 3>(feature.geometry(), strict, geom_handler_spline{});
+                    }
+                    std::cout << "    knots:\n";
+                    std::cout << "     [";
+                    auto k_itr = feature.knots().begin();
+                    auto k_end = feature.knots().end();
+                    if (k_itr != k_end) {
+                        std::cout << *k_itr;
+                        ++k_itr;
+                    }
+                    for ( ; k_itr != k_end; ++k_itr) {
+                        std::cout << ", " << *k_itr;
+                    }
+                    std::cout << "]\n";
+                }
                 break;
             default:
                 std::cout << "UNKNOWN GEOMETRY TYPE\n";

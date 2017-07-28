@@ -1,5 +1,5 @@
 
-PROTOZERO_INCLUDE := ../../../../mapbox/protozero/include
+PROTOZERO_INCLUDE := ../../../protozero/include
 
 CXXFLAGS := -Iinclude -I../include -I${PROTOZERO_INCLUDE} -g -Wall -Wextra -Werror
 
