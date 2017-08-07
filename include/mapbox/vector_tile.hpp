@@ -268,8 +268,8 @@ GeometryCollectionType feature::getGeometries(float scale) const {
 
             x += protozero::decode_zigzag32(static_cast<std::uint32_t>(*start_itr++));
             y += protozero::decode_zigzag32(static_cast<std::uint32_t>(*start_itr++));
-            float px = std::round(static_cast<float>(x) * scale);
-            float py = std::round(static_cast<float>(y) * scale);
+            float px = ::roundf(static_cast<float>(x) * scale);
+            float py = ::roundf(static_cast<float>(y) * scale);
             static const float max_coord = static_cast<float>(std::numeric_limits<typename GeometryCollectionType::coordinate_type>::max());
             static const float min_coord = static_cast<float>(std::numeric_limits<typename GeometryCollectionType::coordinate_type>::min());
 
