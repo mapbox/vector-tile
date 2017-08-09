@@ -32,7 +32,7 @@ namespace vtzero {
         uint32_t v;
     };
 
-    class layer_builder : public layer_builder_base {
+    class layer_builder_impl : public layer_builder_base {
 
         std::string m_data;
         std::string m_keys_data;
@@ -50,7 +50,7 @@ namespace vtzero {
     public:
 
         template <typename T>
-        layer_builder(T&& name, uint32_t version, uint32_t extent) :
+        layer_builder_impl(T&& name, uint32_t version, uint32_t extent) :
             layer_builder_base(),
             m_data(),
             m_keys_data(),
@@ -108,8 +108,6 @@ namespace vtzero {
             return m_pbf_message_layer;
         }
 
-        void add_feature(feature& feature, layer& layer);
-
         void build(protozero::pbf_builder<detail::pbf_tile>& pbf_tile_builder) override {
             pbf_tile_builder.add_bytes_vectored(detail::pbf_tile::layers,
                 data(),
@@ -118,7 +116,7 @@ namespace vtzero {
             );
         }
 
-    }; // class layer_builder
+    }; // class layer_builder_impl
 
     class layer_builder_existing : public layer_builder_base {
 
@@ -137,19 +135,42 @@ namespace vtzero {
 
     }; // class layer_builder_existing
 
+    class tile_builder;
+
+    class layer_builder {
+
+        vtzero::layer_builder_impl* m_layer;
+
+    public:
+
+        template <typename ...TArgs>
+        layer_builder(vtzero::tile_builder& tile, TArgs&& ...args);
+
+        vtzero::layer_builder_impl& get_layer() noexcept {
+            return *m_layer;
+        };
+
+        uint32_t add_key(const data_view& text) {
+            return m_layer->add_key(text);
+        }
+
+        void add_feature(feature& feature, layer& layer);
+
+    }; // class layer_builder
+
     namespace detail {
 
         class feature_builder_base {
 
-            layer_builder& m_layer;
+            layer_builder m_layer;
 
             void add_tag_internal(uint32_t key_idx, const data_view value) {
                 m_pbf_tags.add_element(key_idx);
-                m_pbf_tags.add_element(m_layer.add_value(value));
+                m_pbf_tags.add_element(m_layer.get_layer().add_value(value));
             }
 
             void add_tag_internal(const data_view key, const data_view value) {
-                const auto idx = m_layer.add_tag(key, value);
+                const auto idx = m_layer.get_layer().add_tag(key, value);
                 m_pbf_tags.add_element(idx.k);
                 m_pbf_tags.add_element(idx.v);
             }
@@ -159,9 +180,9 @@ namespace vtzero {
             protozero::pbf_builder<detail::pbf_feature> m_feature_writer;
             protozero::packed_field_uint32 m_pbf_tags;
 
-            feature_builder_base(layer_builder& layer, uint64_t id) :
+            feature_builder_base(layer_builder layer, uint64_t id) :
                 m_layer(layer),
-                m_feature_writer(layer.message(), detail::pbf_layer::features) {
+                m_feature_writer(layer.get_layer().message(), detail::pbf_layer::features) {
                 m_feature_writer.add_uint64(detail::pbf_feature::id, id);
             }
 
@@ -209,7 +230,7 @@ namespace vtzero {
 
         public:
 
-            feature_builder(layer_builder& layer, uint64_t id) :
+            feature_builder(layer_builder layer, uint64_t id) :
                 feature_builder_base(layer, id) {
             }
 
@@ -247,7 +268,7 @@ namespace vtzero {
 
     public:
 
-        geometry_feature_builder(layer_builder& layer, uint64_t id, GeomType geom_type, const data_view& geometry) :
+        geometry_feature_builder(layer_builder layer, uint64_t id, GeomType geom_type, const data_view& geometry) :
             feature_builder_base(layer, id) {
             m_feature_writer.add_enum(detail::pbf_feature::type, static_cast<int32_t>(geom_type));
             m_feature_writer.add_string(detail::pbf_feature::geometry, geometry);
@@ -265,7 +286,7 @@ namespace vtzero {
 
     public:
 
-        point_feature_builder(layer_builder& layer, uint64_t id = 0) :
+        point_feature_builder(layer_builder layer, uint64_t id = 0) :
             feature_builder(layer, id) {
             m_feature_writer.add_enum(detail::pbf_feature::type, static_cast<int32_t>(GeomType::POINT));
             m_pbf_geometry = {m_feature_writer, detail::pbf_feature::geometry};
@@ -342,7 +363,7 @@ namespace vtzero {
 
     public:
 
-        line_string_feature_builder(layer_builder& layer, uint64_t id = 0) :
+        line_string_feature_builder(layer_builder layer, uint64_t id = 0) :
             feature_builder(layer, id) {
             m_feature_writer.add_enum(detail::pbf_feature::type, static_cast<int32_t>(GeomType::LINESTRING));
             m_pbf_geometry = {m_feature_writer, detail::pbf_feature::geometry};
@@ -402,7 +423,7 @@ namespace vtzero {
 
     public:
 
-        polygon_feature_builder(layer_builder& layer, uint64_t id = 0) :
+        polygon_feature_builder(layer_builder layer, uint64_t id = 0) :
             feature_builder(layer, id) {
             m_feature_writer.add_enum(detail::pbf_feature::type, static_cast<int32_t>(GeomType::POLYGON));
             m_pbf_geometry = {m_feature_writer, detail::pbf_feature::geometry};
@@ -482,16 +503,16 @@ namespace vtzero {
 
     public:
 
-        layer_builder& add_layer(const layer& layer) {
-            m_layers.emplace_back(new layer_builder{layer.name(), layer.version(), layer.extent()});
-            return *static_cast<layer_builder*>(m_layers.back().get());
+        layer_builder_impl* add_layer(const layer& layer) {
+            m_layers.emplace_back(new layer_builder_impl{layer.name(), layer.version(), layer.extent()});
+            return static_cast<layer_builder_impl*>(m_layers.back().get());
         }
 
         template <typename T,
                   typename std::enable_if<!std::is_same<typename std::decay<T>::type, layer>{}, int>::type = 0>
-        layer_builder& add_layer(T&& name, uint32_t version = 2, uint32_t extent = 4096) {
-            m_layers.emplace_back(new layer_builder{std::forward<T>(name), version, extent});
-            return *static_cast<layer_builder*>(m_layers.back().get());
+        layer_builder_impl* add_layer(T&& name, uint32_t version = 2, uint32_t extent = 4096) {
+            m_layers.emplace_back(new layer_builder_impl{std::forward<T>(name), version, extent});
+            return static_cast<layer_builder_impl*>(m_layers.back().get());
         }
 
         void add_layer_with_data(const layer& layer) {
@@ -517,6 +538,11 @@ namespace vtzero {
         }
 
     }; // class tile_builder
+
+    template <typename ...TArgs>
+    layer_builder::layer_builder(vtzero::tile_builder& tile, TArgs&& ...args) :
+        m_layer(tile.add_layer(std::forward<TArgs>(args)...)) {
+    }
 
 } // namespace vtzero
 

@@ -9,9 +9,9 @@
 
 int main() {
     vtzero::tile_builder tile;
-    auto& layer_points   = tile.add_layer("points");
-    auto& layer_lines    = tile.add_layer("lines");
-    auto& layer_polygons = tile.add_layer("polygons");
+    vtzero::layer_builder layer_points{tile, "points"};
+    vtzero::layer_builder layer_lines{tile, "lines"};
+    vtzero::layer_builder layer_polygons{tile, "polygons"};
 
     {
         vtzero::point_feature_builder feature{layer_points, 1 /* id */};

@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
             std::exit(1);
         }
         vtzero::tile_builder tb;
-        auto& layer_builder = tb.add_layer(layer);
+        vtzero::layer_builder layer_builder{tb, layer};
         layer_builder.add_feature(feature, layer);
         std::cout << tb.serialize();
     }
