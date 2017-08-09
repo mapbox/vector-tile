@@ -15,9 +15,8 @@ int main() {
 
     {
         vtzero::point_feature_builder feature{layer_points, 1 /* id */};
-        feature.points_begin(1);
-        feature.add_point({10, 10});
-        feature.points_end();
+        feature.add_points(1);
+        feature.set_point(10, 10);
         feature.add_tag("foo", "bar");
         feature.add_tag("x", "y");
         feature.rollback();
@@ -25,57 +24,52 @@ int main() {
 
     {
         vtzero::point_feature_builder feature{layer_points, 2 /* id */};
-        feature.add_single_point({20, 20});
+        feature.add_point(20, 20);
         feature.add_tag("some", "attr");
     }
     {
         vtzero::point_feature_builder feature{layer_points, 3 /* id */};
-        feature.add_single_point({20, 20});
+        feature.add_point(20, 20);
         feature.add_tag("some", "attr");
     }
 
     {
         vtzero::point_feature_builder feature{layer_points, 4 /* id */};
-        feature.add_single_point({20, 20});
+        feature.add_point(20, 20);
         feature.add_tag("some", "otherattr");
     }
 
 
     vtzero::point_feature_builder feature{layer_points, 5 /* id */};
-    feature.add_single_point({20, 20});
+    feature.add_point(vtzero::point{20, 20});
     feature.add_tag("otherkey", "attr");
     feature.commit();
 
     {
         vtzero::line_string_feature_builder feature{layer_lines, 6 /* id */};
-        feature.linestring_begin(3);
-        feature.add_point({10, 10});
-        feature.add_point({10, 20});
-        feature.add_point({20, 20});
-        feature.linestring_end();
-        feature.linestring_begin(2);
-        feature.add_point({11, 11});
-        feature.add_point({12, 13});
-        feature.linestring_end();
+        feature.add_linestring(3);
+        feature.set_point(10, 10);
+        feature.set_point(10, 20);
+        feature.set_point(vtzero::point{20, 20});
+        std::vector<vtzero::point> points = {{11, 11}, {12, 13}};
+        feature.add_linestring(points.begin(), points.end());
         feature.add_tag("highway", "primary");
         feature.add_tag(std::string{"maxspeed"}, vtzero::sint_value(50));
     }
 
     {
         vtzero::polygon_feature_builder feature{layer_polygons, 7 /* id */};
-        feature.ring_begin(5);
-        feature.add_point({0, 0});
-        feature.add_point({10, 0});
-        feature.add_point({10, 10});
-        feature.add_point({0, 10});
-        feature.add_point({0, 0});
-        feature.ring_end();
-        feature.ring_begin(4);
-        feature.add_point({3, 3});
-        feature.add_point({3, 5});
-        feature.add_point({5, 5});
-        feature.add_point({3, 3});
-        feature.ring_end();
+        feature.add_ring(5);
+        feature.set_point(0, 0);
+        feature.set_point(10, 0);
+        feature.set_point(10, 10);
+        feature.set_point(0, 10);
+        feature.set_point(0, 0);
+        feature.add_ring(4);
+        feature.set_point(3, 3);
+        feature.set_point(3, 5);
+        feature.set_point(5, 5);
+        feature.close_ring();
         feature.add_tag("natural", "wood");
     }
 
