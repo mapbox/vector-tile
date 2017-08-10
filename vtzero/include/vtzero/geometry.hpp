@@ -15,12 +15,9 @@ namespace vtzero {
         int32_t y;
     };
 
-    inline int32_t get_x_value(point p) noexcept {
-        return p.x;
-    }
-
-    inline int32_t get_y_value(point p) noexcept {
-        return p.y;
+    template <typename T>
+    point create_point(T p) noexcept {
+        return {p.x, p.y};
     }
 
     inline bool operator==(const point& a, const point& b) noexcept {

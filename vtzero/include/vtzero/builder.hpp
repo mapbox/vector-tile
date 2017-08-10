@@ -296,18 +296,22 @@ namespace vtzero {
             assert(m_num_points == 0 && "has fewer points than expected");
         }
 
-        void add_point(const int32_t x, const int32_t y) {
+        void add_point(const point p) {
             assert(m_pbf_geometry.valid());
             assert(!m_pbf_tags.valid());
             m_pbf_geometry.add_element(detail::command_move_to(1));
-            m_pbf_geometry.add_element(protozero::encode_zigzag32(x));
-            m_pbf_geometry.add_element(protozero::encode_zigzag32(y));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y));
             m_pbf_geometry.commit();
         }
 
-        template <typename TPoint>
-        void add_point(const TPoint& p) {
-            add_point(get_x_value(p), get_y_value(p));
+        void add_point(const int32_t x, const int32_t y) {
+            add_point(point{x, y});
+        }
+
+        template <typename T>
+        void add_point(T p) {
+            add_point(create_point(p));
         }
 
         void add_points(uint32_t count) {
@@ -318,26 +322,30 @@ namespace vtzero {
             m_pbf_geometry.add_element(detail::command_move_to(count));
         }
 
-        void set_point(const int32_t x, const int32_t y) {
+        void set_point(const point p) {
             assert(m_pbf_geometry.valid());
             assert(!m_pbf_tags.valid() && "Call add_points() before set_point()");
             assert(m_num_points > 0 && "Too many points");
             --m_num_points;
-            m_pbf_geometry.add_element(protozero::encode_zigzag32(x - m_cursor.x));
-            m_pbf_geometry.add_element(protozero::encode_zigzag32(y - m_cursor.y));
-            m_cursor = {x, y};
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+            m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+            m_cursor = p;
         }
 
-        template <typename TPoint>
-        void set_point(const TPoint& p) {
-            set_point(get_x_value(p), get_y_value(p));
+        void set_point(const int32_t x, const int32_t y) {
+            set_point(point{x, y});
+        }
+
+        template <typename T>
+        void set_point(T p) {
+            set_point(create_point(p));
         }
 
         template <typename TIter>
         void add_points(TIter begin, TIter end) {
             add_points(std::distance(begin, end));
             for (; begin != end; ++begin) {
-                set_point(get_x_value(*begin), get_y_value(*begin));
+                set_point(*begin);
             }
             m_pbf_geometry.commit();
         }
@@ -346,12 +354,21 @@ namespace vtzero {
         void add_points(TIter begin, TIter end, uint32_t count) {
             add_points(count);
             for (; begin != end; ++begin) {
-                set_point(get_x_value(*begin), get_y_value(*begin));
+                set_point(*begin);
 #ifndef NDEBUG
                 --count;
 #endif
             }
             assert(count == 0 && "Iterators must yield exactly count points");
+            m_pbf_geometry.commit();
+        }
+
+        template <typename TContainer>
+        void add_points_from_container(const TContainer& container) {
+            add_points(container.size());
+            for (const auto& element : container) {
+                set_point(element);
+            }
             m_pbf_geometry.commit();
         }
 
@@ -382,35 +399,59 @@ namespace vtzero {
             m_start_line = true;
         }
 
-        void set_point(const int32_t x, const int32_t y) {
+        void set_point(const point p) {
             assert(m_pbf_geometry.valid());
             assert(!m_pbf_tags.valid() && "Add full geometry before adding tags");
             assert(m_num_points > 0 && "Too many calls to set_point()");
             --m_num_points;
             if (m_start_line) {
                 m_pbf_geometry.add_element(detail::command_move_to(1));
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(x - m_cursor.x));
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(y - m_cursor.y));
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
                 m_pbf_geometry.add_element(detail::command_line_to(m_num_points));
                 m_start_line = false;
             } else {
-                assert(x != m_cursor.x || y != m_cursor.y); // no zero-length segments
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(x - m_cursor.x));
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(y - m_cursor.y));
+                assert(p != m_cursor); // no zero-length segments
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
             }
-            m_cursor = {x, y};
+            m_cursor = p;
         }
 
-        template <typename TPoint>
-        void set_point(const TPoint& p) {
-            set_point(get_x_value(p), get_y_value(p));
+        void set_point(const int32_t x, const int32_t y) {
+            set_point(point{x, y});
+        }
+
+        template <typename T>
+        void set_point(T p) {
+            set_point(create_point(p));
         }
 
         template <typename TIter>
         void add_linestring(TIter begin, TIter end) {
             add_linestring(std::distance(begin, end));
             for (; begin != end; ++begin) {
-                set_point(get_x_value(*begin), get_y_value(*begin));
+                set_point(*begin);
+            }
+        }
+
+        template <typename TIter>
+        void add_linestring(TIter begin, TIter end, uint32_t count) {
+            add_linestring(count);
+            for (; begin != end; ++begin) {
+                set_point(*begin);
+#ifndef NDEBUG
+                --count;
+#endif
+            }
+            assert(count == 0 && "Iterators must yield exactly count points");
+        }
+
+        template <typename TContainer>
+        void add_linestring_from_container(const TContainer& container) {
+            add_linestring(container.size());
+            for (const auto& element : container) {
+                set_point(element);
             }
         }
 
@@ -442,29 +483,38 @@ namespace vtzero {
             m_start_ring = true;
         }
 
-        void set_point(const int32_t x, const int32_t y) {
+        void set_point(const point p) {
             assert(m_pbf_geometry.valid());
             assert(!m_pbf_tags.valid() && "Call ring_begin() before add_point()");
             assert(m_num_points > 0 && "Too many calls to add_point()");
             --m_num_points;
             if (m_start_ring) {
-                m_first_point = {x, y};
+                m_first_point = p;
                 m_pbf_geometry.add_element(detail::command_move_to(1));
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(x - m_cursor.x));
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(y - m_cursor.y));
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
                 m_pbf_geometry.add_element(detail::command_line_to(m_num_points - 1));
                 m_start_ring = false;
                 m_cursor = m_first_point;
             } else if (m_num_points == 0) {
-                assert(m_first_point.x == x && m_first_point.y == y); // XXX
+                assert(m_first_point == p); // XXX
                 // spec 4.3.3.3 "A ClosePath command MUST have a command count of 1"
                 m_pbf_geometry.add_element(detail::command_close_path(1));
             } else {
-                assert(m_cursor.x != x || m_cursor.y != y); // XXX
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(x - m_cursor.x));
-                m_pbf_geometry.add_element(protozero::encode_zigzag32(y - m_cursor.y));
-                m_cursor = {x, y};
+                assert(m_cursor != p); // XXX
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.x - m_cursor.x));
+                m_pbf_geometry.add_element(protozero::encode_zigzag32(p.y - m_cursor.y));
+                m_cursor = p;
             }
+        }
+
+        void set_point(const int32_t x, const int32_t y) {
+            set_point(point{x, y});
+        }
+
+        template <typename T>
+        void set_point(T p) {
+            set_point(create_point(p));
         }
 
         void close_ring() {
@@ -475,20 +525,35 @@ namespace vtzero {
             --m_num_points;
         }
 
-        template <typename TPoint>
-        void set_point(const TPoint& p) {
-            set_point(get_x_value(p), get_y_value(p));
-        }
-
         template <typename TIter>
         void add_ring(TIter begin, TIter end) {
             add_ring(std::distance(begin, end));
             for (; begin != end; ++begin) {
-                set_point(get_x_value(*begin), get_y_value(*begin));
+                set_point(create_point(*begin));
             }
         }
 
-    }; // class line_string_feature_builder
+        template <typename TIter>
+        void add_ring(TIter begin, TIter end, uint32_t count) {
+            add_ring(count);
+            for (; begin != end; ++begin) {
+                set_point(*begin);
+#ifndef NDEBUG
+                --count;
+#endif
+            }
+            assert(count == 0 && "Iterators must yield exactly count points");
+        }
+
+        template <typename TContainer>
+        void add_ring_from_container(const TContainer& container) {
+            add_ring(container.size());
+            for (const auto& element : container) {
+                set_point(element);
+            }
+        }
+
+    }; // class polygon_feature_builder
 
     inline void layer_builder::add_feature(feature& feature, layer& layer) {
         geometry_feature_builder feature_builder{*this, feature.id(), feature.type(), feature.geometry()};
