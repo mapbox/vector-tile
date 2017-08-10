@@ -293,6 +293,7 @@ namespace vtzero {
         uint32_it_range m_tags;
         data_view m_geometry;
         GeomType m_type;
+        bool m_has_id;
 
     public:
 
@@ -300,14 +301,16 @@ namespace vtzero {
             m_id(0),
             m_tags(),
             m_geometry(),
-            m_type() {
+            m_type(),
+            m_has_id(false) {
         }
 
         feature(const data_view& data) :
             m_id(0), // defaults to 0, see https://github.com/mapbox/vector-tile-spec/blob/master/2.1/vector_tile.proto#L32
             m_tags(),
             m_geometry(),
-            m_type() { // defaults to UNKOWN, see https://github.com/mapbox/vector-tile-spec/blob/master/2.1/vector_tile.proto#L41
+            m_type(), // defaults to UNKNOWN, see https://github.com/mapbox/vector-tile-spec/blob/master/2.1/vector_tile.proto#L41
+            m_has_id(false) {
 
             protozero::pbf_message<detail::pbf_feature> reader{data};
 
@@ -315,6 +318,7 @@ namespace vtzero {
                 switch (reader.tag_and_type()) {
                     case protozero::tag_and_type(detail::pbf_feature::id, protozero::pbf_wire_type::varint):
                         m_id = reader.get_uint64();
+                        m_has_id = true;
                         break;
                     case protozero::tag_and_type(detail::pbf_feature::tags, protozero::pbf_wire_type::length_delimited):
                         m_tags = reader.get_packed_uint32();
@@ -353,6 +357,10 @@ namespace vtzero {
         uint64_t id() const noexcept {
             assert(valid());
             return m_id;
+        }
+
+        bool has_id() const noexcept {
+            return m_has_id;
         }
 
         GeomType type() const noexcept {
