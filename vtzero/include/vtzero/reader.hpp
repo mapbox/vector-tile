@@ -280,6 +280,24 @@ namespace vtzero {
             return !(*this == other);
         }
 
+        /**
+         * Returns true if there are no tags.
+         *
+         * Complexity: Constant.
+         */
+        bool empty() const noexcept {
+            return m_it == m_end;
+        }
+
+        /**
+         * Return the number of tags.
+         *
+         * Complexity: Linear.
+         */
+        std::size_t size() const noexcept {
+            return m_it.size() / 2;
+        }
+
     }; // tags_iterator
 
     /**
