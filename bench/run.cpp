@@ -1,27 +1,178 @@
 #include <iostream>
 #include <chrono>
+#include <cmath>
 #include <mapbox/vector_tile.hpp>
+#include <mapbox/geometry.hpp>
 #include <fstream>
+#include <string>
+#include <vector>
+
+#include <vtzero/reader.hpp>
 
 std::size_t feature_count = 0;
 
+struct set_value {
+    mapbox::geometry::value val;
+
+    template <typename T>
+    void operator()(const T& v) {
+        val = v;
+    }
+
+    void operator()(const protozero::data_view& v) {
+        val = std::string{v};
+    }
+
+    void operator()(const float v) {
+        val = double(v);
+    }
+};
+
+mapbox::geometry::property_map get_properties(const vtzero::feature& feature, const vtzero::layer& layer) {
+    mapbox::geometry::property_map props;
+
+    const auto tags = feature.tags(layer);
+    props.reserve(tags.size());
+
+    for (const auto& tag : tags) {
+        set_value sv;
+        vtzero::value_visit(sv, tag.value());
+        props.emplace(tag.key(), sv.val);
+    }
+
+    return props;
+}
+
+struct geom_handler_points {
+
+    mapbox::vector_tile::points_arrays_type& m_paths;
+    float m_scale;
+
+    geom_handler_points(mapbox::vector_tile::points_arrays_type& paths, float scale) :
+        m_paths(paths),
+        m_scale(scale) {
+    }
+
+    void points_begin(uint32_t count) const noexcept {
+        m_paths.emplace_back();
+        m_paths.back().reserve(count);
+    }
+
+    void points_point(const vtzero::point point) const {
+        const float x = std::round(static_cast<float>(point.x) * m_scale);
+        const float y = std::round(static_cast<float>(point.y) * m_scale);
+        m_paths.back().emplace_back(x, y);
+    }
+
+    void points_end() const noexcept {
+    }
+
+};
+
+struct geom_handler_linestrings {
+
+    mapbox::vector_tile::points_arrays_type& m_paths;
+    float m_scale;
+
+    geom_handler_linestrings(mapbox::vector_tile::points_arrays_type& paths, float scale) :
+        m_paths(paths),
+        m_scale(scale) {
+    }
+
+    void linestring_begin(uint32_t count) const noexcept {
+        m_paths.emplace_back();
+        m_paths.back().reserve(count);
+    }
+
+    void linestring_point(const vtzero::point point) const noexcept {
+        const float x = std::round(static_cast<float>(point.x) * m_scale);
+        const float y = std::round(static_cast<float>(point.y) * m_scale);
+        m_paths.back().emplace_back(x, y);
+    }
+
+    void linestring_end() const noexcept {
+    }
+
+};
+
+struct geom_handler_polygons {
+
+    mapbox::vector_tile::points_arrays_type& m_paths;
+    float m_scale;
+
+    geom_handler_polygons(mapbox::vector_tile::points_arrays_type& paths, float scale) :
+        m_paths(paths),
+        m_scale(scale) {
+    }
+
+    void ring_begin(uint32_t count) const noexcept {
+        m_paths.emplace_back();
+        m_paths.back().reserve(count);
+    }
+
+    void ring_point(const vtzero::point point) const noexcept {
+        const float x = std::round(static_cast<float>(point.x) * m_scale);
+        const float y = std::round(static_cast<float>(point.y) * m_scale);
+        m_paths.back().emplace_back(x, y);
+    }
+
+    void ring_end(bool /*is_outer*/) const noexcept {
+    }
+
+};
+
+
+mapbox::vector_tile::points_arrays_type get_geometry(const vtzero::feature& feature, float scale) {
+    mapbox::vector_tile::points_arrays_type paths;
+
+    bool strict = false;
+
+    switch (feature.type()) {
+        case vtzero::GeomType::POINT:
+            vtzero::decode_point_geometry(feature.geometry(), strict, geom_handler_points{paths, scale});
+            break;
+        case vtzero::GeomType::LINESTRING:
+            vtzero::decode_linestring_geometry(feature.geometry(), strict, geom_handler_linestrings{paths, scale});
+            break;
+        case vtzero::GeomType::POLYGON:
+            vtzero::decode_polygon_geometry(feature.geometry(), strict, geom_handler_polygons{paths, scale});
+            break;
+        default:
+            std::cout << "UNKNOWN GEOMETRY TYPE\n";
+    }
+
+    return paths;
+}
+
 static void decode_entire_tile(std::string const& buffer) {
-    mapbox::vector_tile::buffer tile(buffer);
-    for (auto const& name : tile.layerNames()) {
-        const mapbox::vector_tile::layer layer = tile.getLayer(name);
-        std::size_t num_features = layer.featureCount();
+    vtzero::vector_tile tile{buffer};
+//    for (auto const& name : tile.layerNames()) {
+    for (const auto layer : tile) {
+//        const mapbox::vector_tile::layer layer = tile.getLayer(name);
+/*        std::size_t num_features = layer.featureCount();
         if (num_features == 0) {
             std::cout << "Layer '" << name << "' (empty)\n";
             continue;
-        }
-        for (std::size_t i=0;i<num_features;++i) {
-            auto const feature = mapbox::vector_tile::feature(layer.getFeature(i),layer);
-            auto const& feature_id = feature.getID();
-            if (!feature_id) {
+        }*/
+        for (const auto feature : layer) {
+            if (!feature.has_id()) {
                 throw std::runtime_error("Hit unexpected error decoding feature");
             }
-            auto props = feature.getProperties();
-            mapbox::vector_tile::points_arrays_type geom = feature.getGeometries<mapbox::vector_tile::points_arrays_type>(1.0);
+            auto const feature_id = feature.id();
+            (void)feature_id;
+            auto props = get_properties(feature, layer);
+/*            for (const auto x : props) {
+                std::cout << x.first << ':';
+                x.second.match([](mapbox::geometry::null_value_t) { std::cout << "NULL"; },
+                               [](bool r){ std::cout << r; },
+                               [](int64_t r){ std::cout << r; },
+                               [](uint64_t r){ std::cout << r; },
+                               [](double r){ std::cout << r; },
+                               [](std::string r){ std::cout << r; },
+                               [](auto){ std::cout << "XXX"; });
+                std::cout << '\n';
+            }*/
+            mapbox::vector_tile::points_arrays_type geom = get_geometry(feature, 1.0);
             ++feature_count;
         }
     }

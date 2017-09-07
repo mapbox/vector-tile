@@ -1,6 +1,6 @@
 CC := $(CC)
 CXX := $(CXX)
-CXXFLAGS := $(CXXFLAGS) -isystem mason_packages/.link/include/ -Iinclude -std=c++14 -DPROTOZERO_STRICT_API=1
+CXXFLAGS := $(CXXFLAGS) -isystem mason_packages/.link/include/ -Iinclude -Ivtzero/include -I../protozero/include -std=c++14 -DPROTOZERO_STRICT_API=1
 RELEASE_FLAGS := -O3 -DNDEBUG -flto -fvisibility-inlines-hidden -fvisibility=hidden
 WARNING_FLAGS := -Wall -Wextra -pedantic -Werror -Wsign-compare -Wfloat-equal -Wconversion -Wshadow
 CLANG_WARNING_FLAGS := -Wno-unsequenced -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-exit-time-destructors
