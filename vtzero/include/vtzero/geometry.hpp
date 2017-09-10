@@ -113,8 +113,8 @@ namespace vtzero {
                 throw geometry_exception{"too few points in geometry"};
             }
 
-            const uint32_t x = protozero::decode_zigzag32(*it++);
-            const uint32_t y = protozero::decode_zigzag32(*it++);
+            const int32_t x = protozero::decode_zigzag32(*it++);
+            const int32_t y = protozero::decode_zigzag32(*it++);
 
             // spec 4.3.3.2 "For any pair of (dX, dY) the dX and dY MUST NOT both be 0."
             if (m_strict && x == 0 && y == 0) {
