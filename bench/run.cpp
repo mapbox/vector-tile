@@ -147,14 +147,11 @@ mapbox::vector_tile::points_arrays_type get_geometry(const vtzero::feature& feat
 static void decode_entire_tile(std::string const& buffer) {
     vtzero::vector_tile tile{buffer};
     std::ostream cnull(0);
-//    for (auto const& name : tile.layerNames()) {
     for (const auto layer : tile) {
-//        const mapbox::vector_tile::layer layer = tile.getLayer(name);
-/*        std::size_t num_features = layer.featureCount();
-        if (num_features == 0) {
-            std::cout << "Layer '" << name << "' (empty)\n";
+        if (layer.get_feature_count() == 0) {
+            std::cout << "Layer '" << std::string{layer.name()} << "' (empty)\n";
             continue;
-        }*/
+        }
         for (const auto feature : layer) {
             if (!feature.has_id()) {
                 throw std::runtime_error("Hit unexpected error decoding feature");
