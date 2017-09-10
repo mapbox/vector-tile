@@ -146,6 +146,7 @@ mapbox::vector_tile::points_arrays_type get_geometry(const vtzero::feature& feat
 
 static void decode_entire_tile(std::string const& buffer) {
     vtzero::vector_tile tile{buffer};
+    std::ostream cnull(0);
 //    for (auto const& name : tile.layerNames()) {
     for (const auto layer : tile) {
 //        const mapbox::vector_tile::layer layer = tile.getLayer(name);
@@ -174,6 +175,7 @@ static void decode_entire_tile(std::string const& buffer) {
             }*/
             mapbox::vector_tile::points_arrays_type geom = get_geometry(feature, 1.0);
             ++feature_count;
+            cnull << props.size() << geom.size();
         }
     }
 }
