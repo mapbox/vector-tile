@@ -37,7 +37,7 @@ mapbox::geometry::property_map get_properties(const vtzero::feature& feature, co
     for (const auto& tag : tags) {
         set_value sv;
         vtzero::value_visit(sv, tag.value());
-        props.emplace(tag.key(), sv.val);
+        props.emplace(tag.key().to_string(), std::move(sv.val));
     }
 
     return props;
