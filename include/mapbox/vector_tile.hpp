@@ -35,15 +35,15 @@ class layer;
 
 class feature {
 public:
-    using properties_type = mapbox::geometry::property_map;
+    using properties_type = mapbox::feature::property_map;
     using packed_iterator_type = protozero::iterator_range<protozero::pbf_reader::const_uint32_iterator>;
 
     feature(protozero::data_view const&, layer const&);
 
     GeomType getType() const { return type; }
-    optional<mapbox::geometry::value> getValue(std::string const&) const;
+    optional<mapbox::feature::value> getValue(std::string const&) const;
     properties_type getProperties() const;
-    optional<mapbox::geometry::identifier> const& getID() const;
+    optional<mapbox::feature::identifier> const& getID() const;
     std::uint32_t getExtent() const;
     std::uint32_t getVersion() const;
     template <typename GeometryCollectionType>
@@ -51,7 +51,7 @@ public:
 
 private:
     const layer& layer_;
-    optional<mapbox::geometry::identifier> id;
+    optional<mapbox::feature::identifier> id;
     GeomType type = GeomType::UNKNOWN;
     packed_iterator_type tags_iter;
     packed_iterator_type geometry_iter;
@@ -90,7 +90,7 @@ private:
     std::map<std::string, const protozero::data_view> layers;
 };
 
-static mapbox::geometry::value parseValue(protozero::data_view const& value_view) {
+static mapbox::feature::value parseValue(protozero::data_view const& value_view) {
     protozero::pbf_reader value_reader(value_view);
     while (value_reader.next())
     {
@@ -146,10 +146,10 @@ inline feature::feature(protozero::data_view const& feature_view, layer const& l
     }
 }
 
-inline optional<mapbox::geometry::value> feature::getValue(const std::string& key) const {
+inline optional<mapbox::feature::value> feature::getValue(const std::string& key) const {
     auto keyIter = layer_.keysMap.find(key);
     if (keyIter == layer_.keysMap.end()) {
-        return optional<mapbox::geometry::value>();
+        return optional<mapbox::feature::value>();
     }
 
     const auto values_count = layer_.values.size();
@@ -177,7 +177,7 @@ inline optional<mapbox::geometry::value> feature::getValue(const std::string& ke
         }
     }
 
-    return optional<mapbox::geometry::value>();
+    return optional<mapbox::feature::value>();
 }
 
 inline feature::properties_type feature::getProperties() const {
@@ -199,7 +199,7 @@ inline feature::properties_type feature::getProperties() const {
     return properties;
 }
 
-inline optional<mapbox::geometry::identifier> const& feature::getID() const {
+inline optional<mapbox::feature::identifier> const& feature::getID() const {
     return id;
 }
 
