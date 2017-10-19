@@ -8,6 +8,7 @@ C++14 library for decoding [Mapbox Vector Tiles](https://www.mapbox.com/vector-t
 
  - C++14 compiler
  - [protozero](https://github.com/mapbox/protozero)
+ - [vtzero](https://github.com/mapbox/vtzero)
  - [variant](https://github.com/mapbox/variant)
  - [geometry](https://github.com/mapbox/geometry.hpp)
 

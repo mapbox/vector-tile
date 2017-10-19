@@ -1,7 +1,7 @@
 #pragma once
 
 /// The major version number
-#define VECTOR_TILE_VERSION_MAJOR 1
+#define VECTOR_TILE_VERSION_MAJOR 2
 
 /// The minor version number
 #define VECTOR_TILE_VERSION_MINOR 0
@@ -13,4 +13,4 @@
 #define VECTOR_TILE_VERSION_CODE (VECTOR_TILE_VERSION_MAJOR * 10000 + VECTOR_TILE_VERSION_MINOR * 100 + VECTOR_TILE_VERSION_PATCH)
 
 /// Version number as string
-#define VECTOR_TILE_VERSION_STRING "1.0.0-rc6"
+#define VECTOR_TILE_VERSION_STRING "2.0.0"
