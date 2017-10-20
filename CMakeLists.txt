@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.7)
 project(hpp_skel LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
@@ -36,7 +36,7 @@ mason_use(variant VERSION 1.1.5 HEADER_ONLY)
 include_directories(SYSTEM ${MASON_PACKAGE_variant_INCLUDE_DIRS})
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
-include_directories("${PROJECT_SOURCE_DIR}/../geometry/include")
+include_directories("${PROJECT_SOURCE_DIR}/../geometry.hpp/include")
 include_directories("${PROJECT_SOURCE_DIR}/../vtzero/include")
 include_directories("${PROJECT_SOURCE_DIR}/../protozero/include")
 
