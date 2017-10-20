@@ -20,17 +20,48 @@ static std::string open_tile(std::string const& path) {
 TEST_CASE( "Read Feature-single-point.mvt" ) {
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-point.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
+    REQUIRE(fm.size() == 1);
+    REQUIRE(fm.end() != fm.find("layer_name"));
+    auto fc = fm["layer_name"];
+    REQUIRE(fc.size() == 1);
+    auto f = fc[0];
+    REQUIRE(f.id.is<std::uint64_t>());
+    CHECK(f.id.get<std::uint64_t>() == 123);
+    REQUIRE(f.properties.size() == 1);
+    REQUIRE(f.properties.end() != f.properties.find("hello"));
+    auto val = f.properties["hello"];
+    REQUIRE(val.is<std::string>());
+    CHECK(val.get<std::string>() == "world");
+    REQUIRE(f.geometry.is<mapbox::geometry::point<std::int64_t>>());
+    auto pt = f.geometry.get<mapbox::geometry::point<std::int64_t>>();
+    CHECK(pt.x == 25);
+    CHECK(pt.y == 17);
+}
+
+TEST_CASE( "Read Feature-single-multipoint.mvt" ) {
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-multipoint.mvt");
+    auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
+    REQUIRE(fm.size() == 1);
+    REQUIRE(fm.end() != fm.find("layer_name"));
+    auto fc = fm["layer_name"];
+    REQUIRE(fc.size() == 1);
+    auto f = fc[0];
+    REQUIRE(f.id.is<std::uint64_t>());
+    CHECK(f.id.get<std::uint64_t>() == 123);
+    REQUIRE(f.properties.size() == 1);
+    REQUIRE(f.properties.end() != f.properties.find("hello"));
+    auto val = f.properties["hello"];
+    REQUIRE(val.is<std::string>());
+    CHECK(val.get<std::string>() == "world");
+    REQUIRE(f.geometry.is<mapbox::geometry::multi_point<std::int64_t>>());
+    auto mp = f.geometry.get<mapbox::geometry::multi_point<std::int64_t>>();
+    CHECK(mp[0].x == 5);
+    CHECK(mp[0].y == 7);
+    CHECK(mp[1].x == 3);
+    CHECK(mp[1].y == 2);
 }
 
 /*
-TEST_CASE( "Read Feature-single-multipoint.mvt" ) {
-    std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-multipoint.mvt");
-    mapbox::vector_tile::buffer tile(buffer);
-    ASSERT_KNOWN_FEATURE()
-    REQUIRE(feature.getType() == mapbox::vector_tile::GeomType::POINT); \
-    REQUIRE(stringify_geom(geom) == "[5, 7][3, 2]");
-}
-
 TEST_CASE( "Read Feature-single-linestring.mvt" ) {
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-linestring.mvt");
     mapbox::vector_tile::buffer tile(buffer);
