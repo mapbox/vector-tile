@@ -6,7 +6,8 @@
 
 #include <map>
 
-namespace mapbox { namespace vector_tile {
+namespace mapbox {
+namespace vector_tile {
 
 namespace detail {
 
@@ -17,7 +18,8 @@ struct point_geometry_handler {
 
     geom_type & geom_;
 
-    point_geometry_handler(geom_type & geom) : geom_(geom) {}
+    point_geometry_handler(geom_type & geom) : geom_(geom) {
+    }
 
     void points_begin(std::uint32_t count) {
         geom_.reserve(count);
@@ -27,17 +29,18 @@ struct point_geometry_handler {
         geom_.emplace_back(pt.x, pt.y);
     }
 
-    void points_end() {}
+    void points_end() {
+    }
 };
 
 template <typename CoordinateType>
-mapbox::geometry::geometry<CoordinateType> create_geometry_point(vtzero::feature const& f) {
+mapbox::geometry::geometry<CoordinateType> create_geometry_point(vtzero::feature const & f) {
 
     mapbox::geometry::multi_point<CoordinateType> mp;
     vtzero::decode_point_geometry(f.geometry(), false, detail::point_geometry_handler<CoordinateType>(mp));
     if (mp.empty()) {
         return mapbox::geometry::geometry<CoordinateType>();
-        //throw std::runtime_error("Point feature has no points in its geometry");
+        // throw std::runtime_error("Point feature has no points in its geometry");
     } else if (mp.size() == 1) {
         return mapbox::geometry::geometry<CoordinateType>(mp.front());
     } else {
@@ -52,7 +55,8 @@ struct line_string_geometry_handler {
 
     geom_type & geom_;
 
-    line_string_geometry_handler(geom_type & geom) : geom_(geom) {}
+    line_string_geometry_handler(geom_type & geom) : geom_(geom) {
+    }
 
     void linestring_begin(std::uint32_t count) {
         geom_.emplace_back();
@@ -63,14 +67,15 @@ struct line_string_geometry_handler {
         geom_.back().emplace_back(pt.x, pt.y);
     }
 
-    void linestring_end() {}
-
+    void linestring_end() {
+    }
 };
 
 template <typename CoordinateType>
 struct polygon_ring {
 
-    polygon_ring() : ring(), is_outer(true) {}
+    polygon_ring() : ring(), is_outer(true) {
+    }
 
     mapbox::geometry::linear_ring<CoordinateType> ring;
     bool is_outer;
@@ -83,7 +88,8 @@ struct polygon_geometry_handler {
 
     geom_type & geom_;
 
-    polygon_geometry_handler(geom_type & geom) : geom_(geom) {}
+    polygon_geometry_handler(geom_type & geom) : geom_(geom) {
+    }
 
     void ring_begin(std::uint32_t count) {
         geom_.emplace_back();
@@ -100,13 +106,13 @@ struct polygon_geometry_handler {
 };
 
 template <typename CoordinateType>
-mapbox::geometry::geometry<CoordinateType> create_geometry_polygon(vtzero::feature const& f) {
+mapbox::geometry::geometry<CoordinateType> create_geometry_polygon(vtzero::feature const & f) {
 
     std::vector<polygon_ring<CoordinateType>> rings;
     vtzero::decode_polygon_geometry(f.geometry(), false, detail::polygon_geometry_handler<CoordinateType>(rings));
     if (rings.empty()) {
         return mapbox::geometry::geometry<CoordinateType>();
-        //throw std::runtime_error("Polygon feature has no rings in its geometry");
+        // throw std::runtime_error("Polygon feature has no rings in its geometry");
     }
     mapbox::geometry::multi_polygon<CoordinateType> mp;
     for (auto && r : rings) {
@@ -119,7 +125,7 @@ mapbox::geometry::geometry<CoordinateType> create_geometry_polygon(vtzero::featu
     }
     if (mp.empty()) {
         return mapbox::geometry::geometry<CoordinateType>();
-        //throw std::runtime_error("Polygon feature has no rings in its geometry");
+        // throw std::runtime_error("Polygon feature has no rings in its geometry");
     } else if (mp.size() == 1) {
         return mapbox::geometry::geometry<CoordinateType>(std::move(mp.front()));
     } else {
@@ -128,13 +134,13 @@ mapbox::geometry::geometry<CoordinateType> create_geometry_polygon(vtzero::featu
 }
 
 template <typename CoordinateType>
-mapbox::geometry::geometry<CoordinateType> create_geometry_line_string(vtzero::feature const& f) {
+mapbox::geometry::geometry<CoordinateType> create_geometry_line_string(vtzero::feature const & f) {
 
     mapbox::geometry::multi_line_string<CoordinateType> mls;
     vtzero::decode_linestring_geometry(f.geometry(), false, detail::line_string_geometry_handler<CoordinateType>(mls));
     if (mls.empty()) {
         return mapbox::geometry::geometry<CoordinateType>();
-        //throw std::runtime_error("Line string feature has no points in its geometry");
+        // throw std::runtime_error("Line string feature has no points in its geometry");
     } else if (mls.size() == 1) {
         return mapbox::geometry::geometry<CoordinateType>(std::move(mls.front()));
     } else {
@@ -145,7 +151,7 @@ mapbox::geometry::geometry<CoordinateType> create_geometry_line_string(vtzero::f
 } // end ns detail
 
 template <typename CoordinateType>
-mapbox::geometry::geometry<CoordinateType> create_geometry(vtzero::feature const& f) {
+mapbox::geometry::geometry<CoordinateType> create_geometry(vtzero::feature const & f) {
     switch (f.geometry_type()) {
     case vtzero::GeomType::POINT:
         return detail::create_geometry_point<CoordinateType>(f);
@@ -177,17 +183,15 @@ mapbox::feature::value convert_property_value(const vtzero::property_value_view 
     }
 }
 
-mapbox::feature::property_map create_properties(vtzero::feature const& f) {
+mapbox::feature::property_map create_properties(vtzero::feature const & f) {
     mapbox::feature::property_map map;
 
-    f.for_each_property([&](vtzero::property_view p){
-            map.emplace(std::string(p.key()), convert_property_value(p.value()));
-        });
+    f.for_each_property([&](vtzero::property_view p) { map.emplace(std::string(p.key()), convert_property_value(p.value())); });
 
     return map;
 }
 
-mapbox::feature::identifier create_id(vtzero::feature const& f) {
+mapbox::feature::identifier create_id(vtzero::feature const & f) {
     if (f.has_id()) {
         return mapbox::feature::identifier(f.id());
     } else {
@@ -196,7 +200,7 @@ mapbox::feature::identifier create_id(vtzero::feature const& f) {
 }
 
 template <typename CoordinateType>
-mapbox::feature::feature<CoordinateType> create_feature(vtzero::feature const& f) {
+mapbox::feature::feature<CoordinateType> create_feature(vtzero::feature const & f) {
     return mapbox::feature::feature<CoordinateType>(create_geometry<CoordinateType>(f), create_properties(f), create_id(f));
 }
 
@@ -204,7 +208,7 @@ template <typename CoordinateType>
 using layer_map = std::map<std::string, mapbox::feature::feature_collection<CoordinateType>>;
 
 template <typename CoordinateType>
-layer_map<CoordinateType> decode_tile(std::string const& buffer) {
+layer_map<CoordinateType> decode_tile(std::string const & buffer) {
     layer_map<CoordinateType> m;
     vtzero::vector_tile tile(buffer);
     while (auto layer = tile.next_layer()) {
@@ -219,5 +223,5 @@ layer_map<CoordinateType> decode_tile(std::string const& buffer) {
     }
     return m;
 }
-
-}} // end ns mapbox::vector_tile
+}
+} // end ns mapbox::vector_tile

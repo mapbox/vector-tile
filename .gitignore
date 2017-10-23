@@ -1,6 +1,8 @@
 build
 .mason
+.toolchain
 mason_packages
 demo/decode
 demo/data
 demo/include
+local.env
