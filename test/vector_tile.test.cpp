@@ -6,9 +6,11 @@
 
 #include <catch.hpp>
 
-static std::string open_tile(std::string const & path) {
+static std::string open_tile(std::string const& path)
+{
     std::ifstream stream(path.c_str(), std::ios_base::in | std::ios_base::binary);
-    if (!stream.is_open()) {
+    if (!stream.is_open())
+    {
         throw std::runtime_error("could not open: '" + path + "'");
     }
     std::string message(std::istreambuf_iterator<char>(stream.rdbuf()), (std::istreambuf_iterator<char>()));
@@ -16,7 +18,8 @@ static std::string open_tile(std::string const & path) {
     return message;
 }
 
-TEST_CASE("Read Feature-single-point.mvt") {
+TEST_CASE("Read Feature-single-point.mvt")
+{
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-point.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
@@ -37,7 +40,8 @@ TEST_CASE("Read Feature-single-point.mvt") {
     CHECK(pt.y == 17);
 }
 
-TEST_CASE("Read Feature-single-multipoint.mvt") {
+TEST_CASE("Read Feature-single-multipoint.mvt")
+{
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-multipoint.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
