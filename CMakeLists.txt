@@ -35,10 +35,21 @@ include_directories(SYSTEM ${MASON_PACKAGE_benchmark_INCLUDE_DIRS})
 mason_use(variant VERSION 1.1.5 HEADER_ONLY)
 include_directories(SYSTEM ${MASON_PACKAGE_variant_INCLUDE_DIRS})
 
+mason_use(vtzero VERSION 7455d08 HEADER_ONLY)
+include_directories(SYSTEM ${MASON_PACKAGE_vtzero_INCLUDE_DIRS})
+
+mason_use(geometry VERSION 57920c8 HEADER_ONLY)
+include_directories(SYSTEM ${MASON_PACKAGE_geometry_INCLUDE_DIRS})
+
+mason_use(protozero VERSION 1.6.0 HEADER_ONLY)
+include_directories(SYSTEM ${MASON_PACKAGE_protozero_INCLUDE_DIRS})
+
 include_directories("${PROJECT_SOURCE_DIR}/include")
-include_directories("${PROJECT_SOURCE_DIR}/../geometry.hpp/include")
-include_directories("${PROJECT_SOURCE_DIR}/../vtzero/include")
-include_directories("${PROJECT_SOURCE_DIR}/../protozero/include")
+
+# For local testing
+#include_directories("${PROJECT_SOURCE_DIR}/../geometry.hpp/include")
+#include_directories("${PROJECT_SOURCE_DIR}/../vtzero/include")
+#include_directories("${PROJECT_SOURCE_DIR}/../protozero/include")
 
 file(GLOB TEST_SOURCES test/*.cpp)
 add_executable(unit-tests ${TEST_SOURCES})

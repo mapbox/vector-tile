@@ -6,6 +6,7 @@
 
 #include <map>
 
+
 namespace mapbox {
 namespace vector_tile {
 
@@ -206,33 +207,35 @@ mapbox::geometry::geometry<CoordinateType> create_geometry(vtzero::feature const
     }
 }
 
-mapbox::feature::value convert_property_value(const vtzero::property_value_view value)
-{
-    switch (value.type())
-    {
-    case vtzero::property_value_type::string_value:
-        return mapbox::feature::value(std::string(value.string_value()));
-    case vtzero::property_value_type::float_value:
-        return mapbox::feature::value(double(value.float_value()));
-    case vtzero::property_value_type::double_value:
-        return mapbox::feature::value(value.double_value());
-    case vtzero::property_value_type::int_value:
-        return mapbox::feature::value(value.int_value());
-    case vtzero::property_value_type::uint_value:
-        return mapbox::feature::value(value.uint_value());
-    case vtzero::property_value_type::sint_value:
-        return mapbox::feature::value(value.sint_value());
-    default: // case vtzero::property_value_type::bool_value:
-        return mapbox::feature::value(value.bool_value());
-    }
-}
+struct property_value_mapping {
+
+	/// mapping for string type
+	using string_type = std::string;
+
+	/// mapping for float type
+	using float_type = double;
+
+	/// mapping for double type
+	using double_type = double;
+
+	/// mapping for int type
+	using int_type = int64_t;
+
+	/// mapping for uint type
+	using uint_type = uint64_t;
+
+	/// mapping for bool type
+	using bool_type = bool;
+
+}; // struct property_value_mapping
 
 mapbox::feature::property_map create_properties(vtzero::feature const& f)
 {
     mapbox::feature::property_map map;
-
-    f.for_each_property([&](vtzero::property_view p) { map.emplace(std::string(p.key()), convert_property_value(p.value())); });
-
+    f.for_each_property([&](vtzero::property && p) { 
+		map.emplace(std::string(p.key()), vtzero::convert_property_value<mapbox::feature::value, property_value_mapping>(p.value()));
+		return true;
+	});
     return map;
 }
 
