@@ -40,7 +40,7 @@ struct point_geometry_handler
 };
 
 template <typename CoordinateType>
-mapbox::geometry::geometry<CoordinateType> create_geometry_point(vtzero::feature const& f)
+mapbox::geometry::geometry<CoordinateType> extract_geometry_point(vtzero::feature const& f)
 {
 
     mapbox::geometry::multi_point<CoordinateType> mp;
@@ -130,7 +130,7 @@ struct polygon_geometry_handler
 };
 
 template <typename CoordinateType>
-mapbox::geometry::geometry<CoordinateType> create_geometry_polygon(vtzero::feature const& f)
+mapbox::geometry::geometry<CoordinateType> extract_geometry_polygon(vtzero::feature const& f)
 {
 
     std::vector<polygon_ring<CoordinateType>> rings;
@@ -169,7 +169,7 @@ mapbox::geometry::geometry<CoordinateType> create_geometry_polygon(vtzero::featu
 }
 
 template <typename CoordinateType>
-mapbox::geometry::geometry<CoordinateType> create_geometry_line_string(vtzero::feature const& f)
+mapbox::geometry::geometry<CoordinateType> extract_geometry_line_string(vtzero::feature const& f)
 {
 
     mapbox::geometry::multi_line_string<CoordinateType> mls;
@@ -192,16 +192,16 @@ mapbox::geometry::geometry<CoordinateType> create_geometry_line_string(vtzero::f
 } // end ns detail
 
 template <typename CoordinateType>
-mapbox::geometry::geometry<CoordinateType> create_geometry(vtzero::feature const& f)
+mapbox::geometry::geometry<CoordinateType> extract_geometry(vtzero::feature const& f)
 {
     switch (f.geometry_type())
     {
     case vtzero::GeomType::POINT:
-        return detail::create_geometry_point<CoordinateType>(f);
+        return detail::extract_geometry_point<CoordinateType>(f);
     case vtzero::GeomType::LINESTRING:
-        return detail::create_geometry_line_string<CoordinateType>(f);
+        return detail::extract_geometry_line_string<CoordinateType>(f);
     case vtzero::GeomType::POLYGON:
-        return detail::create_geometry_polygon<CoordinateType>(f);
+        return detail::extract_geometry_polygon<CoordinateType>(f);
     default:
         return mapbox::geometry::geometry<CoordinateType>();
     }
@@ -229,7 +229,7 @@ struct property_value_mapping {
 
 }; // struct property_value_mapping
 
-mapbox::feature::property_map create_properties(vtzero::feature const& f)
+mapbox::feature::property_map extract_properties(vtzero::feature const& f)
 {
     mapbox::feature::property_map map;
     f.for_each_property([&](vtzero::property && p) { 
@@ -239,7 +239,7 @@ mapbox::feature::property_map create_properties(vtzero::feature const& f)
     return map;
 }
 
-mapbox::feature::identifier create_id(vtzero::feature const& f)
+mapbox::feature::identifier extract_id(vtzero::feature const& f)
 {
     if (f.has_id())
     {
@@ -252,9 +252,9 @@ mapbox::feature::identifier create_id(vtzero::feature const& f)
 }
 
 template <typename CoordinateType>
-mapbox::feature::feature<CoordinateType> create_feature(vtzero::feature const& f)
+mapbox::feature::feature<CoordinateType> extract_feature(vtzero::feature const& f)
 {
-    return mapbox::feature::feature<CoordinateType>(create_geometry<CoordinateType>(f), create_properties(f), create_id(f));
+    return mapbox::feature::feature<CoordinateType>(extract_geometry<CoordinateType>(f), extract_properties(f), extract_id(f));
 }
 
 template <typename CoordinateType>
@@ -270,7 +270,7 @@ layer_map<CoordinateType> decode_tile(std::string const& buffer)
         mapbox::feature::feature_collection<CoordinateType> fc;
         while (auto feature = layer.next_feature())
         {
-            auto f = create_feature<CoordinateType>(feature);
+            auto f = extract_feature<CoordinateType>(feature);
             if (!f.geometry.template is<mapbox::geometry::empty>())
             {
                 fc.push_back(f);
