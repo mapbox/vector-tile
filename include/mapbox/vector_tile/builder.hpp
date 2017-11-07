@@ -1,6 +1,8 @@
 #pragma once
 
 #include <mapbox/geometry.hpp>
+#include <mapbox/feature.hpp>
+
 #include <vtzero/builder.hpp>
 
 namespace vtzero {
@@ -42,7 +44,7 @@ struct id_visitor {
     void operator() (std::int64_t val)
     {
         std::uint64_t val_ = static_cast<std::uint64_t>(val);
-        if (static_cast<std::int64_t>(val_) == val)
+        if (0 <= val)
         {
             fbuilder.set_id(val_);
         }
@@ -98,7 +100,7 @@ void set_properties(FeatureBuilder & fbuilder, mapbox::feature::property_map con
 {
     for (auto const& n : prop)
     {
-        mapbox::apply_visitor(value_visitor(fbuilder, n.first), n.second);  
+        mapbox::util::apply_visitor(value_visitor<FeatureBuilder>(fbuilder, n.first), n.second);  
     }
 }
 
@@ -115,8 +117,9 @@ struct feature_builder_visitor {
         prop(prop_),
         id(id_) {}
     
+    template <typename T>
     feature_builder_visitor(vtzero::layer_builder & lbuilder_,
-                            mapbox::feature::feature & feat) : 
+                            mapbox::feature::feature<T> const& feat) : 
         lbuilder(lbuilder_),
         prop(feat.properties),
         id(feat.id) {}
@@ -126,8 +129,9 @@ struct feature_builder_visitor {
     template <typename T>
     void operator() (mapbox::geometry::point<T> const& pt)
     {
-        vtzero::point_feature_builder fbuilder { lbuilder };
-        mapbox::apply_visitor(id_visitor(fbuilder), id);
+        using builder_type = vtzero::point_feature_builder;
+        builder_type fbuilder { lbuilder };
+        mapbox::util::apply_visitor(id_visitor<builder_type>(fbuilder), id);
         fbuilder.add_point(pt);
         set_properties(fbuilder, prop);
         fbuilder.commit();
@@ -136,8 +140,13 @@ struct feature_builder_visitor {
     template <typename T>
     void operator() (mapbox::geometry::multi_point<T> const& mp)
     {
-        vtzero::point_feature_builder fbuilder { lbuilder };
-        mapbox::apply_visitor(id_visitor(fbuilder), id);
+        using builder_type = vtzero::point_feature_builder;
+        if (mp.empty())
+        {
+            return;
+        }
+        builder_type fbuilder { lbuilder };
+        mapbox::util::apply_visitor(id_visitor<builder_type>(fbuilder), id);
         fbuilder.add_points_from_container(mp);
         set_properties(fbuilder, prop);
         fbuilder.commit();
@@ -146,8 +155,13 @@ struct feature_builder_visitor {
     template <typename T>
     void operator() (mapbox::geometry::line_string<T> const& ls)
     {
-        vtzero::linestring_feature_builder fbuilder { lbuilder };
-        mapbox::apply_visitor(id_visitor(fbuilder), id);
+        using builder_type = vtzero::linestring_feature_builder;
+        if (ls.size() < 2)
+        {
+            return;
+        }
+        builder_type fbuilder { lbuilder };
+        mapbox::util::apply_visitor(id_visitor<builder_type>(fbuilder), id);
         fbuilder.add_linestring_from_container(ls);
         set_properties(fbuilder, prop);
         fbuilder.commit();
@@ -156,24 +170,53 @@ struct feature_builder_visitor {
     template <typename T>
     void operator() (mapbox::geometry::multi_line_string<T> const& mls)
     {
-        vtzero::linestring_feature_builder fbuilder { lbuilder };
-        mapbox::apply_visitor(id_visitor(fbuilder), id);
+        using builder_type = vtzero::linestring_feature_builder;
+        if (mls.empty())
+        {
+            return;
+        }
+        bool empty = true;
+        builder_type fbuilder { lbuilder };
+        mapbox::util::apply_visitor(id_visitor<builder_type>(fbuilder), id);
         for (auto const& ls : mls)
         {
+            if (ls.size() < 2)
+            {
+                continue;
+            }
             fbuilder.add_linestring_from_container(ls);
+            empty = false;
         }
-        set_properties(fbuilder, prop);
-        fbuilder.commit();
+        if (empty)
+        {
+            fbuilder.rollback();
+        }
+        else
+        {
+            set_properties(fbuilder, prop);
+            fbuilder.commit();
+        }
     }
     
     template <typename T>
     void operator() (mapbox::geometry::polygon<T> const& poly)
     {
-        vtzero::polygon_feature_builder fbuilder { lbuilder };
-        mapbox::apply_visitor(id_visitor(fbuilder), id);
+        using builder_type = vtzero::polygon_feature_builder;
+        if (poly.empty())
+        {
+            return;
+        }
+        builder_type fbuilder { lbuilder };
+        mapbox::util::apply_visitor(id_visitor<builder_type>(fbuilder), id);
+        bool first = true;
         for (auto const & ring : poly)
         {
-            fbuilder.add_ring_from_container(ring);
+            if (first && ring.size() < 3) {
+                return;
+            } else if (ring.size() >= 3) {
+                fbuilder.add_ring_from_container(ring);
+            }
+            first = false;
         }
         set_properties(fbuilder, prop);
         fbuilder.commit();
@@ -182,8 +225,9 @@ struct feature_builder_visitor {
     template <typename T>
     void operator() (mapbox::geometry::multi_polygon<T> const& mp)
     {
-        vtzero::linestring_feature_builder fbuilder { lbuilder };
-        mapbox::apply_visitor(id_visitor(fbuilder), id);
+        using builder_type = vtzero::polygon_feature_builder;
+        builder_type fbuilder { lbuilder };
+        mapbox::util::apply_visitor(id_visitor<builder_type>(fbuilder), id);
         for (auto const & poly : mp)
         {
             for (auto const & ring : poly)
@@ -200,12 +244,17 @@ struct feature_builder_visitor {
     {
         for (auto const& geom : gc)
         {
-            mapbox::apply_visitor(*this, geom);
+            mapbox::util::apply_visitor(*this, geom);
         }
     }
 
 };
 
+template <typename T>
+void encode_feature(vtzero::layer_builder & lbuilder, mapbox::feature::feature<T> const& feat)
+{
+    mapbox::util::apply_visitor(feature_builder_visitor(lbuilder, feat), feat.geometry);
+}
 
 
 }

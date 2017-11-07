@@ -27,7 +27,7 @@ mapbox::geometry::geometry<CoordinateType> extract_geometry(vtzero::feature cons
     }
 }
 
-mapbox::feature::property_map extract_properties(vtzero::feature const& f)
+inline mapbox::feature::property_map extract_properties(vtzero::feature const& f)
 {
     mapbox::feature::property_map map;
     f.for_each_property([&](vtzero::property && p) { 
@@ -37,7 +37,7 @@ mapbox::feature::property_map extract_properties(vtzero::feature const& f)
     return map;
 }
 
-mapbox::feature::identifier extract_id(vtzero::feature const& f)
+inline mapbox::feature::identifier extract_id(vtzero::feature const& f)
 {
     if (f.has_id())
     {
