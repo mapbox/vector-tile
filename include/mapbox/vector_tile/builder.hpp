@@ -217,11 +217,12 @@ struct feature_builder_visitor
         bool first = true;
         for (auto const& ring : poly)
         {
-            if (first && ring.size() < 3)
+            if (first && ring.size() < 4)
             {
+                fbuilder.rollback();
                 return;
             }
-            else if (ring.size() >= 3)
+            else if (ring.size() >= 4)
             {
                 fbuilder.add_ring_from_container(ring);
             }
