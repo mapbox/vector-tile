@@ -65,7 +65,8 @@ TEST_CASE("Read Feature-single-multipoint.mvt")
     CHECK(mp[1].y == 2);
 }
 
-TEST_CASE( "Read Feature-single-linestring.mvt" ) {
+TEST_CASE("Read Feature-single-linestring.mvt")
+{
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-linestring.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
@@ -92,7 +93,8 @@ TEST_CASE( "Read Feature-single-linestring.mvt" ) {
     CHECK(ls[2].y == 10);
 }
 
-TEST_CASE( "Read Feature-single-multilinestring.mvt" ) {
+TEST_CASE("Read Feature-single-multilinestring.mvt")
+{
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-multilinestring.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
@@ -125,7 +127,8 @@ TEST_CASE( "Read Feature-single-multilinestring.mvt" ) {
     CHECK(mls[1][1].y == 5);
 }
 
-TEST_CASE( "Read Feature-single-polygon.mvt" ) {
+TEST_CASE("Read Feature-single-polygon.mvt")
+{
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-polygon.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);

@@ -30,10 +30,10 @@ mapbox::geometry::geometry<CoordinateType> extract_geometry(vtzero::feature cons
 inline mapbox::feature::property_map extract_properties(vtzero::feature const& f)
 {
     mapbox::feature::property_map map;
-    f.for_each_property([&](vtzero::property && p) { 
-		map.emplace(std::string(p.key()), vtzero::convert_property_value<mapbox::feature::value, detail::property_value_mapping>(p.value()));
-		return true;
-	});
+    f.for_each_property([&](vtzero::property&& p) {
+        map.emplace(std::string(p.key()), vtzero::convert_property_value<mapbox::feature::value, detail::property_value_mapping>(p.value()));
+        return true;
+    });
     return map;
 }
 
@@ -78,6 +78,5 @@ layer_map<CoordinateType> decode_tile(std::string const& buffer)
     }
     return m;
 }
-
 }
 } // end ns mapbox::vector_tile
