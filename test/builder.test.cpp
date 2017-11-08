@@ -247,7 +247,7 @@ TEST_CASE("Encode feature")
             }
         }
     }
-    
+
     SECTION("polygon")
     {
         mapbox::geometry::linear_ring<std::int64_t> lr_in1;
@@ -309,7 +309,7 @@ TEST_CASE("Encode feature")
             }
         }
     }
-    
+
     SECTION("multi polygon")
     {
         mapbox::geometry::linear_ring<std::int64_t> lr_in1;
@@ -390,7 +390,7 @@ TEST_CASE("Encode feature")
                 CHECK(mp_out[0][1][3].y == 4);
                 CHECK(mp_out[0][1][4].x == 4);
                 CHECK(mp_out[0][1][4].y == 4);
-                
+
                 CHECK(mp_out[1][0][0].x == 100);
                 CHECK(mp_out[1][0][0].y == 100);
                 CHECK(mp_out[1][0][1].x == 110);
