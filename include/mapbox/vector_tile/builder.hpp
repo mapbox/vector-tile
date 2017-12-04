@@ -100,6 +100,24 @@ struct value_visitor
     }
 };
 
+template <typename T>
+std::size_t size_no_duplicates(T const& geom) {
+    if (geom.empty()) {
+        return 0;
+    }
+    std::size_t size = geom.size();
+    auto i1 = geom.begin();
+    auto i0 = ++i1;
+    while (i1 != geom.end()) {
+        if (*i1 == *i0) {
+            --size;
+        }
+        ++i1;
+        ++i0;
+    }
+    return size;
+}
+
 template <typename FeatureBuilder>
 void set_properties(FeatureBuilder& fbuilder, mapbox::feature::property_map const& prop)
 {

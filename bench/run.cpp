@@ -95,8 +95,8 @@ static void BM_decode_polygon(benchmark::State& state) // NOLINT google-runtime-
 BENCHMARK_TEMPLATE(BM_decode_polygon_fixture, int64_t);
 BENCHMARK_TEMPLATE(BM_decode_polygon_fixture, int32_t);
 BENCHMARK_TEMPLATE(BM_decode_polygon_fixture, int16_t);
-BENCHMARK_TEMPLATE(BM_decode_polygon, int64_t)->RangeMultiplier(2)->Range(1, 1<<14);
-BENCHMARK_TEMPLATE(BM_decode_polygon, int32_t)->RangeMultiplier(2)->Range(1, 1<<14);
-BENCHMARK_TEMPLATE(BM_decode_polygon, int16_t)->RangeMultiplier(2)->Range(1, 1<<14);
+BENCHMARK_TEMPLATE(BM_decode_polygon, int64_t)->RangeMultiplier(2)->Range(1, 1<<12);
+BENCHMARK_TEMPLATE(BM_decode_polygon, int32_t)->RangeMultiplier(2)->Range(1, 1<<12);
+BENCHMARK_TEMPLATE(BM_decode_polygon, int16_t)->RangeMultiplier(2)->Range(1, 1<<12);
 
 BENCHMARK_MAIN();
