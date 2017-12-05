@@ -3,6 +3,8 @@
 #include <mapbox/vector_tile/builder.hpp>
 
 #include <limits>
+#include <ctime>
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -27,10 +29,15 @@ static void BM_decode_polygon_fixture(benchmark::State& state) // NOLINT google-
     auto layer = tile.next_layer();
     auto feature = layer.next_feature();
 
-    while (state.KeepRunning()) {
+    while (state.KeepRunning())
+    {
         benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
     }
 }
+
+BENCHMARK_TEMPLATE(BM_decode_polygon_fixture, int64_t);
+BENCHMARK_TEMPLATE(BM_decode_polygon_fixture, int32_t);
+BENCHMARK_TEMPLATE(BM_decode_polygon_fixture, int16_t);
 
 template <typename CoordinateType>
 static void BM_decode_polygon(benchmark::State& state) // NOLINT google-runtime-references
@@ -42,29 +49,33 @@ static void BM_decode_polygon(benchmark::State& state) // NOLINT google-runtime-
         std::uint32_t extent = 4096;
         std::int64_t range = state.range(0);
         vtzero::layer_builder lbuilder{tbuilder, "my_layer_name", 2, extent};
-        
+
         mapbox::geometry::polygon<CoordinateType> poly;
         poly.emplace_back();
-        mapbox::geometry::linear_ring<CoordinateType> & lr = poly.back();
-        
+        mapbox::geometry::linear_ring<CoordinateType>& lr = poly.back();
+
         CoordinateType x = static_cast<CoordinateType>(extent / 2) - static_cast<CoordinateType>(range / 2);
         CoordinateType y = static_cast<CoordinateType>(extent / 2) - static_cast<CoordinateType>(range / 2);
-        for (std::int64_t i = 0; i < range; ++i) {
+        for (std::int64_t i = 0; i < range; ++i)
+        {
             ++num_points;
             lr.emplace_back(x, y);
             ++y;
         }
-        for (std::int64_t i = 0; i < range; ++i) {
+        for (std::int64_t i = 0; i < range; ++i)
+        {
             ++num_points;
             lr.emplace_back(x, y);
             ++x;
         }
-        for (std::int64_t i = 0; i < range; ++i) {
+        for (std::int64_t i = 0; i < range; ++i)
+        {
             ++num_points;
             lr.emplace_back(x, y);
             --y;
         }
-        for (std::int64_t i = 0; i < range; ++i) {
+        for (std::int64_t i = 0; i < range; ++i)
+        {
             ++num_points;
             lr.emplace_back(x, y);
             --x;
@@ -84,7 +95,8 @@ static void BM_decode_polygon(benchmark::State& state) // NOLINT google-runtime-
     auto layer = tile.next_layer();
     auto feature = layer.next_feature();
 
-    while (state.KeepRunning()) {
+    while (state.KeepRunning())
+    {
         benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
     }
     // sets a simple counter
@@ -92,11 +104,27 @@ static void BM_decode_polygon(benchmark::State& state) // NOLINT google-runtime-
     state.counters["PointRate"] = benchmark::Counter(num_points, benchmark::Counter::kIsRate);
 }
 
-BENCHMARK_TEMPLATE(BM_decode_polygon_fixture, int64_t);
-BENCHMARK_TEMPLATE(BM_decode_polygon_fixture, int32_t);
-BENCHMARK_TEMPLATE(BM_decode_polygon_fixture, int16_t);
-BENCHMARK_TEMPLATE(BM_decode_polygon, int64_t)->RangeMultiplier(2)->Range(1, 1<<12);
-BENCHMARK_TEMPLATE(BM_decode_polygon, int32_t)->RangeMultiplier(2)->Range(1, 1<<12);
-BENCHMARK_TEMPLATE(BM_decode_polygon, int16_t)->RangeMultiplier(2)->Range(1, 1<<12);
+BENCHMARK_TEMPLATE(BM_decode_polygon, int64_t)->RangeMultiplier(2)->Range(1, 1 << 12);
+BENCHMARK_TEMPLATE(BM_decode_polygon, int32_t)->RangeMultiplier(2)->Range(1, 1 << 12);
+BENCHMARK_TEMPLATE(BM_decode_polygon, int16_t)->RangeMultiplier(2)->Range(1, 1 << 12);
+
+static void BM_size_no_repeats(benchmark::State& state) // NOLINT google-runtime-references
+{
+    mapbox::geometry::line_string<std::int64_t> ls;
+
+    for (int x = state.range(0); x > 0; x--)
+    {
+        ls.emplace_back(x, x);
+    }
+
+    while (state.KeepRunning())
+    {
+        benchmark::DoNotOptimize(mapbox::vector_tile::size_no_repeats(ls));
+    }
+
+    state.counters["Points"] = ls.size();
+}
+
+BENCHMARK(BM_size_no_repeats)->RangeMultiplier(2)->Range(1024, 1 << 15);
 
 BENCHMARK_MAIN();

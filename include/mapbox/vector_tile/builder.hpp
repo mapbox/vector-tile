@@ -101,19 +101,19 @@ struct value_visitor
 };
 
 template <typename T>
-std::size_t size_no_duplicates(T const& geom) {
-    if (geom.empty()) {
+std::uint32_t size_no_repeats(T const& geom)
+{
+    if (geom.empty())
+    {
         return 0;
     }
-    std::size_t size = geom.size();
-    auto i1 = geom.begin();
-    auto i0 = ++i1;
-    while (i1 != geom.end()) {
-        if (*i1 == *i0) {
+    std::uint32_t size = geom.size() > std::numeric_limits<std::uint32_t>::max() ? std::numeric_limits<std::uint32_t>::max() : static_cast<std::uint32_t>(geom.size());
+    for (std::size_t i = 1; i < geom.size(); ++i)
+    {
+        if (geom[i] == geom[i - 1])
+        {
             --size;
         }
-        ++i1;
-        ++i0;
     }
     return size;
 }
@@ -180,13 +180,22 @@ struct feature_builder_visitor
     void operator()(mapbox::geometry::line_string<T> const& ls)
     {
         using builder_type = vtzero::linestring_feature_builder;
-        if (ls.size() < 2)
+        std::uint32_t s = size_no_repeats(ls);
+        if (s < 2)
         {
             return;
         }
         builder_type fbuilder{lbuilder};
         mapbox::util::apply_visitor(id_visitor<builder_type>(fbuilder), id);
-        fbuilder.add_linestring_from_container(ls);
+        fbuilder.add_linestring(s);
+        fbuilder.set_point(ls.front());
+        for (std::size_t i = 1; i < ls.size(); ++i)
+        {
+            if (ls[i] != ls[i - 1])
+            {
+                fbuilder.set_point(ls[i]);
+            }
+        }
         set_properties(fbuilder, prop);
         fbuilder.commit();
     }
@@ -204,11 +213,20 @@ struct feature_builder_visitor
         mapbox::util::apply_visitor(id_visitor<builder_type>(fbuilder), id);
         for (auto const& ls : mls)
         {
-            if (ls.size() < 2)
+            std::uint32_t s = size_no_repeats(ls);
+            if (s < 2)
             {
                 continue;
             }
-            fbuilder.add_linestring_from_container(ls);
+            fbuilder.add_linestring(s);
+            fbuilder.set_point(ls.front());
+            for (std::size_t i = 1; i < ls.size(); ++i)
+            {
+                if (ls[i] != ls[i - 1])
+                {
+                    fbuilder.set_point(ls[i]);
+                }
+            }
             empty = false;
         }
         if (empty)
@@ -235,14 +253,23 @@ struct feature_builder_visitor
         bool first = true;
         for (auto const& ring : poly)
         {
-            if (first && ring.size() < 4)
+            std::uint32_t s = size_no_repeats(ring);
+            if (first && s < 4)
             {
                 fbuilder.rollback();
                 return;
             }
-            else if (ring.size() >= 4)
+            else if (s >= 4)
             {
-                fbuilder.add_ring_from_container(ring);
+                fbuilder.add_ring(s);
+                fbuilder.set_point(ring.front());
+                for (std::size_t i = 1; i < ring.size(); ++i)
+                {
+                    if (ring[i] != ring[i - 1])
+                    {
+                        fbuilder.set_point(ring[i]);
+                    }
+                }
             }
             first = false;
         }
@@ -258,9 +285,28 @@ struct feature_builder_visitor
         mapbox::util::apply_visitor(id_visitor<builder_type>(fbuilder), id);
         for (auto const& poly : mp)
         {
+            bool first = true;
             for (auto const& ring : poly)
             {
-                fbuilder.add_ring_from_container(ring);
+                std::uint32_t s = size_no_repeats(ring);
+                if (first && s < 4)
+                {
+                    fbuilder.rollback();
+                    return;
+                }
+                else if (s >= 4)
+                {
+                    fbuilder.add_ring(s);
+                    fbuilder.set_point(ring.front());
+                    for (std::size_t i = 1; i < ring.size(); ++i)
+                    {
+                        if (ring[i] != ring[i - 1])
+                        {
+                            fbuilder.set_point(ring[i]);
+                        }
+                    }
+                }
+                first = false;
             }
         }
         set_properties(fbuilder, prop);
