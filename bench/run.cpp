@@ -48,14 +48,15 @@ static void BM_decode_polygon(benchmark::State& state) // NOLINT google-runtime-
         vtzero::tile_builder tbuilder;
         std::uint32_t extent = 4096;
         std::int64_t range = state.range(0);
+        std::int64_t half_range = range / 2;
         vtzero::layer_builder lbuilder{tbuilder, "my_layer_name", 2, extent};
 
         mapbox::geometry::polygon<CoordinateType> poly;
         poly.emplace_back();
         mapbox::geometry::linear_ring<CoordinateType>& lr = poly.back();
 
-        CoordinateType x = static_cast<CoordinateType>(extent / 2) - static_cast<CoordinateType>(range / 2);
-        CoordinateType y = static_cast<CoordinateType>(extent / 2) - static_cast<CoordinateType>(range / 2);
+        CoordinateType x = static_cast<CoordinateType>(extent / 2) - static_cast<CoordinateType>(half_range);
+        CoordinateType y = static_cast<CoordinateType>(extent / 2) - static_cast<CoordinateType>(half_range);
         for (std::int64_t i = 0; i < range; ++i)
         {
             ++num_points;
@@ -100,8 +101,8 @@ static void BM_decode_polygon(benchmark::State& state) // NOLINT google-runtime-
         benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
     }
     // sets a simple counter
-    state.counters["Points"] = num_points;
-    state.counters["PointRate"] = benchmark::Counter(num_points, benchmark::Counter::kIsRate);
+    state.counters["Points"] = static_cast<double>(num_points);
+    state.counters["PointRate"] = static_cast<double>(benchmark::Counter(num_points, benchmark::Counter::kIsRate));
 }
 
 BENCHMARK_TEMPLATE(BM_decode_polygon, int64_t)->RangeMultiplier(2)->Range(1, 1 << 12);
@@ -122,7 +123,7 @@ static void BM_size_no_repeats(benchmark::State& state) // NOLINT google-runtime
         benchmark::DoNotOptimize(mapbox::vector_tile::size_no_repeats(ls));
     }
 
-    state.counters["Points"] = ls.size();
+    state.counters["Points"] = static_cast<double>(ls.size());
 }
 
 BENCHMARK(BM_size_no_repeats)->RangeMultiplier(2)->Range(1024, 1 << 15);
