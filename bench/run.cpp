@@ -9,6 +9,9 @@
 #include <fstream>
 #include <sstream>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+
 static std::string open_tile(std::string const& path)
 {
     std::ifstream stream(path.c_str(), std::ios_base::in | std::ios_base::binary);
@@ -101,8 +104,8 @@ static void BM_decode_polygon(benchmark::State& state) // NOLINT google-runtime-
         benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
     }
     // sets a simple counter
-    state.counters["Points"] = static_cast<double>(num_points);
-    state.counters["PointRate"] = static_cast<double>(benchmark::Counter(num_points, benchmark::Counter::kIsRate));
+    state.counters["Points"] = num_points;
+    state.counters["PointRate"] = benchmark::Counter(num_points, benchmark::Counter::kIsRate);
 }
 
 BENCHMARK_TEMPLATE(BM_decode_polygon, int64_t)->RangeMultiplier(2)->Range(1, 1 << 12);
@@ -123,9 +126,14 @@ static void BM_size_no_repeats(benchmark::State& state) // NOLINT google-runtime
         benchmark::DoNotOptimize(mapbox::vector_tile::size_no_repeats(ls));
     }
 
-    state.counters["Points"] = static_cast<double>(ls.size());
+    state.counters["Points"] = ls.size();
 }
 
 BENCHMARK(BM_size_no_repeats)->RangeMultiplier(2)->Range(1024, 1 << 15);
 
+#pragma GCC diagnostic pop // end -Wconversion suppersion
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 BENCHMARK_MAIN();
+#pragma GCC diagnostic pop
