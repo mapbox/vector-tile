@@ -51,7 +51,7 @@ include_directories("${PROJECT_SOURCE_DIR}/include")
 #include_directories("${PROJECT_SOURCE_DIR}/../vtzero/include")
 #include_directories("${PROJECT_SOURCE_DIR}/../protozero/include")
 
-file(GLOB TEST_SOURCES test/*.cpp)
+file(GLOB TEST_SOURCES test/*.cpp test/unit/*.cpp)
 add_executable(unit-tests ${TEST_SOURCES})
 
 # libbenchmark.a supports threads and therefore needs pthread support
