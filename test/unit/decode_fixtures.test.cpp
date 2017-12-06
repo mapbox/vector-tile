@@ -18,17 +18,17 @@ static std::string open_tile(std::string const& path)
     return message;
 }
 
-TEST_CASE("Read Feature-single-point.mvt")
+TEST_CASE("Read feature point")
 {
-    std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-point.mvt");
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/017/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
-    REQUIRE(fm.end() != fm.find("layer_name"));
-    auto fc = fm["layer_name"];
+    REQUIRE(fm.end() != fm.find("hello"));
+    auto fc = fm["hello"];
     REQUIRE(fc.size() == 1);
     auto f = fc[0];
     REQUIRE(f.id.is<std::uint64_t>());
-    CHECK(f.id.get<std::uint64_t>() == 123);
+    CHECK(f.id.get<std::uint64_t>() == 1);
     REQUIRE(f.properties.size() == 1);
     REQUIRE(f.properties.end() != f.properties.find("hello"));
     auto val = f.properties["hello"];
@@ -40,17 +40,17 @@ TEST_CASE("Read Feature-single-point.mvt")
     CHECK(pt.y == 17);
 }
 
-TEST_CASE("Read Feature-single-multipoint.mvt")
+TEST_CASE("Read feature multipoint")
 {
-    std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-multipoint.mvt");
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/020/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
-    REQUIRE(fm.end() != fm.find("layer_name"));
-    auto fc = fm["layer_name"];
+    REQUIRE(fm.end() != fm.find("hello"));
+    auto fc = fm["hello"];
     REQUIRE(fc.size() == 1);
     auto f = fc[0];
     REQUIRE(f.id.is<std::uint64_t>());
-    CHECK(f.id.get<std::uint64_t>() == 123);
+    CHECK(f.id.get<std::uint64_t>() == 1);
     REQUIRE(f.properties.size() == 1);
     REQUIRE(f.properties.end() != f.properties.find("hello"));
     auto val = f.properties["hello"];
@@ -65,18 +65,18 @@ TEST_CASE("Read Feature-single-multipoint.mvt")
     CHECK(mp[1].y == 2);
 }
 
-TEST_CASE("Read Feature-single-linestring.mvt")
+TEST_CASE("Read feature linestring")
 {
-    std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-linestring.mvt");
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/018/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
     REQUIRE(fm.size() == 1);
-    REQUIRE(fm.end() != fm.find("layer_name"));
-    auto fc = fm["layer_name"];
+    REQUIRE(fm.end() != fm.find("hello"));
+    auto fc = fm["hello"];
     REQUIRE(fc.size() == 1);
     auto f = fc[0];
     REQUIRE(f.id.is<std::uint64_t>());
-    CHECK(f.id.get<std::uint64_t>() == 123);
+    CHECK(f.id.get<std::uint64_t>() == 1);
     REQUIRE(f.properties.size() == 1);
     REQUIRE(f.properties.end() != f.properties.find("hello"));
     auto val = f.properties["hello"];
@@ -93,18 +93,18 @@ TEST_CASE("Read Feature-single-linestring.mvt")
     CHECK(ls[2].y == 10);
 }
 
-TEST_CASE("Read Feature-single-multilinestring.mvt")
+TEST_CASE("Read feature multilinestring")
 {
-    std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-multilinestring.mvt");
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/021/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
     REQUIRE(fm.size() == 1);
-    REQUIRE(fm.end() != fm.find("layer_name"));
-    auto fc = fm["layer_name"];
+    REQUIRE(fm.end() != fm.find("hello"));
+    auto fc = fm["hello"];
     REQUIRE(fc.size() == 1);
     auto f = fc[0];
     REQUIRE(f.id.is<std::uint64_t>());
-    CHECK(f.id.get<std::uint64_t>() == 123);
+    CHECK(f.id.get<std::uint64_t>() == 1);
     REQUIRE(f.properties.size() == 1);
     REQUIRE(f.properties.end() != f.properties.find("hello"));
     auto val = f.properties["hello"];
@@ -127,18 +127,18 @@ TEST_CASE("Read Feature-single-multilinestring.mvt")
     CHECK(mls[1][1].y == 5);
 }
 
-TEST_CASE("Read Feature-single-polygon.mvt")
+TEST_CASE("Read feature polygon")
 {
-    std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-polygon.mvt");
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/019/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
     REQUIRE(fm.size() == 1);
-    REQUIRE(fm.end() != fm.find("layer_name"));
-    auto fc = fm["layer_name"];
+    REQUIRE(fm.end() != fm.find("hello"));
+    auto fc = fm["hello"];
     REQUIRE(fc.size() == 1);
     auto f = fc[0];
     REQUIRE(f.id.is<std::uint64_t>());
-    CHECK(f.id.get<std::uint64_t>() == 123);
+    CHECK(f.id.get<std::uint64_t>() == 1);
     REQUIRE(f.properties.size() == 1);
     REQUIRE(f.properties.end() != f.properties.find("hello"));
     auto val = f.properties["hello"];
@@ -156,18 +156,17 @@ TEST_CASE("Read Feature-single-polygon.mvt")
     CHECK(poly[0][2].y == 34);
 }
 
-/*
-TEST_CASE( "Read Feature-single-multipolygon.mvt" ) {
-    std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-multipolygon.mvt");
+TEST_CASE( "Read feature multipolygon" ) {
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/022/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
     REQUIRE(fm.size() == 1);
-    REQUIRE(fm.end() != fm.find("layer_name"));
-    auto fc = fm["layer_name"];
+    REQUIRE(fm.end() != fm.find("hello"));
+    auto fc = fm["hello"];
     REQUIRE(fc.size() == 1);
     auto f = fc[0];
     REQUIRE(f.id.is<std::uint64_t>());
-    CHECK(f.id.get<std::uint64_t>() == 123);
+    CHECK(f.id.get<std::uint64_t>() == 1);
     REQUIRE(f.properties.size() == 1);
     REQUIRE(f.properties.end() != f.properties.find("hello"));
     auto val = f.properties["hello"];
@@ -183,4 +182,4 @@ TEST_CASE( "Read Feature-single-multipolygon.mvt" ) {
     CHECK(mpoly[0][0][1].y == 12);
     CHECK(mpoly[0][0][2].x == 20);
     CHECK(mpoly[0][0][2].y == 34);
-}*/
+}
