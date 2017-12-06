@@ -186,9 +186,27 @@ TEST_CASE("Read feature multipolygon")
     CHECK(mpoly[0][0][4].y == 0);
 }
 
-TEST_CASE("Read invalid: missing geometry type field")
+TEST_CASE("Read invalid: missing geometry type field, results in feature collection and no layer")
 {
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/003/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     CHECK(fm.empty());
+}
+
+TEST_CASE("Read invalid: missing geometry field, results in an exception from vtzero")
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/004/tile.mvt");
+    CHECK_THROWS_WITH(mapbox::vector_tile::decode_tile<std::int64_t>(buffer), "Missing geometry field in feature (spec 4.2)");
+}
+
+TEST_CASE("Read invalid: the tags array has only a single tag, where multiples of two are required, results in an exception from vtzero")
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/005/tile.mvt");
+    CHECK_THROWS_WITH(mapbox::vector_tile::decode_tile<std::int64_t>(buffer), "unpaired property key/value indexes (spec 4.4)");
+}
+
+TEST_CASE("Read invalid: invalid geometry type enum value, results in an exception from vtzero")
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/006/tile.mvt");
+    CHECK_THROWS_WITH(mapbox::vector_tile::decode_tile<std::int64_t>(buffer), "Unknown geometry type (spec 4.3.4)");
 }
