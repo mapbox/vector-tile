@@ -70,7 +70,6 @@ TEST_CASE("Read feature linestring")
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/018/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
-    REQUIRE(fm.size() == 1);
     REQUIRE(fm.end() != fm.find("hello"));
     auto fc = fm["hello"];
     REQUIRE(fc.size() == 1);
@@ -97,7 +96,6 @@ TEST_CASE("Read feature multilinestring")
 {
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/021/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
-    REQUIRE(fm.size() == 1);
     REQUIRE(fm.size() == 1);
     REQUIRE(fm.end() != fm.find("hello"));
     auto fc = fm["hello"];
@@ -132,7 +130,6 @@ TEST_CASE("Read feature polygon")
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/019/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
-    REQUIRE(fm.size() == 1);
     REQUIRE(fm.end() != fm.find("hello"));
     auto fc = fm["hello"];
     REQUIRE(fc.size() == 1);
@@ -156,10 +153,10 @@ TEST_CASE("Read feature polygon")
     CHECK(poly[0][2].y == 34);
 }
 
-TEST_CASE( "Read feature multipolygon" ) {
+TEST_CASE("Read feature multipolygon")
+{
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/022/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
-    REQUIRE(fm.size() == 1);
     REQUIRE(fm.size() == 1);
     REQUIRE(fm.end() != fm.find("hello"));
     auto fc = fm["hello"];
@@ -187,4 +184,11 @@ TEST_CASE( "Read feature multipolygon" ) {
     CHECK(mpoly[0][0][3].y == 10);
     CHECK(mpoly[0][0][4].x == 0);
     CHECK(mpoly[0][0][4].y == 0);
+}
+
+TEST_CASE("Read invalid: missing geometry type field")
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/003/tile.mvt");
+    auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
+    CHECK(fm.empty());
 }
