@@ -136,6 +136,7 @@ mapbox::geometry::geometry<CoordinateType> extract_geometry_polygon(vtzero::feat
         // throw std::runtime_error("Polygon feature has no rings in its geometry");
     }
     mapbox::geometry::multi_polygon<CoordinateType> mp;
+    mp.reserve(rings.size());
     for (auto&& r : rings)
     {
         if (r.is_outer)
