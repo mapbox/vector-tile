@@ -29,7 +29,7 @@ endif()
 mason_use(catch VERSION 1.9.6 HEADER_ONLY)
 include_directories(SYSTEM ${MASON_PACKAGE_catch_INCLUDE_DIRS})
 
-mason_use(benchmark VERSION 1.3.0)
+mason_use(benchmark VERSION 1.2.0)
 include_directories(SYSTEM ${MASON_PACKAGE_benchmark_INCLUDE_DIRS})
 
 mason_use(variant VERSION 1.1.5 HEADER_ONLY)

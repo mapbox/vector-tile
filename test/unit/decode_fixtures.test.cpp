@@ -175,11 +175,16 @@ TEST_CASE( "Read feature multipolygon" ) {
     REQUIRE(f.geometry.is<mapbox::geometry::multi_polygon<std::int64_t>>());
     auto mpoly = f.geometry.get<mapbox::geometry::multi_polygon<std::int64_t>>();
     REQUIRE(mpoly.size() == 2);
-    REQUIRE(mpoly[0].size() == 4);
-    CHECK(mpoly[0][0][0].x == 3);
-    CHECK(mpoly[0][0][0].y == 6);
-    CHECK(mpoly[0][0][1].x == 8);
-    CHECK(mpoly[0][0][1].y == 12);
-    CHECK(mpoly[0][0][2].x == 20);
-    CHECK(mpoly[0][0][2].y == 34);
+    REQUIRE(mpoly[0].size() == 1);
+    REQUIRE(mpoly[0][0].size() == 5);
+    CHECK(mpoly[0][0][0].x == 0);
+    CHECK(mpoly[0][0][0].y == 0);
+    CHECK(mpoly[0][0][1].x == 10);
+    CHECK(mpoly[0][0][1].y == 0);
+    CHECK(mpoly[0][0][2].x == 10);
+    CHECK(mpoly[0][0][2].y == 10);
+    CHECK(mpoly[0][0][3].x == 0);
+    CHECK(mpoly[0][0][3].y == 10);
+    CHECK(mpoly[0][0][4].x == 0);
+    CHECK(mpoly[0][0][4].y == 0);
 }
