@@ -74,7 +74,11 @@ layer_map<CoordinateType> decode_tile(std::string const& buffer)
                 fc.push_back(f);
             }
         }
-        m.emplace(std::string(layer.name()), std::move(fc));
+
+        if (!fc.empty())
+        {
+            m.emplace(std::string(layer.name()), std::move(fc));
+        }
     }
     return m;
 }
