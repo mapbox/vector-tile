@@ -79,7 +79,6 @@ layer_map<CoordinateType> decode_tile(std::string const& buffer)
         {
             m.emplace(std::string(layer.name()), std::move(fc));
         }
-
     }
     return m;
 }
