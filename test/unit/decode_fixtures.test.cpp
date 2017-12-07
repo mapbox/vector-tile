@@ -243,11 +243,10 @@ TEST_CASE("Read: two layers with the same name value, but only the first layer a
     auto fc = fm["hello"];
     REQUIRE(fc.size() == 1);
     auto f = fc[0];
-    REQUIRE(f.geometry.is<mapbox::geometry::point<std::int64_t>>());
-    auto pt = f.geometry.get<mapbox::geometry::point<std::int64_t>>();
-    CHECK(pt.x == 25);
-    CHECK(pt.y == 17);
-    // it would be better to assert on a property that is unique, rather than a geometry that is unique
+    REQUIRE(f.properties.size() == 1);
+    auto val = f.properties["name"];
+    CHECK(val.is<std::string>());
+    CHECK(val.get<std::string>() == "layer-one");
 }
 
 TEST_CASE("Read: missing layer version property, defaults to a specific version and properly parses")
