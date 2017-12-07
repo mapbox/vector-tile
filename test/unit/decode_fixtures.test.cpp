@@ -186,27 +186,177 @@ TEST_CASE("Read feature multipolygon")
     CHECK(mpoly[0][0][4].y == 0);
 }
 
-TEST_CASE("Read invalid: missing geometry type field, results in feature collection and no layer")
+TEST_CASE("Read: UNKNOWN geometry type, results in no features")
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/016/tile.mvt");
+    auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
+    CHECK(fm.empty());
+}
+
+TEST_CASE("Read: missing geometry type field, results in feature collection and no layer")
 {
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/003/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     CHECK(fm.empty());
 }
 
-TEST_CASE("Read invalid: missing geometry field, results in an exception from vtzero")
+TEST_CASE("Read: missing layer extent is assigned the default value")
 {
-    std::string buffer = open_tile("test/mvt-fixtures/fixtures/004/tile.mvt");
-    CHECK_THROWS_WITH(mapbox::vector_tile::decode_tile<std::int64_t>(buffer), "Missing geometry field in feature (spec 4.2)");
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/009/tile.mvt");
+    auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
+    REQUIRE(fm.size() == 1);
+    REQUIRE(fm.end() != fm.find("hello"));
+    auto fc = fm["hello"];
+    REQUIRE(fc.size() == 1);
+    auto f = fc[0];
+    REQUIRE(f.geometry.is<mapbox::geometry::point<std::int64_t>>());
+    auto pt = f.geometry.get<mapbox::geometry::point<std::int64_t>>();
+    // just creating a point is a check that we are handling with a default extent,
+    // but we'll want to assert on extent somewhere in the future
 }
 
-TEST_CASE("Read invalid: the tags array has only a single tag, where multiples of two are required, results in an exception from vtzero")
+TEST_CASE("Read: A Layer value property is listed as 'string' but encoded as std::int64_t, results in a skip and no properties on feature")
 {
-    std::string buffer = open_tile("test/mvt-fixtures/fixtures/005/tile.mvt");
-    CHECK_THROWS_WITH(mapbox::vector_tile::decode_tile<std::int64_t>(buffer), "unpaired property key/value indexes (spec 4.4)");
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/010/tile.mvt");
+    auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
+    REQUIRE(fm.size() == 1);
+    REQUIRE(fm.end() != fm.find("hello"));
+    auto fc = fm["hello"];
+    REQUIRE(fc.size() == 1);
+    auto f = fc[0];
+    CHECK(f.properties.empty());
 }
 
-TEST_CASE("Read invalid: invalid geometry type enum value, results in an exception from vtzero")
+TEST_CASE("Read: two layers with the same name value, but only the first layer added is kept")
 {
-    std::string buffer = open_tile("test/mvt-fixtures/fixtures/006/tile.mvt");
-    CHECK_THROWS_WITH(mapbox::vector_tile::decode_tile<std::int64_t>(buffer), "Unknown geometry type (spec 4.3.4)");
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/015/tile.mvt");
+    auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
+    REQUIRE(fm.size() == 1);
+    // right now we default to the std::map::emplace functionality, which will automatically
+    // remove an element where the key currently exists - meaning the first layer added
+    // will be the final layer. Is this what we want? Can we override the feature
+    // collection map to throw an exception? Something to benchmark and think about.
+    REQUIRE(fm.size() == 1);
+    REQUIRE(fm.end() != fm.find("hello"));
+    auto fc = fm["hello"];
+    REQUIRE(fc.size() == 1);
+    auto f = fc[0];
+    REQUIRE(f.geometry.is<mapbox::geometry::point<std::int64_t>>());
+    auto pt = f.geometry.get<mapbox::geometry::point<std::int64_t>>();
+    CHECK(pt.x == 25);
+    CHECK(pt.y == 17);
+    // it would be better to assert on a property that is unique, rather than a geometry that is unique
+}
+
+TEST_CASE("Read: missing layer version property, defaults to a specific version and properly parses")
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/024/tile.mvt");
+    auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
+    CHECK(!fm.empty());
+    // not exactly sure how to test that this one works other than making sure decode_tile actually works
+}
+
+TEST_CASE("Read: layer has no features, results in an empty feature map")
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/025/tile.mvt");
+    auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
+    CHECK(fm.empty());
+}
+
+TEST_CASE("Read: has an extra Value type called 'my_value' which is not handled in the property map")
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/026/tile.mvt");
+    auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
+    REQUIRE(fm.size() == 1);
+    auto fc = fm["hello"];
+    REQUIRE(fc.empty()); // my_value does not make it through
+}
+
+TEST_CASE("Read: all valid property value types")
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/038/tile.mvt");
+    auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
+    REQUIRE(fm.size() == 1);
+    REQUIRE(fm.end() != fm.find("hello"));
+    auto fc = fm["hello"];
+    REQUIRE(fc.size() == 1);
+    auto f = fc[0];
+    REQUIRE(f.properties.size() == 7);
+
+    REQUIRE(f.properties.end() != f.properties.find("string_value"));
+    auto string_value = f.properties["string_value"];
+    CHECK(string_value.is<std::string>());
+    CHECK(string_value.get<std::string>() == "ello");
+
+    REQUIRE(f.properties.end() != f.properties.find("bool_value"));
+    auto bool_value = f.properties["bool_value"];
+    CHECK(bool_value.is<bool>());
+    CHECK(bool_value.get<bool>() == true);
+
+    REQUIRE(f.properties.end() != f.properties.find("int_value"));
+    auto int_value = f.properties["int_value"];
+    CHECK(int_value.is<std::int64_t>());
+    CHECK(int_value.get<std::int64_t>() == 6);
+
+    REQUIRE(f.properties.end() != f.properties.find("double_value"));
+    auto double_value = f.properties["double_value"];
+    CHECK(double_value.is<double>());
+    CHECK(double_value.get<double>() == 1.23);
+
+    REQUIRE(f.properties.end() != f.properties.find("float_value"));
+    auto float_value = f.properties["float_value"];
+    CHECK(float_value.is<double>());
+    CHECK(float_value.get<double>() == Approx(3.1));
+
+    REQUIRE(f.properties.end() != f.properties.find("sint_value"));
+    auto sint_value = f.properties["sint_value"];
+    CHECK(sint_value.is<std::int64_t>());
+    CHECK(sint_value.get<std::int64_t>() == -87948);
+
+    REQUIRE(f.properties.end() != f.properties.find("uint_value"));
+    auto uint_value = f.properties["uint_value"];
+    CHECK(uint_value.is<std::uint64_t>());
+    CHECK(uint_value.get<std::uint64_t>() == 87948);
+}
+
+
+// std::string buffer038 = open_tile("test/mvt-fixtures/fixtures/038/tile.mvt");
+// CHECK_THROWS_WITH(mapbox::vector_tile::decode_tile<std::int64_t>(buffer038), "waka");
+// std::string buffer039 = open_tile("test/mvt-fixtures/fixtures/039/tile.mvt");
+// CHECK_THROWS_WITH(mapbox::vector_tile::decode_tile<std::int64_t>(buffer039), "waka");
+// std::string buffer043 = open_tile("test/mvt-fixtures/fixtures/043/tile.mvt");
+// CHECK_THROWS_WITH(mapbox::vector_tile::decode_tile<std::int64_t>(buffer043), "waka");
+
+TEST_CASE("Read exceptions: throw exceptions on invalid vector tiles from vtzero")
+{
+    std::string buffer004 = open_tile("test/mvt-fixtures/fixtures/004/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer004));
+    std::string buffer005 = open_tile("test/mvt-fixtures/fixtures/005/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer005));
+    std::string buffer006 = open_tile("test/mvt-fixtures/fixtures/006/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer006));
+    std::string buffer007 = open_tile("test/mvt-fixtures/fixtures/007/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer007));
+    std::string buffer008 = open_tile("test/mvt-fixtures/fixtures/008/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer008));
+    std::string buffer011 = open_tile("test/mvt-fixtures/fixtures/011/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer011));
+    std::string buffer012 = open_tile("test/mvt-fixtures/fixtures/012/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer012));
+    std::string buffer013 = open_tile("test/mvt-fixtures/fixtures/013/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer013));
+    std::string buffer014 = open_tile("test/mvt-fixtures/fixtures/014/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer014));
+    std::string buffer023 = open_tile("test/mvt-fixtures/fixtures/023/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer023));
+    std::string buffer030 = open_tile("test/mvt-fixtures/fixtures/030/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer030));
+    std::string buffer040 = open_tile("test/mvt-fixtures/fixtures/040/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer040));
+    std::string buffer041 = open_tile("test/mvt-fixtures/fixtures/041/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer041));
+    std::string buffer042 = open_tile("test/mvt-fixtures/fixtures/042/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer042));
+    std::string buffer044 = open_tile("test/mvt-fixtures/fixtures/044/tile.mvt");
+    CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer044));
 }
