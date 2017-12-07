@@ -319,15 +319,7 @@ TEST_CASE("Read: all valid property value types")
     CHECK(uint_value.get<std::uint64_t>() == 87948);
 }
 
-
-// std::string buffer038 = open_tile("test/mvt-fixtures/fixtures/038/tile.mvt");
-// CHECK_THROWS_WITH(mapbox::vector_tile::decode_tile<std::int64_t>(buffer038), "waka");
-// std::string buffer039 = open_tile("test/mvt-fixtures/fixtures/039/tile.mvt");
-// CHECK_THROWS_WITH(mapbox::vector_tile::decode_tile<std::int64_t>(buffer039), "waka");
-// std::string buffer043 = open_tile("test/mvt-fixtures/fixtures/043/tile.mvt");
-// CHECK_THROWS_WITH(mapbox::vector_tile::decode_tile<std::int64_t>(buffer043), "waka");
-
-TEST_CASE("Read exceptions: throw exceptions on invalid vector tiles from vtzero")
+TEST_CASE("Read: vtzero exceptions")
 {
     std::string buffer004 = open_tile("test/mvt-fixtures/fixtures/004/tile.mvt");
     CHECK_THROWS(mapbox::vector_tile::decode_tile<std::int64_t>(buffer004));
