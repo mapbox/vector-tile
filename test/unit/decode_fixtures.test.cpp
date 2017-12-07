@@ -211,6 +211,8 @@ TEST_CASE("Read: missing layer extent is assigned the default value")
     auto f = fc[0];
     REQUIRE(f.geometry.is<mapbox::geometry::point<std::int64_t>>());
     auto pt = f.geometry.get<mapbox::geometry::point<std::int64_t>>();
+    CHECK(pt.x == 25);
+    CHECK(pt.y == 17);
     // just creating a point is a check that we are handling with a default extent,
     // but we'll want to assert on extent somewhere in the future
 }
