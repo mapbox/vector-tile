@@ -254,7 +254,6 @@ TEST_CASE("Read: missing layer version property, defaults to a specific version 
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/024/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     CHECK(!fm.empty());
-    // not exactly sure how to test that this one works other than making sure decode_tile actually works
 }
 
 TEST_CASE("Read: layer has no features, results in an empty feature map")
@@ -270,7 +269,7 @@ TEST_CASE("Read: has an extra Value type called 'my_value' which is not handled 
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
     auto fc = fm["hello"];
-    REQUIRE(fc.empty()); // my_value does not make it through
+    REQUIRE(fc.empty());
 }
 
 TEST_CASE("Read: all valid property value types")
