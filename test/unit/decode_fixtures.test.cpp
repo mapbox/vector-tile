@@ -229,15 +229,11 @@ TEST_CASE("Read: A Layer value property is listed as 'string' but encoded as std
     CHECK(f.properties.empty());
 }
 
-TEST_CASE("Read: two layers with the same name value, but only the first layer added is kept")
+TEST_CASE("Read: two layers with the same name value, but only the first layer added is kept (std::map::emplace default)")
 {
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/015/tile.mvt");
     auto fm = mapbox::vector_tile::decode_tile<std::int64_t>(buffer);
     REQUIRE(fm.size() == 1);
-    // right now we default to the std::map::emplace functionality, which will automatically
-    // remove an element where the key currently exists - meaning the first layer added
-    // will be the final layer. Is this what we want? Can we override the feature
-    // collection map to throw an exception? Something to benchmark and think about.
     REQUIRE(fm.size() == 1);
     REQUIRE(fm.end() != fm.find("hello"));
     auto fc = fm["hello"];
