@@ -12,6 +12,7 @@
 #include <stdexcept>
 
 #include <experimental/optional>
+
 template <typename T>
 using optional = std::experimental::optional<T>;
 
@@ -239,6 +240,15 @@ GeometryCollectionType feature::getGeometries(float scale) const {
             std::uint32_t cmd_length = static_cast<std::uint32_t>(*start_itr++);
             cmd = cmd_length & 0x7;
             length = len_reserve = cmd_length >> 3;
+            // Prevents the creation of vector tiles that would cause
+            // a denial of service from massive over allocation. Protection
+            // limit is based on the assumption of an int64_t point which is
+            // 16 bytes in size and wanting to have a maximum of 10 MB of memory
+            // used.
+            static const std::uint32_t MAX_LENGTH = (10 * 1024 * 1024) / 16;
+            if (len_reserve > MAX_LENGTH) {
+                len_reserve = MAX_LENGTH;
+            }
         }
 
         --length;
