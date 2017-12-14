@@ -73,10 +73,11 @@ int main(int argc, char** argv) {
             for (std::size_t i=0;i<feature_count;++i) {
                 auto const feature = mapbox::vector_tile::feature(layer.getFeature(i),layer);
                 auto const& feature_id = feature.getID();
-                if (!feature_id) {
-                    throw std::runtime_error("Hit unexpected error decoding feature");
+                if (feature_id) {
+                    std::cout << "    id: " << (*feature_id).get<uint64_t>() << "\n";
+                } else {
+                    std::cout << "    id: (no id set)\n";
                 }
-                std::cout << "    id: " << (*feature_id).get<uint64_t>() << "\n";
                 std::cout << "    type: " << int(feature.getType()) << "\n";
                 auto props = feature.getProperties();
                 std::cout << "    Properties:\n";
