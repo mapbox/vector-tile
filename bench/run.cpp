@@ -27,7 +27,7 @@ static std::string open_tile(std::string const& path)
 template <typename CoordinateType>
 static void BM_decode_polygon_fixture(benchmark::State& state) // NOLINT google-runtime-references
 {
-    std::string buffer = open_tile("test/mvt-fixtures/fixtures/valid/Feature-single-polygon.mvt");
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/019/tile.mvt");
     vtzero::vector_tile tile(buffer);
     auto layer = tile.next_layer();
     auto feature = layer.next_feature();
@@ -41,6 +41,96 @@ static void BM_decode_polygon_fixture(benchmark::State& state) // NOLINT google-
 BENCHMARK_TEMPLATE(BM_decode_polygon_fixture, int64_t);
 BENCHMARK_TEMPLATE(BM_decode_polygon_fixture, int32_t);
 BENCHMARK_TEMPLATE(BM_decode_polygon_fixture, int16_t);
+
+template <typename CoordinateType>
+static void BM_decode_multipolygon_fixture(benchmark::State& state) // NOLINT google-runtime-references
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/022/tile.mvt");
+    vtzero::vector_tile tile(buffer);
+    auto layer = tile.next_layer();
+    auto feature = layer.next_feature();
+
+    while (state.KeepRunning())
+    {
+        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
+    }
+}
+
+BENCHMARK_TEMPLATE(BM_decode_multipolygon_fixture, int64_t);
+BENCHMARK_TEMPLATE(BM_decode_multipolygon_fixture, int32_t);
+BENCHMARK_TEMPLATE(BM_decode_multipolygon_fixture, int16_t);
+
+template <typename CoordinateType>
+static void BM_decode_multilinestring_fixture(benchmark::State& state) // NOLINT google-runtime-references
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/021/tile.mvt");
+    vtzero::vector_tile tile(buffer);
+    auto layer = tile.next_layer();
+    auto feature = layer.next_feature();
+
+    while (state.KeepRunning())
+    {
+        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
+    }
+}
+
+BENCHMARK_TEMPLATE(BM_decode_multilinestring_fixture, int64_t);
+BENCHMARK_TEMPLATE(BM_decode_multilinestring_fixture, int32_t);
+BENCHMARK_TEMPLATE(BM_decode_multilinestring_fixture, int16_t);
+
+template <typename CoordinateType>
+static void BM_decode_linestring_fixture(benchmark::State& state) // NOLINT google-runtime-references
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/018/tile.mvt");
+    vtzero::vector_tile tile(buffer);
+    auto layer = tile.next_layer();
+    auto feature = layer.next_feature();
+
+    while (state.KeepRunning())
+    {
+        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
+    }
+}
+
+BENCHMARK_TEMPLATE(BM_decode_linestring_fixture, int64_t);
+BENCHMARK_TEMPLATE(BM_decode_linestring_fixture, int32_t);
+BENCHMARK_TEMPLATE(BM_decode_linestring_fixture, int16_t);
+
+template <typename CoordinateType>
+static void BM_decode_multipoint_fixture(benchmark::State& state) // NOLINT google-runtime-references
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/020/tile.mvt");
+    vtzero::vector_tile tile(buffer);
+    auto layer = tile.next_layer();
+    auto feature = layer.next_feature();
+
+    while (state.KeepRunning())
+    {
+        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
+    }
+}
+
+BENCHMARK_TEMPLATE(BM_decode_multipoint_fixture, int64_t);
+BENCHMARK_TEMPLATE(BM_decode_multipoint_fixture, int32_t);
+BENCHMARK_TEMPLATE(BM_decode_multipoint_fixture, int16_t);
+
+template <typename CoordinateType>
+static void BM_decode_point_fixture(benchmark::State& state) // NOLINT google-runtime-references
+{
+    std::string buffer = open_tile("test/mvt-fixtures/fixtures/017/tile.mvt");
+    vtzero::vector_tile tile(buffer);
+    auto layer = tile.next_layer();
+    auto feature = layer.next_feature();
+
+    while (state.KeepRunning())
+    {
+        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
+    }
+}
+
+BENCHMARK_TEMPLATE(BM_decode_point_fixture, int64_t);
+BENCHMARK_TEMPLATE(BM_decode_point_fixture, int32_t);
+BENCHMARK_TEMPLATE(BM_decode_point_fixture, int16_t);
 
 template <typename CoordinateType>
 static void BM_decode_polygon(benchmark::State& state) // NOLINT google-runtime-references
