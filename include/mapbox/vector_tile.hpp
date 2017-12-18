@@ -298,6 +298,7 @@ GeometryCollectionType feature::getGeometries(float scale) const {
             if (!paths.back().empty()) {
                 paths.back().push_back(paths.back()[0]);
             }
+            length = 0;
         } else {
             throw std::runtime_error("unknown command");
         }
