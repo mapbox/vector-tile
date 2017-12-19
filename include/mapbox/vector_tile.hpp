@@ -243,9 +243,9 @@ GeometryCollectionType feature::getGeometries(float scale) const {
             // Prevents the creation of vector tiles that would cause
             // a denial of service from massive over allocation. Protection
             // limit is based on the assumption of an int64_t point which is
-            // 16 bytes in size and wanting to have a maximum of 10 MB of memory
+            // 16 bytes in size and wanting to have a maximum of 1 MB of memory
             // used.
-            constexpr std::uint32_t MAX_LENGTH = (10 * 1024 * 1024) / 16;
+            constexpr std::uint32_t MAX_LENGTH = (1024 * 1024) / 16;
             if (len_reserve > MAX_LENGTH) {
                 len_reserve = MAX_LENGTH;
             }
@@ -270,6 +270,12 @@ GeometryCollectionType feature::getGeometries(float scale) const {
             }
 
             if (cmd == CommandType::MOVE_TO && !paths.back().empty()) {
+                if (paths.back().size() < paths.back().capacity()) {
+                    // Assumign we had an invalid length before
+                    // lets shrink to fit, just to make sure
+                    // we don't have a large capcity unused vector
+                    paths.back().shrink_to_fit();
+                }
                 paths.emplace_back();
                 if (!is_point) {
                     first = true;
@@ -302,6 +308,13 @@ GeometryCollectionType feature::getGeometries(float scale) const {
         } else {
             throw std::runtime_error("unknown command");
         }
+    }
+    if (paths.size() < paths.capacity()) {
+        // Assumign we had an invalid length before
+        // lets shrink to fit, just to make sure
+        // we don't have a large capacity vector
+        // just wasting memory
+        paths.shrink_to_fit();
     }
 #if defined(DEBUG)
     for (auto const& p : paths) {
