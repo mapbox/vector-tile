@@ -271,9 +271,10 @@ GeometryCollectionType feature::getGeometries(float scale) const {
 
             if (cmd == CommandType::MOVE_TO && !paths.back().empty()) {
                 if (paths.back().size() < paths.back().capacity()) {
-                    // Assumign we had an invalid length before
+                    // Assuming we had an invalid length before
                     // lets shrink to fit, just to make sure
-                    // we don't have a large capcity unused vector
+                    // we don't have a large capacity vector
+                    // just wasting memory
                     paths.back().shrink_to_fit();
                 }
                 paths.emplace_back();
@@ -310,7 +311,7 @@ GeometryCollectionType feature::getGeometries(float scale) const {
         }
     }
     if (paths.size() < paths.capacity()) {
-        // Assumign we had an invalid length before
+        // Assuming we had an invalid length before
         // lets shrink to fit, just to make sure
         // we don't have a large capacity vector
         // just wasting memory
