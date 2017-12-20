@@ -12,6 +12,7 @@
 #include <stdexcept>
 
 #include <experimental/optional>
+
 template <typename T>
 using optional = std::experimental::optional<T>;
 
@@ -239,6 +240,15 @@ GeometryCollectionType feature::getGeometries(float scale) const {
             std::uint32_t cmd_length = static_cast<std::uint32_t>(*start_itr++);
             cmd = cmd_length & 0x7;
             length = len_reserve = cmd_length >> 3;
+            // Prevents the creation of vector tiles that would cause
+            // a denial of service from massive over allocation. Protection
+            // limit is based on the assumption of an int64_t point which is
+            // 16 bytes in size and wanting to have a maximum of 1 MB of memory
+            // used.
+            constexpr std::uint32_t MAX_LENGTH = (1024 * 1024) / 16;
+            if (len_reserve > MAX_LENGTH) {
+                len_reserve = MAX_LENGTH;
+            }
         }
 
         --length;
@@ -260,6 +270,13 @@ GeometryCollectionType feature::getGeometries(float scale) const {
             }
 
             if (cmd == CommandType::MOVE_TO && !paths.back().empty()) {
+                if (paths.back().size() < paths.back().capacity()) {
+                    // Assuming we had an invalid length before
+                    // lets shrink to fit, just to make sure
+                    // we don't have a large capacity vector
+                    // just wasting memory
+                    paths.back().shrink_to_fit();
+                }
                 paths.emplace_back();
                 if (!is_point) {
                     first = true;
@@ -288,9 +305,17 @@ GeometryCollectionType feature::getGeometries(float scale) const {
             if (!paths.back().empty()) {
                 paths.back().push_back(paths.back()[0]);
             }
+            length = 0;
         } else {
             throw std::runtime_error("unknown command");
         }
+    }
+    if (paths.size() < paths.capacity()) {
+        // Assuming we had an invalid length before
+        // lets shrink to fit, just to make sure
+        // we don't have a large capacity vector
+        // just wasting memory
+        paths.shrink_to_fit();
     }
 #if defined(DEBUG)
     for (auto const& p : paths) {
