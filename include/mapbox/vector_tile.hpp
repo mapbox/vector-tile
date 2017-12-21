@@ -224,8 +224,8 @@ template <typename GeometryCollectionType>
 GeometryCollectionType feature::getGeometries(float scale) const {
     std::uint8_t cmd = 1;
     std::uint32_t length = 0;
-    std::int32_t x = 0;
-    std::int32_t y = 0;
+    std::int64_t x = 0;
+    std::int64_t y = 0;
 
     GeometryCollectionType paths;
 
