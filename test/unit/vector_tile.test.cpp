@@ -101,15 +101,43 @@ TEST_CASE( "Read Feature-single-polygon.mvt" ) {
     REQUIRE(stringify_geom(geom) == "25, 17");
 }*/
 
-TEST_CASE( "Prevent massive over allocation" ) {
-    std::string buffer = open_tile("test/test046.mvt");
+TEST_CASE( "Prevent massive over allocation - moveto point" ) {
+    std::string buffer = open_tile("test/fixtures/moveto-huge-point.mvt");
     mapbox::vector_tile::buffer tile(buffer);
     auto const layer_names = tile.layerNames();
     REQUIRE(layer_names.size() == 1);
-    REQUIRE(layer_names[0] == "0000000000");
-    auto const layer = tile.getLayer("0000000000");
+    REQUIRE(layer_names[0] == "hello");
+    auto const layer = tile.getLayer("hello");
     REQUIRE(layer.featureCount() == 1);
-    REQUIRE(layer.getName() == "0000000000");
+    REQUIRE(layer.getName() == "hello");
+    auto const feature = mapbox::vector_tile::feature(layer.getFeature(0),layer);
+    mapbox::vector_tile::points_arrays_type geom = feature.getGeometries<mapbox::vector_tile::points_arrays_type>(1.0);
+    REQUIRE(geom.capacity() <= 655360);
+}
+
+TEST_CASE( "Prevent massive over allocation - moveto linestring" ) {
+    std::string buffer = open_tile("test/fixtures/moveto-huge-linestring.mvt");
+    mapbox::vector_tile::buffer tile(buffer);
+    auto const layer_names = tile.layerNames();
+    REQUIRE(layer_names.size() == 1);
+    REQUIRE(layer_names[0] == "hello");
+    auto const layer = tile.getLayer("hello");
+    REQUIRE(layer.featureCount() == 1);
+    REQUIRE(layer.getName() == "hello");
+    auto const feature = mapbox::vector_tile::feature(layer.getFeature(0),layer);
+    mapbox::vector_tile::points_arrays_type geom = feature.getGeometries<mapbox::vector_tile::points_arrays_type>(1.0);
+    REQUIRE(geom.capacity() <= 655360);
+}
+
+TEST_CASE( "Prevent massive over allocation - moveto polygon" ) {
+    std::string buffer = open_tile("test/fixtures/moveto-huge-linestring.mvt");
+    mapbox::vector_tile::buffer tile(buffer);
+    auto const layer_names = tile.layerNames();
+    REQUIRE(layer_names.size() == 1);
+    REQUIRE(layer_names[0] == "hello");
+    auto const layer = tile.getLayer("hello");
+    REQUIRE(layer.featureCount() == 1);
+    REQUIRE(layer.getName() == "hello");
     auto const feature = mapbox::vector_tile::feature(layer.getFeature(0),layer);
     mapbox::vector_tile::points_arrays_type geom = feature.getGeometries<mapbox::vector_tile::points_arrays_type>(1.0);
     REQUIRE(geom.capacity() <= 655360);
