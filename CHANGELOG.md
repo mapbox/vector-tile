@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0
+
+- Allow nulls from property parsing
+- Several bug fixes around geometry parsing to prevent over allocation of memory.
+
 ## 1.0.0-alpha.1
 
 - Added demo application showing usage of decoder
