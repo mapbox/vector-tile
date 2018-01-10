@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+- Limit possibility rare situation where it might be possible to have an overflow or underflow of integers while decoding a vector tile's geometry
+
 ## 1.0.0
 
 - Allow nulls from property parsing

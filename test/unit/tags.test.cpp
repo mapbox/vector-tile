@@ -4,8 +4,8 @@
 #include <catch.hpp>
 
 TEST_CASE( "Version constant" ) {
-    CHECK(std::string(VECTOR_TILE_VERSION_STRING) == std::string("1.0.0"));
-    CHECK(VECTOR_TILE_VERSION_CODE == 10000);
+    CHECK(std::string(VECTOR_TILE_VERSION_STRING) == std::string("1.0.1"));
+    CHECK(VECTOR_TILE_VERSION_CODE == 10001);
 }
 
 TEST_CASE( "Protobuf Tag Constants" ) {
