@@ -47,10 +47,9 @@ struct id_visitor
 
     void operator()(std::int64_t val)
     {
-        std::uint64_t val_ = static_cast<std::uint64_t>(val);
         if (0 <= val)
         {
-            fbuilder.set_id(val_);
+            fbuilder.set_id(static_cast<std::uint64_t>(val));
         }
     }
 
