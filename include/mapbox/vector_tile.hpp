@@ -71,7 +71,7 @@ layer_map<CoordinateType> decode_tile(std::string const& buffer)
             auto f = extract_feature<CoordinateType>(feature);
             if (!f.geometry.template is<mapbox::geometry::empty>())
             {
-                fc.push_back(f);
+                fc.push_back(std::move(f));
             }
         }
 
