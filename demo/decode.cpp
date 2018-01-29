@@ -1,15 +1,18 @@
 #include <mapbox/vector_tile.hpp>
+
 #include <fstream>
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
+#include <unordered_map>
+#include <vector>
 
 std::string open_tile(std::string const& path) {
-    std::ifstream stream(path.c_str(),std::ios_base::in|std::ios_base::binary);
+    std::ifstream stream(path.c_str(), std::ios_base::in|std::ios_base::binary);
     if (!stream.is_open())
     {
         throw std::runtime_error("could not open: '" + path + "'");
     }
-    std::string message(std::istreambuf_iterator<char>(stream.rdbuf()),(std::istreambuf_iterator<char>()));
+    std::string message(std::istreambuf_iterator<char>(stream.rdbuf()), std::istreambuf_iterator<char>());
     stream.close();
     return message;
 }
@@ -17,11 +20,11 @@ std::string open_tile(std::string const& path) {
 class print_value {
 
 public:
-    std::string operator()(std::vector<mapbox::geometry::value> val) {
+    std::string operator()(std::vector<mapbox::geometry::value> const& val) {
         return "vector";
     }
 
-    std::string operator()(std::unordered_map<std::string, mapbox::geometry::value> val) {
+    std::string operator()(std::unordered_map<std::string, mapbox::geometry::value> const& val) {
         return "unordered_map";
     }
 
@@ -70,8 +73,8 @@ int main(int argc, char** argv) {
             }
             std::cout << "Layer '" << name << "'\n";
             std::cout << "  Features:\n";
-            for (std::size_t i=0;i<feature_count;++i) {
-                auto const feature = mapbox::vector_tile::feature(layer.getFeature(i),layer);
+            for (std::size_t i = 0; i < feature_count; ++i) {
+                auto const feature = mapbox::vector_tile::feature(layer.getFeature(i), layer);
                 auto const& feature_id = feature.getID();
                 if (!feature_id) {
                     throw std::runtime_error("Hit unexpected error decoding feature");
@@ -85,7 +88,7 @@ int main(int argc, char** argv) {
                     std::string value = mapbox::util::apply_visitor(printvisitor, prop.second);
                     std::cout << "      " << prop.first  << ": " << value << "\n";
                 }
-                std::cout << "    Verticies:\n";
+                std::cout << "    Vertices:\n";
                 mapbox::vector_tile::points_arrays_type geom = feature.getGeometries<mapbox::vector_tile::points_arrays_type>(1.0);
                 for (auto const& point_array : geom) {
                     for (auto const& point : point_array) {
