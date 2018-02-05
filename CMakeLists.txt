@@ -35,7 +35,7 @@ include_directories(SYSTEM ${MASON_PACKAGE_benchmark_INCLUDE_DIRS})
 mason_use(variant VERSION 1.1.5 HEADER_ONLY)
 include_directories(SYSTEM ${MASON_PACKAGE_variant_INCLUDE_DIRS})
 
-mason_use(vtzero VERSION 1c38ce7 HEADER_ONLY)
+mason_use(vtzero VERSION 7adde32 HEADER_ONLY)
 include_directories(SYSTEM ${MASON_PACKAGE_vtzero_INCLUDE_DIRS})
 
 mason_use(geometry VERSION 96d3505 HEADER_ONLY)

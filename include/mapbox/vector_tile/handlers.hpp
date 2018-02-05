@@ -39,7 +39,7 @@ mapbox::geometry::geometry<CoordinateType> extract_geometry_point(vtzero::featur
 {
 
     mapbox::geometry::multi_point<CoordinateType> mp;
-    vtzero::decode_point_geometry(f.geometry(), false, detail::point_geometry_handler<CoordinateType>(mp));
+    vtzero::decode_point_geometry(f.geometry(), detail::point_geometry_handler<CoordinateType>(mp));
     if (mp.empty())
     {
         return mapbox::geometry::geometry<CoordinateType>();
@@ -87,12 +87,12 @@ template <typename CoordinateType>
 struct polygon_ring
 {
 
-    polygon_ring() : ring(), is_outer(true)
+    polygon_ring() : ring(), type(vtzero::ring_type::invalid)
     {
     }
 
     mapbox::geometry::linear_ring<CoordinateType> ring;
-    bool is_outer;
+    vtzero::ring_type type;
 };
 
 template <typename CoordinateType>
@@ -118,9 +118,9 @@ struct polygon_geometry_handler
         geom_.back().ring.emplace_back(pt.x, pt.y);
     }
 
-    void ring_end(bool is_outer)
+    void ring_end(vtzero::ring_type type)
     {
-        geom_.back().is_outer = is_outer;
+        geom_.back().type = type;
     }
 };
 
@@ -129,7 +129,7 @@ mapbox::geometry::geometry<CoordinateType> extract_geometry_polygon(vtzero::feat
 {
 
     std::vector<polygon_ring<CoordinateType>> rings;
-    vtzero::decode_polygon_geometry(f.geometry(), false, detail::polygon_geometry_handler<CoordinateType>(rings));
+    vtzero::decode_polygon_geometry(f.geometry(), detail::polygon_geometry_handler<CoordinateType>(rings));
     if (rings.empty())
     {
         return mapbox::geometry::geometry<CoordinateType>();
@@ -139,12 +139,12 @@ mapbox::geometry::geometry<CoordinateType> extract_geometry_polygon(vtzero::feat
     mp.reserve(rings.size());
     for (auto&& r : rings)
     {
-        if (r.is_outer)
+        if (r.type == vtzero::ring_type::outer)
         {
             mp.emplace_back();
             mp.back().push_back(std::move(r.ring));
         }
-        else if (!mp.empty())
+        else if (!mp.empty() && r.type == vtzero::ring_type::inner)
         {
             mp.back().push_back(std::move(r.ring));
         }
@@ -169,7 +169,7 @@ mapbox::geometry::geometry<CoordinateType> extract_geometry_line_string(vtzero::
 {
 
     mapbox::geometry::multi_line_string<CoordinateType> mls;
-    vtzero::decode_linestring_geometry(f.geometry(), false, detail::line_string_geometry_handler<CoordinateType>(mls));
+    vtzero::decode_linestring_geometry(f.geometry(), detail::line_string_geometry_handler<CoordinateType>(mls));
     if (mls.empty())
     {
         return mapbox::geometry::geometry<CoordinateType>();
