@@ -5,30 +5,6 @@
 
 #include <vtzero/builder.hpp>
 
-namespace vtzero {
-
-template <>
-point create_point<mapbox::geometry::point<std::int64_t>>(mapbox::geometry::point<std::int64_t> p) noexcept
-{
-    return {static_cast<std::int32_t>(p.x),
-            static_cast<std::int32_t>(p.y)};
-}
-
-template <>
-point create_point<mapbox::geometry::point<std::int32_t>>(mapbox::geometry::point<std::int32_t> p) noexcept
-{
-    return {p.x, p.y};
-}
-
-template <>
-point create_point<mapbox::geometry::point<std::int16_t>>(mapbox::geometry::point<std::int16_t> p) noexcept
-{
-    return {static_cast<std::int32_t>(p.x),
-            static_cast<std::int32_t>(p.y)};
-}
-
-} // namespace vtzero
-
 namespace mapbox {
 namespace vector_tile {
 
