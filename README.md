@@ -1,6 +1,6 @@
 ## Vector Tile Library
 
-C++14 library for decoding [Mapbox Vector Tiles](https://www.mapbox.com/vector-tiles/).
+C++14 library for encoding & decoding [Mapbox Vector Tiles](https://www.mapbox.com/vector-tiles/).
 
 [![Build Status](https://travis-ci.org/mapbox/vector-tile.svg?branch=master)](https://travis-ci.org/mapbox/vector-tile)
 
@@ -15,37 +15,31 @@ C++14 library for decoding [Mapbox Vector Tiles](https://www.mapbox.com/vector-t
 
 ## Building
 
-Call
+Install test fixtures from an external git repository
 ```sh
 git submodule init
 git submodule update
 ```
 
-to install test fixtures from an external git repository.
+Build the library
+```sh
+# release mode
+make
 
-To install all dependencies and build the tests in this repo do:
+# debug mode
+make debug
+```
 
+Run tests
 ```sh
 make test
 ```
 
-## To bundle the `demo` program do:
+## Demo
 
+The demo decoder is a mini CLI for decoding Mapbox Vector Tiles and printing to stdout. The demo is built when you run `make` and can be used like:
 ```sh
-make demo
-```
-
-This copies all the includes into the `demo/include` folder such that the demo can be build like:
-
-```sh
-make -C demo/
-```
-
-Or also like:
-
-```sh
-cd demo
-make
+./build/demo-decode <path_to_mvt>
 ```
 
 # Who is using vector-tile?

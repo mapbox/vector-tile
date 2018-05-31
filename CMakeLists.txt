@@ -35,7 +35,7 @@ include_directories(SYSTEM ${MASON_PACKAGE_benchmark_INCLUDE_DIRS})
 mason_use(variant VERSION 1.1.5 HEADER_ONLY)
 include_directories(SYSTEM ${MASON_PACKAGE_variant_INCLUDE_DIRS})
 
-mason_use(vtzero VERSION 7adde32 HEADER_ONLY)
+mason_use(vtzero VERSION 1.0.1 HEADER_ONLY)
 include_directories(SYSTEM ${MASON_PACKAGE_vtzero_INCLUDE_DIRS})
 
 mason_use(geometry VERSION 96d3505 HEADER_ONLY)
@@ -50,7 +50,6 @@ include_directories("${PROJECT_SOURCE_DIR}/include")
 #include_directories("${PROJECT_SOURCE_DIR}/../geometry.hpp/include")
 #include_directories("${PROJECT_SOURCE_DIR}/../vtzero/include")
 #include_directories("${PROJECT_SOURCE_DIR}/../protozero/include")
-
 file(GLOB TEST_SOURCES test/*.cpp test/unit/*.cpp)
 add_executable(unit-tests ${TEST_SOURCES})
 
@@ -58,6 +57,10 @@ add_executable(unit-tests ${TEST_SOURCES})
 find_package(Threads REQUIRED)
 file(GLOB BENCH_SOURCES bench/*.cpp)
 add_executable(bench-tests ${BENCH_SOURCES})
+
+# For running the demo
+file(GLOB DEMO_SOURCES demo/*.cpp)
+add_executable(demo-decode ${DEMO_SOURCES})
 
 # link benchmark static library to the bench-tests binary so the bench tests know where to find the benchmark impl code
 target_link_libraries(bench-tests ${MASON_PACKAGE_benchmark_STATIC_LIBS} ${CMAKE_THREAD_LIBS_INIT})
