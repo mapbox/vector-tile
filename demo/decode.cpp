@@ -17,12 +17,48 @@ std::string open_tile(std::string const& path) {
     return message;
 }
 
+std::string print_geometry(const mapbox::geometry::geometry<std::int64_t>& geometry) {
+    std::string type;
+    if (geometry.is<mapbox::geometry::point<std::int64_t>>()) {
+        type = "Point";
+    }
+    if (geometry.is<mapbox::geometry::line_string<std::int64_t>>()) {
+        type = "LineString";
+    }
+    if (geometry.is<mapbox::geometry::polygon<std::int64_t>>()) {
+        type = "Polygon";
+    }
+    if (geometry.is<mapbox::geometry::multi_point<std::int64_t>>()) {
+        type = "MultiPoint";
+    }
+    if (geometry.is<mapbox::geometry::multi_line_string<std::int64_t>>()) {
+        type = "MultiLineString";
+    }
+    if (geometry.is<mapbox::geometry::multi_polygon<std::int64_t>>()) {
+        type = "MultiPolygon";
+    }
+    if (geometry.is<mapbox::geometry::geometry_collection<std::int64_t>>()) {
+        type = "GeometryCollection";
+    }
+    return type;
+}
+
 class print_value {
 public:
+    std::string operator()(std::vector<mapbox::feature::value> val) {
+        (void)val;
+        return "vector";
+    }
+    std::string operator()(std::unordered_map<std::string, mapbox::feature::value> val) {
+        (void)val;
+        return "unordered_map";
+    }
     std::string operator()(mapbox::feature::null_value_t val) {
+        (void)val;
         return "null";
     }
     std::string operator()(std::nullptr_t val) {
+        (void)val;
         return "nullptr";
     }
     std::string operator()(uint64_t val) {
@@ -54,28 +90,15 @@ int main(int argc, char** argv) {
         std::cout << "\nDecoding tile " << tile_path << " ...\n\n";
         for (auto const& layer : vt) {
             std::cout << "Layer \"" << layer.first << "\" (" << layer.second.size() << " features)\n";
-
             auto fc = vt[layer.first];
-
             for (std::size_t i = 0; i < layer.second.size(); ++i) {
                 auto feature = fc[i];
-
-                std::cout << "  feature (id: " << feature.id.get<std::uint64_t>() << ") (type: ";
-                if (feature.geometry.is<mapbox::geometry::point<std::int64_t>>()) {
-                    std::cout <<  "point) ";
-                }
-                if (feature.geometry.is<mapbox::geometry::line_string<std::int64_t>>()) {
-                    std::cout <<  "linestring) ";
-                }
-                if (feature.geometry.is<mapbox::geometry::polygon<std::int64_t>>()) {
-                    std::cout <<  "polygon) ";
-                }
-
-                std::cout << "properties:\n";
+                std::string geom = print_geometry(feature.geometry);
+                std::cout << "  feature (id: " << feature.id.get<std::uint64_t>() << ") (type: " << geom << ")\n";
                 for (auto const& prop : feature.properties) {
                     print_value printvisitor;
                     std::string value = mapbox::util::apply_visitor(printvisitor, prop.second);
-                    std::cout << " - " << prop.first  << ": " << value << "\n";
+                    std::cout << "    " << prop.first  << ": " << value << "\n";
                 }
             }
         }

@@ -12,7 +12,6 @@ C++14 library for encoding & decoding [Mapbox Vector Tiles](https://www.mapbox.c
  - [variant](https://github.com/mapbox/variant)
  - [geometry](https://github.com/mapbox/geometry.hpp)
 
-
 ## Building
 
 Install test fixtures from an external git repository
@@ -35,11 +34,32 @@ Run tests
 make test
 ```
 
-## Demo
+## Demo decoder
 
-The demo decoder is a mini CLI for decoding Mapbox Vector Tiles and printing to stdout. The demo is built when you run `make` and can be used like:
+The demo decoder is a mini CLI for decoding Mapbox Vector Tiles and printing to stdout. The demo is built when you run `make`.
+
+Usage:
+
 ```sh
 ./build/demo-decode <path_to_mvt>
+
+# example
+./build/demo-decode ~/data/cool.mvt
+```
+
+The output will look like this:
+
+```
+Layer "countries" (84 features)
+  Feature (id: 652891810) (type: Polygon)
+    name: Ghana
+    iso_2: gh
+    iso_3: gha
+  Feature (id: 652891810) (type: Polygon)
+    name: Canada
+    iso_2: ca
+    iso_3: can
+  ...
 ```
 
 # Who is using vector-tile?
