@@ -58,9 +58,9 @@ find_package(Threads REQUIRED)
 file(GLOB BENCH_SOURCES bench/*.cpp)
 add_executable(bench-tests ${BENCH_SOURCES})
 
-# For running the demo
-file(GLOB DEMO_SOURCES demo/*.cpp)
-add_executable(demo-decode ${DEMO_SOURCES})
+# For running the demos
+# file(GLOB DEMO_SOURCES demo/*.cpp)
+# add_executable(demo-decode ${DEMO_SOURCES})
 
 # link benchmark static library to the bench-tests binary so the bench tests know where to find the benchmark impl code
 target_link_libraries(bench-tests ${MASON_PACKAGE_benchmark_STATIC_LIBS} ${CMAKE_THREAD_LIBS_INIT})
