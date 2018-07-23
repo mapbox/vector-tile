@@ -1,6 +1,6 @@
 CC := $(CC)
 CXX := $(CXX)
-CXXFLAGS := $(CXXFLAGS) -Iinclude -std=c++14 -Wall
+CXXFLAGS := $(CXXFLAGS) -isystem../include -isystem ../mason_packages/.link/include/ -std=c++14 -Wall
 RELEASE_FLAGS := -O3 -DNDEBUG -fvisibility-inlines-hidden -fvisibility=hidden
 DEBUG_FLAGS := -g -O0 -DDEBUG -fno-inline-functions -fno-omit-frame-pointer
 
