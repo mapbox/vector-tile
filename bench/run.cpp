@@ -17,7 +17,7 @@ static void decode_entire_tile(std::string const& buffer) {
         for (std::size_t i=0;i<num_features;++i) {
             auto const feature = mapbox::vector_tile::feature(layer.getFeature(i),layer);
             auto const& feature_id = feature.getID();
-            if (!feature_id) {
+            if (feature_id.is<mapbox::feature::null_value_t>()) {
                 throw std::runtime_error("Hit unexpected error decoding feature");
             }
             auto props = feature.getProperties();

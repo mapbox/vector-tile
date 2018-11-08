@@ -12,7 +12,7 @@ DEMO_DIR:=./demo
 
 export BUILDTYPE ?= Release
 
-export GEOMETRY_RELEASE ?= 0.9.0
+export GEOMETRY_RELEASE ?= 1.0.0
 export PROTOZERO_RELEASE ?= 1.5.1
 export VARIANT_RELEASE ?= 1.1.4
 
@@ -28,7 +28,7 @@ HEADERS = $(wildcard include/mapbox/vector_tile/*.hpp) include/mapbox/vector_til
 
 ./.mason/mason:
 	mkdir ./.mason
-	curl -sSfL https://github.com/mapbox/mason/archive/v0.8.0.tar.gz | tar --gunzip --extract --strip-components=1 --exclude="*md" --exclude="test*" --directory=./.mason
+	curl -sSfL https://github.com/mapbox/mason/archive/v0.19.0.tar.gz | tar --gunzip --extract --strip-components=1 --exclude="*md" --exclude="test*" --directory=./.mason
 
 mason_packages/headers/protozero: .mason/mason
 	.mason/mason install protozero $(PROTOZERO_RELEASE) && .mason/mason link protozero $(PROTOZERO_RELEASE)
