@@ -17,15 +17,15 @@ std::string open_tile(std::string const& path) {
 class print_value {
 
 public:
-    std::string operator()(std::vector<mapbox::geometry::value> val) {
+    std::string operator()(std::vector<mapbox::feature::value> val) {
         return "vector";
     }
 
-    std::string operator()(std::unordered_map<std::string, mapbox::geometry::value> val) {
+    std::string operator()(std::unordered_map<std::string, mapbox::feature::value> val) {
         return "unordered_map";
     }
 
-    std::string operator()(mapbox::geometry::null_value_t val) {
+    std::string operator()(mapbox::feature::null_value_t val) {
         return "null";
     }
 
@@ -73,8 +73,8 @@ int main(int argc, char** argv) {
             for (std::size_t i=0;i<feature_count;++i) {
                 auto const feature = mapbox::vector_tile::feature(layer.getFeature(i),layer);
                 auto const& feature_id = feature.getID();
-                if (feature_id) {
-                    std::cout << "    id: " << (*feature_id).get<uint64_t>() << "\n";
+                if (feature_id.is<uint64_t>()) {
+                    std::cout << "    id: " << feature_id.get<uint64_t>() << "\n";
                 } else {
                     std::cout << "    id: (no id set)\n";
                 }
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
                     std::string value = mapbox::util::apply_visitor(printvisitor, prop.second);
                     std::cout << "      " << prop.first  << ": " << value << "\n";
                 }
-                std::cout << "    Verticies:\n";
+                std::cout << "    Vertices:\n";
                 mapbox::vector_tile::points_arrays_type geom = feature.getGeometries<mapbox::vector_tile::points_arrays_type>(1.0);
                 for (auto const& point_array : geom) {
                     for (auto const& point : point_array) {

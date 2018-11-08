@@ -2,6 +2,7 @@
 
 #include "vector_tile/vector_tile_config.hpp"
 #include <mapbox/geometry.hpp>
+#include <mapbox/feature.hpp>
 #include <protozero/pbf_reader.hpp>
 
 #include <cmath>
@@ -10,11 +11,6 @@
 #include <functional> // reference_wrapper
 #include <string>
 #include <stdexcept>
-
-#include <experimental/optional>
-
-template <typename T>
-using optional = std::experimental::optional<T>;
 
 namespace mapbox { namespace vector_tile {
 
@@ -38,15 +34,15 @@ class layer;
 
 class feature {
 public:
-    using properties_type = mapbox::geometry::property_map;
+    using properties_type = mapbox::feature::property_map;
     using packed_iterator_type = protozero::iterator_range<protozero::pbf_reader::const_uint32_iterator>;
 
     feature(protozero::data_view const&, layer const&);
 
     GeomType getType() const { return type; }
-    optional<mapbox::geometry::value> getValue(std::string const&) const;
+    mapbox::feature::value getValue(std::string const&) const;
     properties_type getProperties() const;
-    optional<mapbox::geometry::identifier> const& getID() const;
+    mapbox::feature::identifier const& getID() const;
     std::uint32_t getExtent() const;
     std::uint32_t getVersion() const;
     template <typename GeometryCollectionType>
@@ -54,7 +50,7 @@ public:
 
 private:
     const layer& layer_;
-    optional<mapbox::geometry::identifier> id;
+    mapbox::feature::identifier id;
     GeomType type = GeomType::UNKNOWN;
     packed_iterator_type tags_iter;
     packed_iterator_type geometry_iter;
@@ -93,8 +89,8 @@ private:
     std::map<std::string, const protozero::data_view> layers;
 };
 
-static mapbox::geometry::value parseValue(protozero::data_view const& value_view) {
-    mapbox::geometry::value value;
+static mapbox::feature::value parseValue(protozero::data_view const& value_view) {
+    mapbox::feature::value value;
     protozero::pbf_reader value_reader(value_view);
     while (value_reader.next())
     {
@@ -139,7 +135,7 @@ inline feature::feature(protozero::data_view const& feature_view, layer const& l
     while (feature_pbf.next()) {
         switch (feature_pbf.tag()) {
         case FeatureType::ID:
-            id = optional<mapbox::geometry::identifier>{ feature_pbf.get_uint64() };
+            id = feature_pbf.get_uint64();
             break;
         case FeatureType::TAGS:
             tags_iter = feature_pbf.get_packed_uint32();
@@ -157,10 +153,10 @@ inline feature::feature(protozero::data_view const& feature_view, layer const& l
     }
 }
 
-inline optional<mapbox::geometry::value> feature::getValue(const std::string& key) const {
+inline mapbox::feature::value feature::getValue(const std::string& key) const {
     auto keyIter = layer_.keysMap.find(key);
     if (keyIter == layer_.keysMap.end()) {
-        return optional<mapbox::geometry::value>();
+        return mapbox::feature::null_value;
     }
 
     const auto values_count = layer_.values.size();
@@ -188,7 +184,7 @@ inline optional<mapbox::geometry::value> feature::getValue(const std::string& ke
         }
     }
 
-    return optional<mapbox::geometry::value>();
+    return mapbox::feature::null_value;
 }
 
 inline feature::properties_type feature::getProperties() const {
@@ -210,7 +206,7 @@ inline feature::properties_type feature::getProperties() const {
     return properties;
 }
 
-inline optional<mapbox::geometry::identifier> const& feature::getID() const {
+inline mapbox::feature::identifier const& feature::getID() const {
     return id;
 }
 

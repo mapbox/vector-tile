@@ -26,9 +26,8 @@ static std::string open_tile(std::string const& path) {
     REQUIRE(layer.getName() == "layer_name"); \
     auto const feature = mapbox::vector_tile::feature(layer.getFeature(0),layer); \
     auto const& feature_id = feature.getID(); \
-    REQUIRE(feature_id); \
-    REQUIRE((*feature_id).is<uint64_t>()); \
-    REQUIRE((*feature_id).get<uint64_t>() == 123ull); \
+    REQUIRE(feature_id.is<uint64_t>()); \
+    REQUIRE(feature_id.get<uint64_t>() == 123ull); \
     auto props = feature.getProperties(); \
     auto itr = props.find("hello"); \
     REQUIRE(itr != props.end()); \
@@ -36,9 +35,8 @@ static std::string open_tile(std::string const& path) {
     REQUIRE(val.is<std::string>()); \
     REQUIRE(val.get<std::string>() == "world"); \
     auto opt_val = feature.getValue("hello"); \
-    REQUIRE(opt_val); \
-    REQUIRE(opt_val->is<std::string>()); \
-    REQUIRE(opt_val->get<std::string>() == "world"); \
+    REQUIRE(opt_val.is<std::string>()); \
+    REQUIRE(opt_val.get<std::string>() == "world"); \
     mapbox::vector_tile::points_arrays_type geom = feature.getGeometries<mapbox::vector_tile::points_arrays_type>(1.0);
 
 std::string stringify_geom(mapbox::vector_tile::points_arrays_type const& geom) {
