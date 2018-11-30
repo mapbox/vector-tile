@@ -41,7 +41,7 @@ public:
 
     GeomType getType() const { return type; }
     mapbox::feature::value getValue(std::string const&) const;
-    properties_type getProperties() const;
+    properties_type const& getProperties() const;
     mapbox::feature::identifier const& getID() const;
     std::uint32_t getExtent() const;
     std::uint32_t getVersion() const;
@@ -54,6 +54,8 @@ private:
     GeomType type = GeomType::UNKNOWN;
     packed_iterator_type tags_iter;
     packed_iterator_type geometry_iter;
+    mutable properties_type properties;
+    mutable bool properties_initialized = false;
 };
 
 class layer {
@@ -154,43 +156,22 @@ inline feature::feature(protozero::data_view const& feature_view, layer const& l
 }
 
 inline mapbox::feature::value feature::getValue(const std::string& key) const {
-    auto keyIter = layer_.keysMap.find(key);
-    if (keyIter == layer_.keysMap.end()) {
+    const properties_type& properties_ = getProperties();
+    const auto pair = properties_.find(key);
+    if (pair == properties_.cend()) {
         return mapbox::feature::null_value;
     }
 
-    const auto values_count = layer_.values.size();
-    const auto keymap_count = layer_.keysMap.size();
-    auto start_itr = tags_iter.begin();
-    const auto end_itr = tags_iter.end();
-    while (start_itr != end_itr) {
-        std::uint32_t tag_key = static_cast<std::uint32_t>(*start_itr++);
-
-        if (keymap_count <= tag_key) {
-            throw std::runtime_error("feature referenced out of range key");
-        }
-
-        if (start_itr == end_itr) {
-            throw std::runtime_error("uneven number of feature tag ids");
-        }
-
-        std::uint32_t tag_val = static_cast<std::uint32_t>(*start_itr++);;
-        if (values_count <= tag_val) {
-            throw std::runtime_error("feature referenced out of range value");
-        }
-
-        if (tag_key == keyIter->second) {
-            return parseValue(layer_.values[tag_val]);
-        }
-    }
-
-    return mapbox::feature::null_value;
+    return pair->second;
 }
 
-inline feature::properties_type feature::getProperties() const {
+inline feature::properties_type const& feature::getProperties() const {
+    if (properties_initialized) {
+        return properties;
+    }
+
     auto start_itr = tags_iter.begin();
     const auto end_itr = tags_iter.end();
-    properties_type properties;
     auto iter_len = std::distance(start_itr,end_itr);
     if (iter_len > 0) {
         properties.reserve(static_cast<std::size_t>(iter_len/2));
@@ -203,6 +184,7 @@ inline feature::properties_type feature::getProperties() const {
             properties.emplace(layer_.keys.at(tag_key),parseValue(layer_.values.at(tag_val)));
         }
     }
+    properties_initialized = true;
     return properties;
 }
 
