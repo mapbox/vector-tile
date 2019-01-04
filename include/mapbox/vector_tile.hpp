@@ -301,7 +301,7 @@ GeometryCollectionType feature::getGeometries(float scale) const {
                 py > max_coord ||
                 py < min_coord
                 ) {
-                std::runtime_error("paths outside valid range of coordinate_type");
+                throw std::runtime_error("paths outside valid range of coordinate_type");
             } else {
                 paths.back().emplace_back(
                     static_cast<typename GeometryCollectionType::coordinate_type>(px),
