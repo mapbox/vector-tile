@@ -154,21 +154,11 @@ inline feature::feature(protozero::data_view const& feature_view, layer const& l
 }
 
 inline mapbox::feature::value feature::getValue(const std::string& key) const {
-    auto keyIter = layer_.keysMap.find(key);
-    if (keyIter == layer_.keysMap.end()) {
-        return mapbox::feature::null_value;
-    }
-
     const auto values_count = layer_.values.size();
-    const auto keymap_count = layer_.keysMap.size();
     auto start_itr = tags_iter.begin();
     const auto end_itr = tags_iter.end();
     while (start_itr != end_itr) {
         std::uint32_t tag_key = static_cast<std::uint32_t>(*start_itr++);
-
-        if (keymap_count <= tag_key) {
-            throw std::runtime_error("feature referenced out of range key");
-        }
 
         if (start_itr == end_itr) {
             throw std::runtime_error("uneven number of feature tag ids");
@@ -179,7 +169,7 @@ inline mapbox::feature::value feature::getValue(const std::string& key) const {
             throw std::runtime_error("feature referenced out of range value");
         }
 
-        if (tag_key == keyIter->second) {
+        if (layer_.keys.at(tag_key).get() == key) {
             return parseValue(layer_.values[tag_val]);
         }
     }
