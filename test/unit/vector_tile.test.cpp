@@ -112,3 +112,13 @@ TEST_CASE( "Prevent massive over allocation" ) {
     mapbox::vector_tile::points_arrays_type geom = feature.getGeometries<mapbox::vector_tile::points_arrays_type>(1.0);
     REQUIRE(geom.capacity() <= 655360);
 }
+
+TEST_CASE( "Handle layer with duplicate keys" ) {
+    std::string buffer = open_tile("test/test047.mvt");
+    mapbox::vector_tile::buffer tile(buffer);
+    auto const layer = tile.getLayer("hello");
+    auto const feature = mapbox::vector_tile::feature(layer.getFeature(0),layer);
+    auto opt_val = feature.getValue("type"); \
+    REQUIRE(opt_val.is<std::string>()); \
+    REQUIRE(opt_val.get<std::string>() == "lake"); \
+}
