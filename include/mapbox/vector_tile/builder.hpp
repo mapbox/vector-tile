@@ -9,8 +9,9 @@ namespace mapbox {
 namespace vector_tile {
 
 template <typename T>
-vtzero::point_2d convert(mapbox::geometry::point<T> pt) {
-    return {static_cast<int32_t>(pt.x) , static_cast<int32_t>(pt.y)};
+vtzero::point_2d convert(mapbox::geometry::point<T> pt)
+{
+    return {static_cast<int32_t>(pt.x), static_cast<int32_t>(pt.y)};
 }
 
 template <typename FeatureBuilder>
@@ -149,7 +150,8 @@ struct feature_builder_visitor
         builder_type fbuilder{lbuilder};
         mapbox::util::apply_visitor(id_visitor<builder_type>(fbuilder), id);
         fbuilder.add_points(static_cast<uint32_t>(mp.size()));
-        for (auto const& pt : mp) {
+        for (auto const& pt : mp)
+        {
             fbuilder.set_point(convert(pt));
         }
         set_properties(fbuilder, prop);

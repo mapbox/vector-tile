@@ -34,7 +34,6 @@ struct point_geometry_handler
     void points_end()
     {
     }
-
 };
 
 template <typename CoordinateType>
