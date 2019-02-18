@@ -61,7 +61,8 @@ TEST_CASE("Encode feature")
                 REQUIRE(l.second.size() == 1);
                 for (auto const& f : l.second)
                 {
-                    REQUIRE(f.id.is<mapbox::feature::null_value_t>());
+                    REQUIRE(f.id.is<std::uint64_t>());
+                    CHECK(f.id.get<std::uint64_t>() == 18446744073709551606ULL);
                     REQUIRE(f.geometry.is<mapbox::geometry::point<std::int64_t>>());
                     prop_out = f.properties;
                     pt_out = f.geometry.get<mapbox::geometry::point<std::int64_t>>();
