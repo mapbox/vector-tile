@@ -3,6 +3,7 @@
 #include <mapbox/geometry.hpp>
 #include <mapbox/feature.hpp>
 #include <mapbox/vector_tile/handlers.hpp>
+#include <mapbox/vector_tile/attribute_handler.hpp>
 #include <mapbox/vector_tile/property_map.hpp>
 #include <vtzero/vector_tile.hpp>
 
@@ -29,19 +30,19 @@ mapbox::geometry::geometry<CoordinateType> extract_geometry(vtzero::feature cons
 
 inline mapbox::feature::property_map extract_properties(vtzero::feature const& f)
 {
-    mapbox::feature::property_map map;
-    f.for_each_property([&](vtzero::property&& p) {
-        map.emplace(std::string(p.key()), vtzero::convert_property_value<mapbox::feature::value, detail::property_value_mapping>(p.value()));
-        return true;
-    });
-    return map;
+    detail::AttributeHandler handler(f);
+    return f.decode_attributes(handler);
 }
 
 inline mapbox::feature::identifier extract_id(vtzero::feature const& f)
 {
-    if (f.has_id())
+    if (f.has_string_id())
     {
-        return mapbox::feature::identifier(f.id());
+        return mapbox::feature::identifier(std::string(f.string_id()));
+    }
+    else if (f.has_integer_id())
+    {
+        return mapbox::feature::identifier(f.integer_id());
     }
     else
     {
@@ -63,10 +64,10 @@ layer_map<CoordinateType> decode_tile(std::string const& buffer)
 {
     layer_map<CoordinateType> m;
     vtzero::vector_tile tile(buffer);
-    while (auto layer = tile.next_layer())
+    for (auto layer : tile)
     {
         mapbox::feature::feature_collection<CoordinateType> fc;
-        while (auto feature = layer.next_feature())
+        for (auto feature : layer)
         {
             auto f = extract_feature<CoordinateType>(feature);
             if (!f.geometry.template is<mapbox::geometry::empty>())

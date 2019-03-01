@@ -35,13 +35,13 @@ include_directories(SYSTEM ${MASON_PACKAGE_benchmark_INCLUDE_DIRS})
 mason_use(variant VERSION 1.1.5 HEADER_ONLY)
 include_directories(SYSTEM ${MASON_PACKAGE_variant_INCLUDE_DIRS})
 
-mason_use(vtzero VERSION 7adde32 HEADER_ONLY)
+mason_use(vtzero VERSION 1b89523 HEADER_ONLY)
 include_directories(SYSTEM ${MASON_PACKAGE_vtzero_INCLUDE_DIRS})
 
 mason_use(geometry VERSION 1.0.0 HEADER_ONLY)
 include_directories(SYSTEM ${MASON_PACKAGE_geometry_INCLUDE_DIRS})
 
-mason_use(protozero VERSION 1.6.0 HEADER_ONLY)
+mason_use(protozero VERSION 1.6.5 HEADER_ONLY)
 include_directories(SYSTEM ${MASON_PACKAGE_protozero_INCLUDE_DIRS})
 
 include_directories("${PROJECT_SOURCE_DIR}/include")

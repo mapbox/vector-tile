@@ -10,6 +10,8 @@ namespace detail {
 template <typename CoordinateType>
 struct point_geometry_handler
 {
+    constexpr static const int dimensions = 2;
+    constexpr static const unsigned int max_geometric_attributes = 0;
 
     using geom_type = mapbox::geometry::multi_point<CoordinateType>;
 
@@ -24,7 +26,7 @@ struct point_geometry_handler
         geom_.reserve(count);
     }
 
-    void points_point(const vtzero::point pt)
+    void points_point(const vtzero::point_2d pt)
     {
         geom_.emplace_back(pt.x, pt.y);
     }
@@ -39,7 +41,7 @@ mapbox::geometry::geometry<CoordinateType> extract_geometry_point(vtzero::featur
 {
 
     mapbox::geometry::multi_point<CoordinateType> mp;
-    vtzero::decode_point_geometry(f.geometry(), detail::point_geometry_handler<CoordinateType>(mp));
+    f.decode_point_geometry(detail::point_geometry_handler<CoordinateType>(mp));
     if (mp.empty())
     {
         return mapbox::geometry::geometry<CoordinateType>();
@@ -58,6 +60,8 @@ mapbox::geometry::geometry<CoordinateType> extract_geometry_point(vtzero::featur
 template <typename CoordinateType>
 struct line_string_geometry_handler
 {
+    constexpr static const int dimensions = 2;
+    constexpr static const unsigned int max_geometric_attributes = 0;
 
     using geom_type = mapbox::geometry::multi_line_string<CoordinateType>;
 
@@ -73,7 +77,7 @@ struct line_string_geometry_handler
         geom_.back().reserve(count);
     }
 
-    void linestring_point(const vtzero::point pt)
+    void linestring_point(const vtzero::point_2d pt)
     {
         geom_.back().emplace_back(pt.x, pt.y);
     }
@@ -98,6 +102,8 @@ struct polygon_ring
 template <typename CoordinateType>
 struct polygon_geometry_handler
 {
+    constexpr static const int dimensions = 2;
+    constexpr static const unsigned int max_geometric_attributes = 0;
 
     using geom_type = std::vector<polygon_ring<CoordinateType>>;
 
@@ -113,7 +119,7 @@ struct polygon_geometry_handler
         geom_.back().ring.reserve(count);
     }
 
-    void ring_point(const vtzero::point pt)
+    void ring_point(const vtzero::point_2d pt)
     {
         geom_.back().ring.emplace_back(pt.x, pt.y);
     }
@@ -129,7 +135,7 @@ mapbox::geometry::geometry<CoordinateType> extract_geometry_polygon(vtzero::feat
 {
 
     std::vector<polygon_ring<CoordinateType>> rings;
-    vtzero::decode_polygon_geometry(f.geometry(), detail::polygon_geometry_handler<CoordinateType>(rings));
+    f.decode_polygon_geometry(detail::polygon_geometry_handler<CoordinateType>(rings));
     if (rings.empty())
     {
         return mapbox::geometry::geometry<CoordinateType>();
@@ -169,7 +175,7 @@ mapbox::geometry::geometry<CoordinateType> extract_geometry_line_string(vtzero::
 {
 
     mapbox::geometry::multi_line_string<CoordinateType> mls;
-    vtzero::decode_linestring_geometry(f.geometry(), detail::line_string_geometry_handler<CoordinateType>(mls));
+    f.decode_linestring_geometry(detail::line_string_geometry_handler<CoordinateType>(mls));
     if (mls.empty())
     {
         return mapbox::geometry::geometry<CoordinateType>();

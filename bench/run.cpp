@@ -29,12 +29,12 @@ static void BM_decode_polygon_fixture(benchmark::State& state) // NOLINT google-
 {
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/019/tile.mvt");
     vtzero::vector_tile tile(buffer);
-    auto layer = tile.next_layer();
-    auto feature = layer.next_feature();
+    auto layer = tile.begin();
+    auto feature = (*layer).begin();
 
     while (state.KeepRunning())
     {
-        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
+        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(*feature));
     }
 }
 
@@ -47,12 +47,12 @@ static void BM_decode_multipolygon_fixture(benchmark::State& state) // NOLINT go
 {
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/022/tile.mvt");
     vtzero::vector_tile tile(buffer);
-    auto layer = tile.next_layer();
-    auto feature = layer.next_feature();
+    auto layer = tile.begin();
+    auto feature = (*layer).begin();
 
     while (state.KeepRunning())
     {
-        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
+        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(*feature));
     }
 }
 
@@ -65,12 +65,12 @@ static void BM_decode_multilinestring_fixture(benchmark::State& state) // NOLINT
 {
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/021/tile.mvt");
     vtzero::vector_tile tile(buffer);
-    auto layer = tile.next_layer();
-    auto feature = layer.next_feature();
+    auto layer = tile.begin();
+    auto feature = (*layer).begin();
 
     while (state.KeepRunning())
     {
-        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
+        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(*feature));
     }
 }
 
@@ -83,12 +83,12 @@ static void BM_decode_linestring_fixture(benchmark::State& state) // NOLINT goog
 {
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/018/tile.mvt");
     vtzero::vector_tile tile(buffer);
-    auto layer = tile.next_layer();
-    auto feature = layer.next_feature();
+    auto layer = tile.begin();
+    auto feature = (*layer).begin();
 
     while (state.KeepRunning())
     {
-        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
+        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(*feature));
     }
 }
 
@@ -101,12 +101,12 @@ static void BM_decode_multipoint_fixture(benchmark::State& state) // NOLINT goog
 {
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/020/tile.mvt");
     vtzero::vector_tile tile(buffer);
-    auto layer = tile.next_layer();
-    auto feature = layer.next_feature();
+    auto layer = tile.begin();
+    auto feature = (*layer).begin();
 
     while (state.KeepRunning())
     {
-        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
+        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(*feature));
     }
 }
 
@@ -119,12 +119,12 @@ static void BM_decode_point_fixture(benchmark::State& state) // NOLINT google-ru
 {
     std::string buffer = open_tile("test/mvt-fixtures/fixtures/017/tile.mvt");
     vtzero::vector_tile tile(buffer);
-    auto layer = tile.next_layer();
-    auto feature = layer.next_feature();
+    auto layer = tile.begin();
+    auto feature = (*layer).begin();
 
     while (state.KeepRunning())
     {
-        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
+        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(*feature));
     }
 }
 
@@ -186,12 +186,12 @@ static void BM_decode_polygon(benchmark::State& state) // NOLINT google-runtime-
     }
 
     vtzero::vector_tile tile(buffer);
-    auto layer = tile.next_layer();
-    auto feature = layer.next_feature();
+    auto layer = tile.begin();
+    auto feature = (*layer).begin();
 
     while (state.KeepRunning())
     {
-        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(feature));
+        benchmark::DoNotOptimize(mapbox::vector_tile::extract_geometry<CoordinateType>(*feature));
     }
     // sets a simple counter
     state.counters["Points"] = num_points;
