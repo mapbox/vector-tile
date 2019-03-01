@@ -27,9 +27,9 @@ struct AttributeHandler
     vtzero::layer const& layer;
     handler_store* active;
 
-    AttributeHandler(vtzero::layer const& layer_)
+    AttributeHandler(vtzero::feature const& feature)
         : stack(),
-          layer(layer_),
+          layer(feature.get_layer()),
           active()
     {
         stack.push_back({std::make_unique<map_type>(), nullptr, {}, nullptr, true});

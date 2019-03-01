@@ -28,9 +28,9 @@ mapbox::geometry::geometry<CoordinateType> extract_geometry(vtzero::feature cons
     }
 }
 
-inline mapbox::feature::property_map extract_properties(vtzero::feature const& f, vtzero::layer const& l)
+inline mapbox::feature::property_map extract_properties(vtzero::feature const& f)
 {
-    detail::AttributeHandler handler(l);
+    detail::AttributeHandler handler(f);
     return f.decode_attributes(handler);
 }
 
@@ -51,9 +51,9 @@ inline mapbox::feature::identifier extract_id(vtzero::feature const& f)
 }
 
 template <typename CoordinateType>
-mapbox::feature::feature<CoordinateType> extract_feature(vtzero::feature const& f, vtzero::layer const& l)
+mapbox::feature::feature<CoordinateType> extract_feature(vtzero::feature const& f)
 {
-    return mapbox::feature::feature<CoordinateType>(extract_geometry<CoordinateType>(f), extract_properties(f, l), extract_id(f));
+    return mapbox::feature::feature<CoordinateType>(extract_geometry<CoordinateType>(f), extract_properties(f), extract_id(f));
 }
 
 template <typename CoordinateType>
@@ -69,7 +69,7 @@ layer_map<CoordinateType> decode_tile(std::string const& buffer)
         mapbox::feature::feature_collection<CoordinateType> fc;
         for (auto feature : layer)
         {
-            auto f = extract_feature<CoordinateType>(feature, layer);
+            auto f = extract_feature<CoordinateType>(feature);
             if (!f.geometry.template is<mapbox::geometry::empty>())
             {
                 fc.push_back(std::move(f));
