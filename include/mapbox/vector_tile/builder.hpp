@@ -59,7 +59,11 @@ struct value_visitor
 
     void operator()(std::int64_t const& val)
     {
-        fbuilder.add_property(key, vtzero::int_value_type{val});
+        if (val >= 0) {
+            fbuilder.add_property(key, vtzero::int_value_type{val});
+        } else {
+            fbuilder.add_property(key, vtzero::sint_value_type{val});
+        }
     }
 
     void operator()(double const& val)
