@@ -257,6 +257,13 @@ GeometryCollectionType feature::getGeometries(float scale) const {
             }
         }
 
+        if (length == 0) {
+            // If length is still equal to zero after the preceding step,
+            // this represents a tile with no draw commands and we continue here to
+            // exit appropriately rather than undeflow when we decrement length
+            continue;
+        }
+
         --length;
 
         if (cmd == CommandType::MOVE_TO || cmd == CommandType::LINE_TO) {
