@@ -1,5 +1,13 @@
 # Changelog
 
+# 1.0.4
+
+- Limit rare situation where a feature with no commands would trigger an underflow while decoding a vetor tile's geometry.
+
+# 1.0.3
+
+- Support for geometry v1.0.0
+
 ## 1.0.2
 
 - Add support for QNX 7 compiler.
