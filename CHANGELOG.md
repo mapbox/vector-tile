@@ -2,7 +2,7 @@
 
 # 1.0.4
 
-- Limit rare situation where a feature with no commands would trigger an underflow while decoding a vetor tile's geometry.
+- Prevent rare situation where a feature with a command count of 0 would trigger an underflow while decoding a vector tile's geometry.
 
 # 1.0.3
 

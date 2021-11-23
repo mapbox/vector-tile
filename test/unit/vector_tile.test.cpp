@@ -113,7 +113,7 @@ TEST_CASE( "Prevent massive over allocation" ) {
     REQUIRE(geom.capacity() <= 655360);
 }
 
-TEST_CASE(" Prevent underflow in case of missing commands" ) {
+TEST_CASE( "Prevent underflow in case of LineTo with 0 command count" ) {
     std::string buffer = open_tile("test/test2048.mvt");
     mapbox::vector_tile::buffer tile(buffer);
     auto const layer_names = tile.layerNames();
@@ -124,7 +124,7 @@ TEST_CASE(" Prevent underflow in case of missing commands" ) {
     for (std::size_t i = 0; i < layer.featureCount(); ++i) {
         auto const feature = mapbox::vector_tile::feature(layer.getFeature(i), layer);
         REQUIRE(feature.getType() == mapbox::vector_tile::GeomType::LINESTRING);
-        mapbox::vector_tile::points_arrays_type geom = feature.getGeometries<mapbox::vector_tile::points_arrays_type>(1.0);
+        auto geom = feature.getGeometries<mapbox::vector_tile::points_arrays_type>(1.0);
         REQUIRE(!geom.empty());
     }
 }
