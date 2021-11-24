@@ -257,9 +257,15 @@ GeometryCollectionType feature::getGeometries(float scale) const {
             }
         }
 
-        --length;
-
         if (cmd == CommandType::MOVE_TO || cmd == CommandType::LINE_TO) {
+            if (length == 0) {
+                // If length is still equal to zero after the preceding step, this
+                // represents a command with an invalid command count, so we continue here to
+                // exit appropriately rather than underflow when we decrement length
+                continue;
+            }
+
+            --length;
 
             if (is_point) {
                 if (first && cmd == CommandType::MOVE_TO) {
