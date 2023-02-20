@@ -40,7 +40,7 @@ public:
     feature(protozero::data_view const&, layer const&);
 
     GeomType getType() const { return type; }
-    mapbox::feature::value getValue(std::string const&) const;
+    mapbox::feature::value getValue(std::string const&, std::string* message = nullptr) const;
     properties_type getProperties() const;
     mapbox::feature::identifier const& getID() const;
     std::uint32_t getExtent() const;
@@ -72,8 +72,8 @@ private:
     std::string name;
     std::uint32_t version;
     std::uint32_t extent;
-    std::map<std::string, std::uint32_t> keysMap;
-    std::vector<std::reference_wrapper<const std::string>> keys;
+    std::multimap<std::string, std::uint32_t> keysMap;
+    std::vector<const std::string> keys;
     std::vector<protozero::data_view> values;
     std::vector<protozero::data_view> features;
 };
@@ -153,22 +153,20 @@ inline feature::feature(protozero::data_view const& feature_view, layer const& l
     }
 }
 
-inline mapbox::feature::value feature::getValue(const std::string& key) const {
-    auto keyIter = layer_.keysMap.find(key);
-    if (keyIter == layer_.keysMap.end()) {
+inline mapbox::feature::value feature::getValue(const std::string& key, std::string* message) const {
+    const auto key_count = layer_.keysMap.count(key);
+    if (key_count < 1) {
         return mapbox::feature::null_value;
     }
 
     const auto values_count = layer_.values.size();
-    const auto keymap_count = layer_.keysMap.size();
+    const auto key_range = layer_.keysMap.equal_range(key);
     auto start_itr = tags_iter.begin();
+    auto start_key = static_cast<std::uint32_t>(*start_itr);
     const auto end_itr = tags_iter.end();
     while (start_itr != end_itr) {
-        std::uint32_t tag_key = static_cast<std::uint32_t>(*start_itr++);
-
-        if (keymap_count <= tag_key) {
-            throw std::runtime_error("feature referenced out of range key");
-        }
+        std::uint32_t tag_key = static_cast<std::uint32_t>(*start_itr);
+        start_itr++;
 
         if (start_itr == end_itr) {
             throw std::runtime_error("uneven number of feature tag ids");
@@ -179,7 +177,19 @@ inline mapbox::feature::value feature::getValue(const std::string& key) const {
             throw std::runtime_error("feature referenced out of range value");
         }
 
-        if (tag_key == keyIter->second) {
+        bool key_found = false;
+        for (auto i = key_range.first; i != key_range.second; ++i) {
+            if (i->second == tag_key) {
+                key_found = true;
+                break;
+            }
+        }
+
+        if (key_found) {
+            // Continue process with case when same keys having multiple tag ids.
+            if (key_count > 1 && message) {
+                *message = std::string("duplicate keys with different tag ids are found");
+            }
             return parseValue(layer_.values[tag_val]);
         }
     }
@@ -403,8 +413,9 @@ inline layer::layer(protozero::data_view const& layer_view) :
             {
                 // We want to keep the keys in the order of the vector tile
                 // https://github.com/mapbox/mapbox-gl-native/pull/5183
-                auto iter = keysMap.emplace(layer_pbf.get_string(), keysMap.size());
-                keys.emplace_back(std::reference_wrapper<const std::string>(iter.first->first));
+                auto val = layer_pbf.get_string();
+                keysMap.emplace(val, keys.size());
+                keys.emplace_back(val);
             }
             break;
         case LayerType::VALUES:
