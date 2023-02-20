@@ -40,7 +40,23 @@ public:
     feature(protozero::data_view const&, layer const&);
 
     GeomType getType() const { return type; }
-    mapbox::feature::value getValue(std::string const&, std::string* message = nullptr) const;
+    /**
+     * Retrieve the value associated with a given key from the feature.
+     *
+     * @param key The key used to look up the corresponding value.
+     * @param duplicate_error A pointer to a string that may be used to record the error message 
+     *                       that occur during the lookup process when duplicate keys are found. 
+     *                       The caller is responsible for managing the memory of this string.
+     * @return The value associated with the specified key, or a null value if the key is not found.
+     *
+     * Note: If the lookup process encounters a duplicate key in the feature, 
+     *       the function will return the value associated with the first occurrence of the key, 
+     *       and will append an error message to the `duplicate_error` string (if provided) 
+     *       to alert the caller to the presence of the duplicate key. 
+     *       The caller should ensure that the `duplicate_error` string is properly initialized 
+     *       and cleaned up after use.
+     */
+    mapbox::feature::value getValue(std::string const&, std::string* duplicate_error = nullptr) const;
     properties_type getProperties() const;
     mapbox::feature::identifier const& getID() const;
     std::uint32_t getExtent() const;
@@ -73,7 +89,7 @@ private:
     std::uint32_t version;
     std::uint32_t extent;
     std::multimap<std::string, std::uint32_t> keysMap;
-    std::vector<const std::string> keys;
+    std::vector<std::reference_wrapper<const std::string>> keys;
     std::vector<protozero::data_view> values;
     std::vector<protozero::data_view> features;
 };
@@ -153,7 +169,7 @@ inline feature::feature(protozero::data_view const& feature_view, layer const& l
     }
 }
 
-inline mapbox::feature::value feature::getValue(const std::string& key, std::string* message) const {
+inline mapbox::feature::value feature::getValue(const std::string& key, std::string* duplicate_error ) const {
     const auto key_count = layer_.keysMap.count(key);
     if (key_count < 1) {
         return mapbox::feature::null_value;
@@ -162,11 +178,9 @@ inline mapbox::feature::value feature::getValue(const std::string& key, std::str
     const auto values_count = layer_.values.size();
     const auto key_range = layer_.keysMap.equal_range(key);
     auto start_itr = tags_iter.begin();
-    auto start_key = static_cast<std::uint32_t>(*start_itr);
     const auto end_itr = tags_iter.end();
     while (start_itr != end_itr) {
-        std::uint32_t tag_key = static_cast<std::uint32_t>(*start_itr);
-        start_itr++;
+        std::uint32_t tag_key = static_cast<std::uint32_t>(*start_itr++);
 
         if (start_itr == end_itr) {
             throw std::runtime_error("uneven number of feature tag ids");
@@ -187,8 +201,8 @@ inline mapbox::feature::value feature::getValue(const std::string& key, std::str
 
         if (key_found) {
             // Continue process with case when same keys having multiple tag ids.
-            if (key_count > 1 && message) {
-                *message = std::string("duplicate keys with different tag ids are found");
+            if (key_count > 1 && duplicate_error) {
+                *duplicate_error = std::string("duplicate keys with different tag ids are found");
             }
             return parseValue(layer_.values[tag_val]);
         }
@@ -413,9 +427,8 @@ inline layer::layer(protozero::data_view const& layer_view) :
             {
                 // We want to keep the keys in the order of the vector tile
                 // https://github.com/mapbox/mapbox-gl-native/pull/5183
-                auto val = layer_pbf.get_string();
-                keysMap.emplace(val, keys.size());
-                keys.emplace_back(val);
+                auto iter = keysMap.emplace(layer_pbf.get_string(), keys.size());
+                keys.emplace_back(std::reference_wrapper<const std::string>(iter->first));
             }
             break;
         case LayerType::VALUES:
