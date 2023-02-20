@@ -40,7 +40,23 @@ public:
     feature(protozero::data_view const&, layer const&);
 
     GeomType getType() const { return type; }
-    mapbox::feature::value getValue(std::string const&) const;
+    /**
+     * Retrieve the value associated with a given key from the feature.
+     *
+     * @param key The key used to look up the corresponding value.
+     * @param warning  A pointer to a string that may be used to record any warnings that
+ *                     occur during the lookup process.
+     *                 The caller is responsible for managing the memory of this string.
+     * @return The value associated with the specified key, or a null value if the key is not found.
+     *
+     * Note: If the lookup process encounters a duplicate key in the feature, the function will
+     *       return the value in the `values` set to which the associated tag index points to, and 
+     *       will append a message to the `warning` string (if provided) to alert the caller to the
+     *       presence of the duplicate key. 
+     *       The caller should ensure that the `warning` string is properly initialized
+     *       and cleaned up after use.
+     */
+    mapbox::feature::value getValue(std::string const&, std::string* warning = nullptr) const;
     properties_type getProperties() const;
     mapbox::feature::identifier const& getID() const;
     std::uint32_t getExtent() const;
@@ -72,7 +88,7 @@ private:
     std::string name;
     std::uint32_t version;
     std::uint32_t extent;
-    std::map<std::string, std::uint32_t> keysMap;
+    std::multimap<std::string, std::uint32_t> keysMap;
     std::vector<std::reference_wrapper<const std::string>> keys;
     std::vector<protozero::data_view> values;
     std::vector<protozero::data_view> features;
@@ -153,22 +169,18 @@ inline feature::feature(protozero::data_view const& feature_view, layer const& l
     }
 }
 
-inline mapbox::feature::value feature::getValue(const std::string& key) const {
-    auto keyIter = layer_.keysMap.find(key);
-    if (keyIter == layer_.keysMap.end()) {
+inline mapbox::feature::value feature::getValue(const std::string& key, std::string* warning ) const {
+    const auto key_range = layer_.keysMap.equal_range(key);
+    const auto key_count = std::distance(key_range.first, key_range.second) ;
+    if (key_count < 1) {
         return mapbox::feature::null_value;
     }
 
     const auto values_count = layer_.values.size();
-    const auto keymap_count = layer_.keysMap.size();
     auto start_itr = tags_iter.begin();
     const auto end_itr = tags_iter.end();
     while (start_itr != end_itr) {
         std::uint32_t tag_key = static_cast<std::uint32_t>(*start_itr++);
-
-        if (keymap_count <= tag_key) {
-            throw std::runtime_error("feature referenced out of range key");
-        }
 
         if (start_itr == end_itr) {
             throw std::runtime_error("uneven number of feature tag ids");
@@ -179,7 +191,19 @@ inline mapbox::feature::value feature::getValue(const std::string& key) const {
             throw std::runtime_error("feature referenced out of range value");
         }
 
-        if (tag_key == keyIter->second) {
+        bool key_found = false;
+        for (auto i = key_range.first; i != key_range.second; ++i) {
+            if (i->second == tag_key) {
+                key_found = true;
+                break;
+            }
+        }
+
+        if (key_found) {
+            // Continue process with case when same keys having multiple tag ids.
+            if (key_count > 1 && warning) {
+                *warning = std::string("duplicate keys with different tag ids are found");
+            }
             return parseValue(layer_.values[tag_val]);
         }
     }
@@ -403,8 +427,8 @@ inline layer::layer(protozero::data_view const& layer_view) :
             {
                 // We want to keep the keys in the order of the vector tile
                 // https://github.com/mapbox/mapbox-gl-native/pull/5183
-                auto iter = keysMap.emplace(layer_pbf.get_string(), keysMap.size());
-                keys.emplace_back(std::reference_wrapper<const std::string>(iter.first->first));
+                auto iter = keysMap.emplace(layer_pbf.get_string(), keys.size());
+                keys.emplace_back(std::reference_wrapper<const std::string>(iter->first));
             }
             break;
         case LayerType::VALUES:

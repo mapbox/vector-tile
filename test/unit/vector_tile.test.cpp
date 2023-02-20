@@ -128,3 +128,29 @@ TEST_CASE( "Prevent underflow in case of LineTo with 0 command count" ) {
         REQUIRE(!geom.empty());
     }
 }
+
+TEST_CASE( "Allow multiple keys mapping to different tag ids" ) {
+    // duplicate key 'hello' and duplicate value 'world'
+    std::string buffer = open_tile("test/duplicate-keys-values.mvt");
+    mapbox::vector_tile::buffer tile(buffer);
+    auto const layer_names = tile.layerNames();
+    REQUIRE(layer_names.size() == 1);
+    REQUIRE(layer_names[0] == "duplicates");
+    auto const layer = tile.getLayer("duplicates");
+    REQUIRE(layer.featureCount() == 1);
+    auto const feature = mapbox::vector_tile::feature(layer.getFeature(0), layer);
+    REQUIRE(feature.getType() == mapbox::vector_tile::GeomType::POLYGON);
+
+    std::string error;
+    auto const val = feature.getValue("hello", &error);
+    REQUIRE(!error.empty());
+    REQUIRE(error == "duplicate keys with different tag ids are found");
+    REQUIRE(val.is<std::string>());
+    REQUIRE(val.get<std::string>() == "world");
+    error.clear();
+    REQUIRE(error.empty());
+    auto const val1 = feature.getValue("unique", &error);
+    REQUIRE(error.empty());
+    REQUIRE(val1.is<std::string>());
+    REQUIRE(val1.get<std::string>() == "single_value");
+}
