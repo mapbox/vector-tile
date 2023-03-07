@@ -128,3 +128,19 @@ TEST_CASE( "Prevent underflow in case of LineTo with 0 command count" ) {
         REQUIRE(!geom.empty());
     }
 }
+
+TEST_CASE( "Allow multiple keys mapping to different tag ids" ) {
+    std::string buffer = open_tile("test/test-duplicate-keys.mvt");
+    mapbox::vector_tile::buffer tile(buffer);
+    auto const layer_names = tile.layerNames();
+    REQUIRE(layer_names.size() == 1);
+    REQUIRE(layer_names[0] == "multimodal");
+    auto const layer = tile.getLayer("multimodal");
+    REQUIRE(layer.featureCount() == 20);
+    auto const feature = mapbox::vector_tile::feature(layer.getFeature(0), layer);
+    REQUIRE(feature.getType() == mapbox::vector_tile::GeomType::POLYGON);
+    std::string error;
+    feature.getValue("spec", &error);
+    REQUIRE(!error.empty());
+    REQUIRE(error == "duplicate keys with different tag ids are found");
+}
