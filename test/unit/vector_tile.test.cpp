@@ -140,7 +140,9 @@ TEST_CASE( "Allow multiple keys mapping to different tag ids" ) {
     auto const feature = mapbox::vector_tile::feature(layer.getFeature(0), layer);
     REQUIRE(feature.getType() == mapbox::vector_tile::GeomType::POLYGON);
     std::string error;
-    feature.getValue("spec", &error);
+    auto const val = feature.getValue("spec", &error);
     REQUIRE(!error.empty());
     REQUIRE(error == "duplicate keys with different tag ids are found");
+    REQUIRE(val.is<std::string>());
+    REQUIRE(val.get<std::string>() == "reduced-speed");
 }
