@@ -44,19 +44,19 @@ public:
      * Retrieve the value associated with a given key from the feature.
      *
      * @param key The key used to look up the corresponding value.
-     * @param message  A pointer to a string that may be used to record any warning or error messages
- *                     that occur during the lookup process.
+     * @param warning  A pointer to a string that may be used to record any warnings that
+ *                     occur during the lookup process.
      *                 The caller is responsible for managing the memory of this string.
      * @return The value associated with the specified key, or a null value if the key is not found.
      *
-     * Note: If the lookup process encounters a duplicate key in the feature, 
-     *       the function will return the value associated with the first occurrence of the key, 
-     *       and will append a warning message to the `message` string (if provided)
-     *       to alert the caller to the presence of the duplicate key. 
-     *       The caller should ensure that the `message` string is properly initialized
+     * Note: If the lookup process encounters a duplicate key in the feature, the function will
+     *       return the value in the `values` set to which the associated tag index points to, and 
+     *       will append a message to the `warning` string (if provided) to alert the caller to the
+     *       presence of the duplicate key. 
+     *       The caller should ensure that the `warning` string is properly initialized
      *       and cleaned up after use.
      */
-    mapbox::feature::value getValue(std::string const&, std::string* message = nullptr) const;
+    mapbox::feature::value getValue(std::string const&, std::string* warning = nullptr) const;
     properties_type getProperties() const;
     mapbox::feature::identifier const& getID() const;
     std::uint32_t getExtent() const;
@@ -169,14 +169,14 @@ inline feature::feature(protozero::data_view const& feature_view, layer const& l
     }
 }
 
-inline mapbox::feature::value feature::getValue(const std::string& key, std::string* message ) const {
-    const auto key_count = layer_.keysMap.count(key);
+inline mapbox::feature::value feature::getValue(const std::string& key, std::string* warning ) const {
+    const auto key_range = layer_.keysMap.equal_range(key);
+    const auto key_count = std::distance(key_range.first, key_range.second) ;
     if (key_count < 1) {
         return mapbox::feature::null_value;
     }
 
     const auto values_count = layer_.values.size();
-    const auto key_range = layer_.keysMap.equal_range(key);
     auto start_itr = tags_iter.begin();
     const auto end_itr = tags_iter.end();
     while (start_itr != end_itr) {
@@ -201,8 +201,8 @@ inline mapbox::feature::value feature::getValue(const std::string& key, std::str
 
         if (key_found) {
             // Continue process with case when same keys having multiple tag ids.
-            if (key_count > 1 && message) {
-                *message = std::string("duplicate keys with different tag ids are found");
+            if (key_count > 1 && warning) {
+                *warning = std::string("duplicate keys with different tag ids are found");
             }
             return parseValue(layer_.values[tag_val]);
         }
